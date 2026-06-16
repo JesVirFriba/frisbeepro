@@ -1,0 +1,2250 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ffffff">
+<title>FrisbeePro – Jesse</title>
+<style>
+:root{
+  --g:#1D9E75;--gl:#E1F5EE;--gm:#5DCAA5;--gd:#085041;
+  --bl:#E6F1FB;--bd:#0C447C;--al:#FAEEDA;--ad:#633806;
+  --rl:#FCEBEB;--rd:#791F1F;--pl:#EEEDFE;--pd:#3C3489;
+  --cl:#FAECE7;--cd:#712B13;
+  --bg:#f5f5f3;--card:#fff;--text:#1a1a1a;--t2:#555;--t3:#999;
+  --border:#e5e5e5;--r:12px;--rs:8px;
+  --nav:70px;--safe:env(safe-area-inset-bottom,0px)
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:var(--bg);color:var(--text);font-size:16px;overscroll-behavior:none}
+.page{display:none;padding:12px 14px calc(var(--nav)+60px+var(--safe));min-height:100vh;max-width:480px;margin:0 auto}
+.page.on{display:block}
+/* NAV */
+.nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;padding-bottom:var(--safe);z-index:100;max-width:480px;left:50%;transform:translateX(-50%)}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 1px;cursor:pointer;border:none;background:none;color:var(--t3);font-size:10px;gap:2px;font-weight:500}
+.ni.on{color:var(--g)}
+.ni-icon{font-size:24px;line-height:1}
+/* TYPOGRAPHY */
+.ph{font-size:20px;font-weight:700;margin-bottom:4px}
+.sect{font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin:16px 0 8px}
+.sect:first-child{margin-top:0}
+/* CARDS */
+.card{background:var(--card);border-radius:var(--r);margin-bottom:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.card-p{padding:13px 15px}
+/* INPUTS */
+input,select,textarea{font-family:inherit;font-size:15px;color:var(--text);background:var(--bg);border:1.5px solid var(--border);border-radius:var(--rs);padding:9px 11px;width:100%;outline:none;-webkit-appearance:none}
+input:focus,select:focus,textarea:focus{border-color:var(--g);background:var(--card)}
+textarea{resize:none;min-height:65px}
+.label{font-size:13px;color:var(--t2);margin-bottom:4px}
+.field{margin-bottom:10px}
+/* BUTTONS */
+.btn{display:block;width:100%;background:var(--g);border:none;color:#fff;padding:13px;border-radius:var(--rs);font-size:14px;font-weight:600;cursor:pointer;text-align:center;margin-top:4px}
+.btn:active{opacity:.85}
+.btn-out{background:none;border:1.5px solid var(--border);color:var(--text)}
+.btn-sm{padding:7px 13px;font-size:12px;border-radius:20px;width:auto;display:inline-block}
+.btn-red{background:none;border:1.5px solid #E24B4A;color:#E24B4A}
+.sv-msg{display:none;text-align:center;font-size:12px;color:var(--g);margin-top:6px;font-weight:500}
+/* STATS */
+.stat-2{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}
+.stat-3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.sc{background:var(--bg);border-radius:var(--rs);padding:10px 8px;text-align:center}
+.sn{font-size:20px;font-weight:700}
+.sl{font-size:10px;color:var(--t2);margin-top:2px}
+/* PROGRESS */
+.prog-bar{height:7px;background:var(--border);border-radius:4px;overflow:hidden}
+.prog-fill{height:100%;border-radius:4px;transition:width .4s}
+/* ROWS */
+.row{display:flex;align-items:center;gap:8px;padding:11px 0;border-bottom:.5px solid var(--border)}
+.row:last-child{border:none}
+.rl{flex:1;font-size:13px;color:var(--t2)}
+.rv{font-size:13px;font-weight:500;color:var(--text)}
+/* BADGES */
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:600}
+/* TABS */
+.tab-row{display:flex;gap:5px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.tab-row::-webkit-scrollbar{display:none}
+.tb{flex-shrink:0;padding:7px 11px;font-size:12px;border:1.5px solid var(--border);border-radius:20px;background:none;color:var(--t2);cursor:pointer;font-weight:500}
+.tb.on{background:var(--g);border-color:var(--g);color:#fff}
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:flex-end;justify-content:center}
+.modal-bg.show{display:flex}
+.modal{background:var(--card);border-radius:20px 20px 0 0;padding:18px 18px calc(18px + var(--safe));width:100%;max-width:480px;max-height:92vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:14px}
+.modal-close{float:right;background:none;border:none;font-size:22px;color:var(--t3);cursor:pointer;margin-top:-4px}
+/* PROFILE */
+.avatar{width:56px;height:56px;border-radius:50%;background:var(--gl);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--gd);flex-shrink:0}
+.rating-hero{border-radius:var(--r);padding:14px;margin-bottom:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rh{text-align:center;padding:12px 6px;border-radius:var(--rs)}
+.rh-num{font-size:36px;font-weight:700;line-height:1}
+.rh-lbl{font-size:10px;margin-top:3px;font-weight:500}
+/* SPEED */
+.speed-hero{background:linear-gradient(135deg,#085041,#1D9E75);border-radius:var(--r);padding:16px;margin-bottom:10px;color:#fff;text-align:center}
+.speed-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.stc{background:var(--bg);border-radius:var(--rs);padding:8px 5px;text-align:center}
+.stc-l{font-size:9px;color:var(--t3);font-weight:600;text-transform:uppercase;margin-bottom:2px;letter-spacing:-.02em}
+.stc-v{font-size:15px;font-weight:700}
+/* CAL */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:10px}
+.cal-dh{font-size:9px;color:var(--t3);text-align:center;padding:3px 0;font-weight:500}
+.cal-day{min-height:40px;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:5px;cursor:pointer;font-size:13px;font-weight:500;color:var(--t2);position:relative}
+.cal-day.today{color:var(--g);font-weight:700}
+.cal-day.has-event::after,.cal-day.has-comp::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%}
+.cal-day.has-event::after{background:var(--g)}
+.cal-day.has-comp::after{background:#E24B4A}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cal-nav-btn{background:none;border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;color:var(--text)}
+/* COMP CARDS */
+.comp-card{background:var(--card);border-radius:var(--r);margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden}
+.comp-head{padding:14px 14px;cursor:pointer}
+.comp-name{font-size:14px;font-weight:600;margin-bottom:1px}
+.comp-meta{font-size:11px;color:var(--t2)}
+.comp-body{border-top:1px solid var(--border);padding:12px 14px;display:none}
+.comp-body.show{display:block}
+/* GOAL CARDS */
+.goal-card{background:var(--card);border-radius:var(--r);margin-bottom:8px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+/* CHART */
+.chart-wrap{background:var(--card);border-radius:var(--r);padding:13px 14px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.bar-chart{display:flex;align-items:flex-end;gap:3px;height:110px;margin-bottom:6px}
+.bc{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px}
+.bv{font-size:9px;color:var(--t2);font-weight:600}
+.bb{width:100%;border-radius:3px 3px 0 0;min-height:3px}
+.bl{font-size:8px;color:var(--t3);text-align:center;line-height:1.2;word-break:break-all}
+/* PUTTI */
+.putti-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.pd{background:var(--bg);border-radius:var(--rs);padding:9px 7px;text-align:center}
+.pd-lbl{font-size:11px;font-weight:600;margin-bottom:3px}
+.pd-pct{font-size:22px;font-weight:700}
+.pd-bar{height:3px;background:var(--border);border-radius:2px;margin:3px 0;overflow:hidden}
+.pd-fill{height:100%;border-radius:2px}
+.pd-sub{font-size:10px;color:var(--t3)}
+/* METRIX */
+.mx-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:.5px solid var(--border)}
+.mx-row:last-child{border:none}
+/* STR CARDS */
+.str-card{background:var(--card);border-radius:var(--r);margin-bottom:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.str-head{display:flex;align-items:center;gap:8px;padding:12px 14px;cursor:pointer}
+.str-body{border-top:1px solid var(--border);padding:12px 14px;display:none}
+.str-body.open{display:block}
+.ex-block{margin-bottom:12px;padding-bottom:12px;border-bottom:.5px solid var(--border)}
+.ex-block:last-child{margin-bottom:0;padding-bottom:0;border:none}
+.ex-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:1px}
+.ex-detail{font-size:11px;color:var(--t2);margin-bottom:1px}
+.ex-hint{font-size:10px;color:var(--t3);margin-bottom:8px}
+.weight-row{display:flex;align-items:center;gap:7px;margin-bottom:9px;background:var(--bg);border-radius:var(--rs);padding:8px 10px}
+.weight-in{width:64px;font-size:16px;font-weight:600;text-align:center;border:1.5px solid var(--border);border-radius:7px;padding:5px 6px;background:var(--card);color:var(--text)}
+.weight-in:focus{outline:none;border-color:var(--g)}
+.sets-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.set-btn{min-width:50px;height:50px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--t2);font-size:10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;transition:all .15s}
+.set-btn.done{background:var(--gl);border-color:var(--gm);color:var(--gd)}
+.set-sn{font-size:8px;opacity:.7}
+.set-tick{font-size:16px;line-height:1}
+.reset-btn{font-size:10px;color:var(--t3);background:none;border:1px solid var(--border);border-radius:20px;padding:3px 9px;cursor:pointer;margin-top:6px}
+/* THROW */
+.ex-row{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border:0.5px solid var(--border);border-radius:var(--rs);margin-bottom:6px}
+.ex-row.done-ex{background:var(--gl);border-color:var(--gm)}
+.rpe-pill{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:500;white-space:nowrap}
+.si-btn{min-width:30px;height:30px;border-radius:5px;border:1.5px solid var(--border);background:var(--bg);color:var(--t2);font-size:10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.si-btn.done-s{background:var(--gl);border-color:var(--gm);color:var(--gd)}
+/* MOB */
+.mob-row{display:flex;align-items:flex-start;gap:10px;padding:12px 0;border-bottom:.5px solid var(--border);cursor:pointer}
+.mob-row:last-child{border:none}
+.mob-cb{width:24px;height:24px;border-radius:6px;border:1.5px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;margin-top:1px}
+.mob-cb.c{background:var(--gl);border-color:var(--gm);color:var(--g)}
+.area-tag{display:inline-block;font-size:10px;padding:1px 7px;border-radius:20px;margin-top:2px}
+.a-lo{background:var(--al);color:var(--ad)}
+.a-se{background:var(--gl);color:var(--gd)}
+.a-ol{background:var(--pl);color:var(--pd)}
+.a-ko{background:var(--cl);color:var(--cd)}
+.a-co{background:var(--bl);color:var(--bd)}
+/* CLAUDE COPY */
+.claude-btn{width:100%;background:linear-gradient(135deg,#085041,#1D9E75);border:none;color:#fff;padding:14px;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px}
+.claude-btn:active{opacity:.88}
+.copy-ok{background:var(--gl);border-radius:var(--rs);padding:10px;font-size:12px;color:var(--gd);text-align:center;display:none;margin-bottom:8px;font-weight:500}
+/* CHAT HISTORY */
+.chat-item{background:var(--card);border-radius:var(--r);margin-bottom:8px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.ci-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.ci-date{font-size:11px;color:var(--t3)}
+.ci-topic{font-size:13px;font-weight:600;flex:1}
+.ci-body{font-size:13px;color:var(--text);line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto}
+.ci-tag{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500}
+/* NOTES */
+.note-card{background:var(--card);border-radius:var(--r);margin-bottom:8px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.nc-tag{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500;margin-bottom:6px;display:inline-block}
+.nc-body{font-size:13px;color:var(--text);line-height:1.6;white-space:pre-wrap;word-break:break-word}
+/* INFO BOX */
+.info-box{background:var(--bl);border-radius:var(--rs);padding:9px 11px;font-size:12px;color:var(--bd);margin-bottom:10px;line-height:1.5}
+.coach-msg{background:var(--gl);border-left:3px solid var(--g);border-radius:0 var(--rs) var(--rs) 0;padding:9px 11px;font-size:12px;color:var(--gd);line-height:1.5;margin-bottom:8px}
+/* EMPTY */
+.empty{text-align:center;padding:24px 12px;color:var(--t3)}
+.ei{font-size:32px;margin-bottom:6px}
+.et{font-size:13px;line-height:1.6}
+/* WK SCROLL */
+.wk-scroll{display:flex;gap:5px;overflow-x:auto;padding-bottom:3px;margin-bottom:12px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.wk-scroll::-webkit-scrollbar{display:none}
+.wk-btn{flex-shrink:0;padding:7px 14px;font-size:12px;border:1.5px solid var(--border);border-radius:20px;background:none;color:var(--t2);cursor:pointer;font-weight:500}
+.wk-btn.on{background:var(--g);border-color:var(--g);color:#fff}
+/* DISC DATA */
+.disc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.disc-col-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:7px}
+.disc-metric{display:flex;justify-content:space-between;padding:3px 0;border-bottom:.5px solid var(--border);font-size:11px}
+.disc-metric:last-child{border:none}
+</style>
+</head>
+<body>
+
+<!-- PAGES -->
+<div class="page on" id="pg-profile"><div id="pv"></div></div>
+<div class="page" id="pg-speed"><div id="sv"></div></div>
+<div class="page" id="pg-train">
+  <div class="ph">Harjoittelu</div>
+  <div class="tab-row" style="padding-bottom:4px">
+    <button class="tb on" onclick="trainTab('week',this)">📅 Viikko</button>
+    <button class="tb" onclick="trainTab('throw',this)">🥏 Heitto</button>
+    <button class="tb" onclick="trainTab('str',this)">💪 Voima</button>
+    <button class="tb" onclick="trainTab('putti',this)">🎯 Putti</button>
+    <button class="tb" onclick="trainTab('mob',this)">🧘 Liikk.</button>
+    <button class="tb" onclick="trainTab('comp_day',this)">🏆 Kisa</button>
+  </div>
+  <div id="train-content"></div>
+</div>
+<div class="page" id="pg-cal">
+  <div class="ph">Kalenteri</div>
+  <div class="cal-nav">
+    <button class="cal-nav-btn" onclick="calPrev()">‹</button>
+    <span id="cal-lbl" style="font-size:14px;font-weight:600"></span>
+    <button class="cal-nav-btn" onclick="calNext()">›</button>
+  </div>
+  <div class="cal-grid" id="cal-grid"></div>
+  <div class="sect">Tapahtumat</div>
+  <div id="cal-ev"></div>
+  <button class="btn" onclick="openM('m-event')">+ Lisää tapahtuma</button>
+</div>
+<div class="page" id="pg-comp">
+  <div class="ph">Kisat</div>
+  <div class="tab-row" id="comp-tabs"></div>
+  <div id="comp-content"></div>
+  <div style="display:flex;gap:8px;margin-bottom:0">
+  <button class="btn" onclick="openM('m-comp')" style="flex:2">+ Lisää kisa</button>
+  <button class="btn btn-out" onclick="syncAllCompsToCalendar()" style="flex:1;font-size:12px">📅 Synkronoi</button>
+</div>
+</div>
+<div class="page" id="pg-dev">
+  <div class="ph">Kehitys</div>
+  <div class="tab-row">
+    <button class="tb on" onclick="devTab('rating',this)">Rating</button>
+    <button class="tb" onclick="devTab('speed',this)">Nopeus</button>
+    <button class="tb" onclick="devTab('putti',this)">Putti</button>
+    <button class="tb" onclick="devTab('metrix',this)">Metrix</button>
+    <button class="tb" onclick="devTab('goals',this)">Tavoitteet</button>
+    <button class="tb" onclick="devTab('chat',this)">💬 Chat-historia</button>
+  </div>
+  <div id="dev-content"></div>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="ni on" onclick="showPg('profile')" id="nav-profile"><span class="ni-icon">👤</span><span>Jesse</span></button>
+  <button class="ni" onclick="showPg('speed')" id="nav-speed"><span class="ni-icon">⚡</span><span>Nopeus</span></button>
+  <button class="ni" onclick="showPg('train')" id="nav-train"><span class="ni-icon">💪</span><span>Treeni</span></button>
+  <button class="ni" onclick="showPg('cal')" id="nav-cal"><span class="ni-icon">📅</span><span>Kalenteri</span></button>
+  <button class="ni" onclick="showPg('comp')" id="nav-comp"><span class="ni-icon">🏆</span><span>Kisat</span></button>
+  <button class="ni" onclick="showPg('dev')" id="nav-dev"><span class="ni-icon">📈</span><span>Kehitys</span></button>
+</nav>
+
+<!-- MODALS -->
+<div class="modal-bg" id="m-speed"><div class="modal">
+  <button class="modal-close" onclick="closeM('m-speed')">✕</button>
+  <div class="modal-title">Kirjaa nopeustesti</div>
+  <div class="info-box">Kopioi tulokset älykiekosta testin jälkeen.</div>
+  <div class="field"><div class="label">Päivämäärä</div><input type="date" id="sp-date"></div>
+  <div class="field"><div class="label">Kiekko / olosuhteet</div><input id="sp-disc" placeholder="Esim. Destroyer, tyyni"></div>
+  <div style="font-size:11px;font-weight:600;color:var(--bd);margin-bottom:6px">BACKHAND</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+    <div class="field"><div class="label">5m vauhdinotto</div><input type="number" step="0.1" id="sp-bh5" inputmode="decimal" placeholder="km/h"></div>
+    <div class="field"><div class="label">Stand still</div><input type="number" step="0.1" id="sp-bhss" inputmode="decimal" placeholder="km/h"></div>
+    <div class="field"><div class="label">Polviltaan</div><input type="number" step="0.1" id="sp-bhkn" inputmode="decimal" placeholder="km/h"></div>
+  </div>
+  <div style="font-size:11px;font-weight:600;color:var(--pd);margin:8px 0 6px">FOREHAND</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+    <div class="field"><div class="label">5m vauhdinotto</div><input type="number" step="0.1" id="sp-fh5" inputmode="decimal" placeholder="km/h"></div>
+    <div class="field"><div class="label">Stand still</div><input type="number" step="0.1" id="sp-fhss" inputmode="decimal" placeholder="km/h"></div>
+    <div class="field"><div class="label">Polviltaan</div><input type="number" step="0.1" id="sp-fhkn" inputmode="decimal" placeholder="km/h"></div>
+  </div>
+  <div class="field"><div class="label">Muistiinpanot</div><textarea id="sp-notes" placeholder="Tuntemukset..."></textarea></div>
+  <button class="btn" onclick="saveSpeed()">Tallenna</button>
+  <div class="sv-msg" id="sp-msg">✓ Tallennettu!</div>
+</div></div>
+
+<div class="modal-bg" id="m-event"><div class="modal">
+  <button class="modal-close" onclick="closeM('m-event')">✕</button>
+  <div class="modal-title">Lisää tapahtuma</div>
+  <div class="field"><div class="label">Tyyppi</div>
+    <select id="ev-type"><option value="kisa">🏆 Kisa</option><option value="treeni">💪 Treeni</option><option value="lepo">😴 Lepopäivä</option><option value="muu">📌 Muu</option></select>
+  </div>
+  <div class="field"><div class="label">Nimi</div><input id="ev-name" placeholder="Tapahtuman nimi"></div>
+  <div class="field"><div class="label">Päivämäärä</div><input type="date" id="ev-date"></div>
+  <div class="field"><div class="label">Lisätieto</div><input id="ev-note" placeholder="Valinnainen"></div>
+  <button class="btn" onclick="saveEvent()">Lisää</button>
+  <div class="sv-msg" id="ev-msg">✓ Lisätty!</div>
+</div></div>
+
+<div class="modal-bg" id="m-comp"><div class="modal">
+  <button class="modal-close" onclick="closeM('m-comp')">✕</button>
+  <div class="modal-title">Lisää kisa</div>
+  <div class="field"><div class="label">Kisan nimi</div><input id="co-name" placeholder="Kisan nimi"></div>
+  <div class="field"><div class="label">Päivämäärä</div><input type="date" id="co-date"></div>
+  <div class="field"><div class="label">Rata</div><input id="co-course" placeholder="Radan nimi"></div>
+  <div class="field"><div class="label">Divisioona</div><select id="co-div"><option selected>MPO</option><option>FPO</option><option>MA1</option><option>MA2</option></select></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+    <div class="field"><div class="label">Tulos (vs par)</div><input id="co-score" type="number" inputmode="numeric" placeholder="-5"></div>
+    <div class="field"><div class="label">Sijoitus</div><input id="co-place" placeholder="12/45"></div>
+    <div class="field"><div class="label">PDGA round-rating</div><input id="co-rrating" type="number" inputmode="numeric" placeholder="935"></div>
+    <div class="field"><div class="label">Metrix round-rating</div><input id="co-mrating" type="number" inputmode="numeric" placeholder="942"></div>
+    <div class="field"><div class="label">C1X%</div><input id="co-c1x" type="number" inputmode="numeric" placeholder="82"></div>
+    <div class="field"><div class="label">C2%</div><input id="co-c2" type="number" inputmode="numeric" placeholder="18"></div>
+    <div class="field"><div class="label">FW hit%</div><input id="co-fhpct" type="number" inputmode="numeric" placeholder="65"></div>
+  </div>
+  <div class="field"><div class="label">Muistiinpanot</div><textarea id="co-notes" placeholder="Mikä toimi, mikä ei..."></textarea></div>
+  <button class="btn" onclick="saveComp()">Tallenna</button>
+  <div class="sv-msg" id="co-msg">✓ Tallennettu!</div>
+</div></div>
+
+<div class="modal-bg" id="m-rating"><div class="modal">
+  <button class="modal-close" onclick="closeM('m-rating')">✕</button>
+  <div class="modal-title">Lisää rating-kirjaus</div>
+  <div class="field"><div class="label">Päivämäärä</div><input type="date" id="rat-date"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+    <div class="field"><div class="label">PDGA-rating</div><input id="rat-val" type="number" inputmode="numeric" placeholder="919"></div>
+    <div class="field"><div class="label">Metrix-rating</div><input id="rat-mval" type="number" inputmode="numeric" placeholder="939"></div>
+  </div>
+  <div class="field"><div class="label">Huomio</div><input id="rat-note" placeholder="Esim. PDGA päivitys"></div>
+  <button class="btn" onclick="saveRating()">Tallenna</button>
+  <div class="sv-msg" id="rat-msg">✓ Tallennettu!</div>
+</div></div>
+
+<div class="modal-bg" id="m-metrix"><div class="modal">
+  <button class="modal-close" onclick="closeM('m-metrix')">✕</button>
+  <div class="modal-title">Lisää Metrix-rata</div>
+  <div class="info-box">Kopioi tiedot Metrix.fi – layout-rating löytyy radan sivulta.</div>
+  <div class="field"><div class="label">Radan nimi</div><input id="mx-course" placeholder="Esim. Kivikon FGR"></div>
+  <div class="field"><div class="label">Layout</div><input id="mx-layout" placeholder="Pro 2025"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+    <div class="field"><div class="label">Layout Rating</div><input id="mx-rating" type="number" inputmode="numeric" placeholder="920"></div>
+    <div class="field"><div class="label">SSA</div><input id="mx-ssa" type="number" step="0.01" inputmode="decimal" placeholder="55.2"></div>
+    <div class="field"><div class="label">Paras tulos</div><input id="mx-best" type="number" inputmode="numeric" placeholder="-8"></div>
+    <div class="field"><div class="label">Paras round-rating</div><input id="mx-myrating" type="number" inputmode="numeric" placeholder="945"></div>
+  </div>
+  <button class="btn" onclick="saveMetrix()">Tallenna</button>
+  <div class="sv-msg" id="mx-msg">✓ Tallennettu!</div>
+</div></div>
+
+<div class="modal-bg" id="m-goal"><div class="modal">
+  <button class="modal-close" onclick="closeM('m-goal')">✕</button>
+  <div class="modal-title">Lisää tavoite</div>
+  <div class="field"><div class="label">Tyyppi</div>
+    <select id="gl-type"><option value="rating">📊 PDGA-rating</option><option value="metrix">📊 Metrix-rating</option><option value="speed">⚡ BH-nopeus</option><option value="speedfh">⚡ FH-nopeus</option><option value="putti">🎯 Puttaus-%</option><option value="kisa">🏆 Kisatulos</option><option value="muu">⭐ Muu</option></select>
+  </div>
+  <div class="field"><div class="label">Kuvaus</div><input id="gl-desc" placeholder="Esim. PDGA rating 919 → 940"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">
+    <div class="field"><div class="label">Lähtöarvo</div><input id="gl-from" type="number" inputmode="decimal" step="0.1"></div>
+    <div class="field"><div class="label">Nyt</div><input id="gl-cur" type="number" inputmode="decimal" step="0.1"></div>
+    <div class="field"><div class="label">Tavoite</div><input id="gl-to" type="number" inputmode="decimal" step="0.1"></div>
+  </div>
+  <div class="field"><div class="label">Aikaraja</div>
+    <select id="gl-deadline"><option value="1kk">1 kuukausi</option><option value="3kk">3 kuukautta</option><option value="6kk">6 kuukautta</option><option value="1v">1 vuosi</option></select>
+  </div>
+  <div class="field"><div class="label">Valmentajan kommentti</div><textarea id="gl-coach" placeholder="Valmentajan ohjeet..."></textarea></div>
+  <button class="btn" onclick="saveGoal()">Lisää</button>
+  <div class="sv-msg" id="gl-msg">✓ Tallennettu!</div>
+</div></div>
+
+<div class="modal-bg" id="m-putti-sess"><div class="modal">
+  <button class="modal-close" onclick="closeM('m-putti-sess')">✕</button>
+  <div class="modal-title">Lisää puttaussessio</div>
+  <div class="field"><div class="label">Päivämäärä</div><input type="date" id="pt-date"></div>
+  <div id="pt-dists"></div>
+  <button class="btn" onclick="savePutti()">Tallenna</button>
+  <div class="sv-msg" id="pt-msg">✓ Tallennettu!</div>
+</div></div>
+
+<div class="modal-bg" id="m-chat"><div class="modal">
+  <button class="modal-close" onclick="closeM('m-chat')">✕</button>
+  <div class="modal-title">Tallenna chat-keskustelu</div>
+  <div class="info-box">Kopioi tärkeät osat Claude-chatista tähän. Tallennettu historia mukaan "Kopioi tilanne"-nappiin.</div>
+  <div class="field"><div class="label">Aihe / otsikko</div><input id="ch-title" placeholder="Esim. FH-tekniikka-analyysi 10.6."></div>
+  <div class="field"><div class="label">Kategoria</div>
+    <select id="ch-tag"><option value="tekniikka">🥏 Tekniikka</option><option value="viikko">📋 Viikko-ohjelma</option><option value="kisa">🏆 Kisa-analyysi</option><option value="tavoite">⭐ Tavoite</option><option value="nopeus">⚡ Nopeus</option><option value="muu">💬 Yleinen</option></select>
+  </div>
+  <div class="field"><div class="label">Keskustelun sisältö</div>
+    <textarea id="ch-body" placeholder="Liitä tai kirjoita tärkeät asiat chatista..." style="min-height:140px"></textarea>
+  </div>
+  <button class="btn" onclick="saveChatEntry()">Tallenna historiaan</button>
+  <div class="sv-msg" id="ch-msg">✓ Tallennettu!</div>
+</div></div>
+
+<div class="modal-bg" id="m-settings"><div class="modal">
+  <button class="modal-close" onclick="closeM('m-settings')">✕</button>
+  <div class="modal-title">Asetukset & varmuuskopio</div>
+  <div class="field"><div class="label">PDGA-rating (nykytaso)</div><input id="s-rating" type="number" inputmode="numeric"></div>
+  <div class="field"><div class="label">Metrix-rating</div><input id="s-metrix" type="number" inputmode="numeric"></div>
+  <div class="field"><div class="label">PDGA tavoiterating</div><input id="s-target" type="number" inputmode="numeric"></div>
+  <div class="field"><div class="label">Metrix tavoiterating</div><input id="s-mtarget" type="number" inputmode="numeric"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+    <div class="field"><div class="label">BH nopeustavoite (km/h)</div><input id="s-bh" type="number" inputmode="numeric"></div>
+    <div class="field"><div class="label">FH nopeustavoite (km/h)</div><input id="s-fh" type="number" inputmode="numeric"></div>
+  </div>
+  <div class="field"><div class="label">Kotikenttä</div><input id="s-home" placeholder="Helsinki"></div>
+  <button class="btn" onclick="saveSettings()">Tallenna</button>
+  <div class="sv-msg" id="s-msg">✓ Tallennettu!</div>
+  <div class="sect">Varmuuskopio & siirto</div>
+  <div style="font-size:12px;color:var(--bd);background:var(--bl);padding:8px 10px;border-radius:var(--rs);margin-bottom:8px;line-height:1.5"><b>Helpoin tapa siirtää:</b> Luo siirto-URL → avaa uusi sovellus → liitä URL osoitekenttään → data siirtyy automaattisesti!</div>
+  <button class="btn" onclick="exportToUrl()" style="margin-bottom:8px">🔗 Luo siirto-URL</button>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+    <button class="btn btn-out" onclick="exportData()">⬇ Lataa JSON</button>
+    <button class="btn btn-out" onclick="importData()">⬆ Tuo JSON</button>
+  </div>
+  <div class="sect">Tiedot</div>
+  <div id="data-summary" style="font-size:12px;color:var(--t2);line-height:1.8"></div>
+</div></div>
+
+<script>
+// ===== STORAGE =====
+const SK='fp_complete_v1';
+function ld(){try{return JSON.parse(localStorage.getItem(SK)||'{}')}catch{return {}}}
+function sv(d){try{localStorage.setItem(SK,JSON.stringify(d))}catch{}}
+function get(k){const d=ld();return d[k]}
+function set(k,v){const d=ld();d[k]=v;sv(d)}
+function num(id){return parseFloat(document.getElementById(id)?.value)||null}
+function v(id){return document.getElementById(id)?.value||''}
+function setV(id,val){const el=document.getElementById(id);if(el)el.value=val}
+function flash(id){const el=document.getElementById(id);if(el){el.style.display='block';setTimeout(()=>{el.style.display='none'},2000)}}
+function now(){return new Date().toLocaleTimeString('fi',{hour:'2-digit',minute:'2-digit'})}
+
+// ===== DEFAULT PROFILE =====
+const DEF={name:'Jesse Virtanen',pdga:'252010',rating:919,metrix:939,target:940,metrix_target:960,div:'MPO',home:'',coach:'Claude (AI-valmentaja)',bh_target:110,fh_target:88}
+
+// ===== NAV =====
+let calY=new Date().getFullYear(),calM=new Date().getMonth();
+let compTab='upcoming',devTabCur='rating',trainTabCur='week';
+let throwWk=1,strWk=1,putWk=1,mobWk=1;
+
+
+// ===== CONSTANTS =====
+const PTDISTS=[
+  {key:'d3',label:'3–4 m',goal:95,col:'#1D9E75'},
+  {key:'d5',label:'5–6 m',goal:85,col:'#1D9E75'},
+  {key:'d7',label:'7–8 m',goal:75,col:'#5DCAA5'},
+  {key:'d9',label:'9–10 m',goal:60,col:'#EF9F27'},
+  {key:'d11',label:'11–12 m',goal:45,col:'#EF9F27'},
+  {key:'d13',label:'13–17 m',goal:20,col:'#D85A30'},
+  {key:'d18',label:'18–20 m',goal:10,col:'#D85A30'}
+];
+
+// ===== MIGRATION from old keys =====
+(function migrate(){
+  const OLD=['fp_v1','fp_v2','fp_jesse_v1','fg_mobile_v1','fg_v4','fp_complete_v1'];
+  const FIELDS=['ratings','speeds','events','comps','metrix','goals','putti_sessions','coach_notes','chat_history'];
+  if(localStorage.getItem('fpc_migrated_v2'))return;
+  let cur={};try{cur=JSON.parse(localStorage.getItem(SK)||'{}')}catch(e){}
+  OLD.forEach(ok=>{
+    let old={};try{old=JSON.parse(localStorage.getItem(ok)||'{}')}catch(e){}
+    if(!Object.keys(old).length)return;
+    FIELDS.forEach(f=>{
+      if(!old[f]||!Array.isArray(old[f]))return;
+      if(!cur[f])cur[f]=[];
+      const ids=new Set(cur[f].map(x=>x.id));
+      cur[f]=[...cur[f],...old[f].filter(x=>!ids.has(x.id))];
+    });
+    Object.keys(old).forEach(k=>{
+      if((k.startsWith('sets_')||k.startsWith('wt_')||k.startsWith('comp_open_')||k.startsWith('str_open_'))&&cur[k]===undefined)cur[k]=old[k];
+    });
+    if(old.disc_analytics&&!cur.disc_analytics)cur.disc_analytics=old.disc_analytics;
+  });
+  localStorage.setItem(SK,JSON.stringify(cur));
+  localStorage.setItem('fpc_migrated_v2','1');
+})();
+
+// ===== PRELOAD DATA =====
+(function preload(){
+  if(localStorage.getItem('fpc_preloaded'))return;
+  const comps=[
+    {id:1747699200000,name:'SM-kars. #1 Lappeenranta – K1',date:'2026-05-09',course:'Ravikangas (LPR) – PRO-layout',div:'MA1',score:'',place:'',rrating:null,mrating:880,c1x:null,c2:null,fhpct:null,notes:'SM-karsintakierros.'},
+    {id:1747785600000,name:'SM-kars. #1 Lappeenranta – K2',date:'2026-05-10',course:'Ravikangas (LPR) – PRO-layout',div:'MA1',score:'',place:'',rrating:null,mrating:897,c1x:null,c2:null,fhpct:null,notes:''},
+    {id:1747958400000,name:'Sepän Heitto 2026 – K1',date:'2026-05-16',course:'Mäntsälän frisbeegolfpuisto – Pro-Mäny 2021',div:'MA1',score:'',place:'',rrating:null,mrating:991,c1x:null,c2:null,fhpct:null,notes:'Erinomainen kierros!'},
+    {id:1747958401000,name:'Sepän Heitto 2026 – K2',date:'2026-05-16',course:'Mäntsälän frisbeegolfpuisto – Pro-Mäny 2021',div:'MA1',score:'',place:'',rrating:null,mrating:896,c1x:null,c2:null,fhpct:null,notes:''},
+    {id:1747526400000,name:'Talin viikkokisat 14.5.',date:'2026-05-14',course:'TALI FRISBEEGOLFI 2025 – Kesä 2025',div:'MA1',score:'',place:'',rrating:null,mrating:919,c1x:null,c2:null,fhpct:null,notes:''},
+    {id:1747612800000,name:'Kivikon viikkokisat #4',date:'2026-05-11',course:'Kivikon FGR – 2023 Blue 18',div:'MA1',score:'',place:'',rrating:null,mrating:976,c1x:null,c2:null,fhpct:null,notes:''},
+    {id:1748044800000,name:'NBDG Extra Sahanmäki',date:'2026-05-20',course:'Sahanmäki Disc Golf Park 2026',div:'MA1',score:'',place:'',rrating:null,mrating:956,c1x:null,c2:null,fhpct:null,notes:''},
+    {id:1748131200000,name:'Talin viikkokisat 21.5.',date:'2026-05-21',course:'TALI FRISBEEGOLFI 2025 – Kesä 2025',div:'MA1',score:'',place:'',rrating:null,mrating:986,c1x:null,c2:null,fhpct:null,notes:''},
+    {id:1748390400000,name:'NBDG Amateurs Oittaa – K1',date:'2026-05-31',course:'Oittaan ulkoilualue – Kalliometsä',div:'MA1',score:'',place:'',rrating:null,mrating:927,c1x:null,c2:null,fhpct:null,notes:''},
+    {id:1748390401000,name:'NBDG Amateurs Oittaa – K2',date:'2026-05-31',course:'Oittaan ulkoilualue – Kalliometsä',div:'MA1',score:'',place:'',rrating:null,mrating:939,c1x:null,c2:null,fhpct:null,notes:'Täsmälleen Metrix-ratingin mukainen.'},
+    {id:1748563200000,name:'Kivikon viikkokisat #5',date:'2026-06-01',course:'Kivikon FGR – 2023 Blue 18',div:'MA1',score:'',place:'',rrating:null,mrating:1001,c1x:null,c2:null,fhpct:null,notes:'Paras kierros! 1001 rating.'},
+    {id:1748736000000,name:'Talin viikkokisat 4.6.',date:'2026-06-04',course:'TALI FRISBEEGOLFI 2025 – Kesä 2025',div:'MA1',score:'',place:'',rrating:null,mrating:977,c1x:null,c2:null,fhpct:null,notes:''},
+    {id:1748995200000,name:'Kivikon viikkokisat #8',date:'2026-06-08',course:'Kivikon FGR – 2023 Blue 18',div:'MA1',score:'',place:'',rrating:null,mrating:976,c1x:null,c2:null,fhpct:null,notes:''},
+    {id:1749772800000,name:'SM-kars. #4 Kivijärvi – K1',date:'2026-06-13',course:'Peltokankaan FGR, Kivijärvi – PRO par 60',div:'MA1',score:'',place:'',rrating:null,mrating:875,c1x:null,c2:null,fhpct:null,notes:'SM-karsinta. Heikko kierros.'},
+    {id:1749859200000,name:'SM-kars. #4 Kivijärvi – K2',date:'2026-06-14',course:'Peltokankaan FGR, Kivijärvi – PRO par 60',div:'MA1',score:'',place:'',rrating:null,mrating:885,c1x:null,c2:null,fhpct:null,notes:''}
+  ];
+  const discSession={id:1749570000000,date:'2026-06-10',disc:'Älykiekko – BH Hyzer + FH Hyzer (250 heittoa)',bh5:120.5,bhss:107.4,bhkn:null,fh5:108.4,fhss:99.6,fhkn:null,notes:'BH 151 h: avg 107,4 km/h, max 120,5, spin 1276 RPM, wobble 3,5°, hyzer 9,1°. FH 99 h: avg 99,6 km/h, max 108,4, spin 711 RPM, wobble 10,0°, hyzer 20,1°.'};
+  if(!(get('comps')||[]).length)set('comps',comps);
+  if(!(get('speeds')||[]).length)set('speeds',[discSession]);
+  if(!(get('ratings')||[]).length)set('ratings',[{id:1746000000000,date:'2026-04-30',val:919,mval:939,note:'Lähtötaso'}]);
+  set('disc_analytics',{last_updated:'2026-06-10',sessions:[{date:'2026-06-10',bh:{throws:151,period:'19.5.–10.6.2026',speed_avg:107.4,speed_max:120.5,speed_min:81.1,spin_avg:1276,spin_max:1553,spin_min:616,hyzer_avg:9.1,hyzer_max:25.6,hyzer_min:-2.3,launch_avg:3.7,launch_max:17.8,launch_min:-3.1,wobble_avg:3.5,wobble_max:9.9,wobble_min:0.2,nose_avg:1.6},fh:{throws:99,period:'24.5.–10.6.2026',speed_avg:99.6,speed_max:108.4,speed_min:86.2,spin_avg:711,spin_max:790,spin_min:598,hyzer_avg:20.1,hyzer_max:34.8,hyzer_min:-0.7,launch_avg:13.6,launch_max:23.0,launch_min:6.0,wobble_avg:10.0,wobble_max:19.1,wobble_min:1.0,nose_avg:-1.2}}]});
+  // Preload chat history from our conversation
+  if(!(get('chat_history')||[]).length){
+    set('chat_history',[
+      {id:1749990000000,title:'Älykiekon data-analyysi 10.6.2026',tag:'nopeus',body:'BH (151 heittoa): avg 107,4 km/h, max 120,5, spin avg 1276 RPM, wobble avg 3,5° (erinomainen), hyzer avg 9,1°.\n\nFH (99 heittoa): avg 99,6 km/h, max 108,4, spin avg 711 RPM, wobble avg 10,0° (kehityskohta), hyzer avg 20,1° (liian jyrkkä).\n\nValmentajan analyysi:\n• BH on todella hyvä – wobble 3,5° kertoo puhtaasta irrotuksesta\n• FH wobble 10,0° → tavoite alle 5°\n• FH hyzer 20,1° → tavoite 12–15° (lasku kasvattaa nopeutta automaattisesti)\n• FH spin 711 vs BH 1276 – ranteen nopeutta lisää irrotusvaiheessa'},
+      {id:1749991000000,title:'Metrix-kisatulokset analyysi',tag:'kisa',body:'16 kierrosta kirjattu (9.5.–14.6.2026). Metrix-keskiarvo: 939.\n\nParas kierros: Kivikon vk #5 → 1001 (62 yli radan ratingin)\nHeikoin: SM-kars. Kivijärvi K1 → 875\n\nValmentajan huomiot:\n• Viikkokisat toimivat hyvin: Kivikko 976/1001, Tali 977/986\n• SM-karsintakierrokset selvästi heikompia (875–897) – syy selvitettävä\n• Vaihteluväli 875–1001 = 126 pistettä → pohjatason nosto tärkein kehityskohta\n• Suunta on oikea: viimeiset kierrokset nouseva trendi'}
+    ]);
+  }
+  localStorage.setItem('fpc_preloaded','1');
+})();
+
+
+function showPg(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.ni').forEach(b=>b.classList.remove('on'));
+  document.getElementById('pg-'+id).classList.add('on');
+  document.getElementById('nav-'+id).classList.add('on');
+  window.scrollTo(0,0);
+  if(id==='profile')renderProfile();
+  if(id==='speed')renderSpeed();
+  if(id==='train')renderTrain();
+  if(id==='cal')renderCal();
+  if(id==='comp')renderComp();
+  if(id==='dev')renderDev();
+}
+function openM(id){
+  document.getElementById(id).classList.add('show');
+  if(id==='m-putti-sess')renderPuttiInputs();
+  if(id==='m-settings')renderSettings();
+  const t=new Date().toISOString().slice(0,10);
+  ['sp-date','ev-date','co-date','pt-date','rat-date'].forEach(f=>{const el=document.getElementById(f);if(el&&!el.value)el.value=t});
+}
+function closeM(id){document.getElementById(id).classList.remove('show')}
+
+// ===== PROFILE =====
+function renderProfile(){
+  const p=get('profile')||DEF;
+  const ratings=(get('ratings')||[]).sort((a,b)=>a.date.localeCompare(b.date));
+  const speeds=(get('speeds')||[]).sort((a,b)=>a.date.localeCompare(b.date));
+  const comps=get('comps')||[];
+  const goals=get('goals')||[];
+  const lastPDGA=ratings.length?ratings[ratings.length-1].val:p.rating;
+  const lastMx=ratings.length&&ratings[ratings.length-1].mval?ratings[ratings.length-1].mval:p.metrix;
+  const bhSp=speeds.filter(s=>s.bh5>0);
+  const fhSp=speeds.filter(s=>s.fh5>0);
+  const bestBH=bhSp.length?Math.max(...bhSp.map(s=>s.bh5)):null;
+  const bestFH=fhSp.length?Math.max(...fhSp.map(s=>s.fh5)):null;
+  const bestComp=comps.length?comps.slice().sort((a,b)=>(b.mrating||0)-(a.mrating||0))[0]:null;
+  const rPct=p.target&&p.rating&&p.target>p.rating?Math.min(100,Math.round(((lastPDGA-p.rating)/(p.target-p.rating))*100)):0;
+
+  let h=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="avatar">JV<\/div>
+      <div>
+        <div style="font-size:18px;font-weight:700">Jesse Virtanen<\/div>
+        <div style="font-size:12px;color:var(--t2)">PDGA #252010 · MPO<\/div>
+        <div style="font-size:11px;color:var(--t3)">Valmentaja: Claude<\/div>
+      <\/div>
+    <\/div>
+    <button onclick="openM('m-settings')" style="background:none;border:1px solid var(--border);border-radius:20px;padding:5px 11px;font-size:11px;color:var(--t2);cursor:pointer">⚙ Asetukset<\/button>
+  <\/div>
+
+  <div class="rating-hero">
+    <div class="rh" style="background:var(--gl)">
+      <div class="rh-num" style="color:var(--gd)">${lastPDGA}<\/div>
+      <div class="rh-lbl" style="color:var(--gd)">PDGA rating<\/div>
+      ${p.target?`<div style="font-size:10px;color:var(--gd);opacity:.7;margin-top:2px">Tavoite: ${p.target}<\/div><div style="height:3px;background:rgba(0,0,0,.1);border-radius:2px;margin-top:5px;overflow:hidden"><div style="height:100%;width:${rPct}%;background:var(--g);border-radius:2px"><\/div><\/div>`:''}
+    <\/div>
+    <div class="rh" style="background:var(--bl)">
+      <div class="rh-num" style="color:var(--bd)">${lastMx}<\/div>
+      <div class="rh-lbl" style="color:var(--bd)">Metrix rating<\/div>
+      ${p.metrix_target?`<div style="font-size:10px;color:var(--bd);opacity:.7;margin-top:2px">Tavoite: ${p.metrix_target}<\/div>`:''}
+    <\/div>
+  <\/div>
+
+  <div class="stat-2">
+    <div class="sc"><div class="sn" style="color:var(--bd)">${bestBH?bestBH.toFixed(1):'–'}<\/div><div class="sl">BH paras (km/h)<\/div>${p.bh_target?`<div style="font-size:9px;color:var(--t3)">Tavoite: ${p.bh_target}<\/div>`:''}${bestBH&&p.bh_target?`<div class="prog-bar" style="margin-top:4px"><div class="prog-fill" style="width:${Math.min(100,Math.round(bestBH/p.bh_target*100))}%;background:var(--bd)"><\/div><\/div>`:''}<\/div>
+    <div class="sc"><div class="sn" style="color:var(--pd)">${bestFH?bestFH.toFixed(1):'–'}<\/div><div class="sl">FH paras (km/h)<\/div>${p.fh_target?`<div style="font-size:9px;color:var(--t3)">Tavoite: ${p.fh_target}<\/div>`:''}${bestFH&&p.fh_target?`<div class="prog-bar" style="margin-top:4px"><div class="prog-fill" style="width:${Math.min(100,Math.round(bestFH/p.fh_target*100))}%;background:var(--pd)"><\/div><\/div>`:''}<\/div>
+    <div class="sc"><div class="sn">${comps.length}<\/div><div class="sl">Kisaa kirjattu<\/div><\/div>
+    <div class="sc"><div class="sn">${bestComp?bestComp.mrating||'–':'–'}<\/div><div class="sl">Paras Metrix-rating<\/div><\/div>
+  <\/div>`;
+
+  // Coach message
+  h+=`<div class="coach-msg">💬 <strong>Valmentaja Claude<\/strong><br>Hei Jesse! Tavoitteena kisamenestys MPO-sarjassa. Älykiekon data näyttää BH-nopeus 107,4 avg – hyvä lähtötaso. FH wobble 10° ja hyzer 20° ovat seuraavat kehityskohteet. Lisää kisat kalenteriin ja kirjaa nopeustestitulokset säännöllisesti.<\/div>`;
+
+  // Active goals
+  const activeGoals=(goals).slice(0,3);
+  if(activeGoals.length){
+    h+=`<div class="sect">Tavoitteet<\/div>`;
+    activeGoals.forEach(g=>{
+      const from=parseFloat(g.from)||0,to=parseFloat(g.to)||1,cur=parseFloat(g.cur)||from;
+      const pct=to!==from?Math.min(100,Math.max(0,Math.round((cur-from)/(to-from)*100))):0;
+      const col=pct>=100?'#1D9E75':pct>=50?'#EF9F27':'#E24B4A';
+      const icons={rating:'📊',metrix:'📊',speed:'⚡',speedfh:'⚡',putti:'🎯',kisa:'🏆',muu:'⭐'};
+      h+=`<div class="goal-card">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+          <span style="font-size:18px">${icons[g.type]||'⭐'}<\/span>
+          <div style="flex:1"><div style="font-size:13px;font-weight:600">${g.desc}<\/div><div style="font-size:10px;color:var(--t3)">${g.deadline} · ${cur} → ${to}<\/div><\/div>
+        <\/div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:3px;font-size:12px"><span style="color:var(--t2)">${cur} / ${to}<\/span><span style="color:${col};font-weight:600">${pct}%<\/span><\/div>
+        <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${col}"><\/div><\/div>
+        ${g.coach?`<div style="font-size:11px;color:var(--bd);background:var(--bl);padding:6px 9px;border-radius:var(--rs);margin-top:6px">💬 ${g.coach}<\/div>`:''}
+      <\/div>`;
+    });
+  }
+
+  // Copy to Claude button
+  h+=`<div class="sect">Valmentajakeskustelu<\/div>
+  <button class="claude-btn" onclick="copyToClaudeChat()">📋 Kopioi tilanne Claude-chattiin<\/button>
+  <div class="copy-ok" id="copy-ok">✓ Kopioitu! Avaa Claude.ai ja liitä.<\/div>
+  <div style="font-size:11px;color:var(--t3);text-align:center;margin-bottom:12px;line-height:1.5">Kopioi kaikki datasi yhdellä napin painalluksella → liitä uuteen Claude-chattiin<\/div>
+  <button class="btn btn-out btn-sm" onclick="openM('m-chat')" style="width:100%;margin-bottom:4px">+ Tallenna chat-keskustelu historiaan<\/button>`;
+
+  document.getElementById('pv').innerHTML=h;
+}
+
+// ===== COPY TO CLAUDE =====
+function buildCtx(){
+  const p=get('profile')||DEF;
+  const ratings=(get('ratings')||[]).sort((a,b)=>a.date.localeCompare(b.date));
+  const speeds=(get('speeds')||[]).sort((a,b)=>a.date.localeCompare(b.date));
+  const comps=(get('comps')||[]).sort((a,b)=>b.date.localeCompare(a.date));
+  const goals=get('goals')||[];
+  const events=(get('events')||[]).filter(e=>e.date>=new Date().toISOString().slice(0,10)).sort((a,b)=>a.date.localeCompare(b.date));
+  const chatHist=(get('chat_history')||[]).sort((a,b)=>b.id-a.id).slice(0,5);
+  const disc=get('disc_analytics');
+  const lastPDGA=ratings.length?ratings[ratings.length-1].val:p.rating;
+  const lastMx=ratings.length&&ratings[ratings.length-1].mval?ratings[ratings.length-1].mval:p.metrix;
+  const bhSp=speeds.filter(s=>s.bh5>0);
+  const fhSp=speeds.filter(s=>s.fh5>0);
+  const bestBH=bhSp.length?Math.max(...bhSp.map(s=>s.bh5)):null;
+  const bestFH=fhSp.length?Math.max(...fhSp.map(s=>s.fh5)):null;
+  const PTDISTS=['d3','d5','d7','d9','d11','d13','d18'];
+  const PLBLS={d3:'3-4m',d5:'5-6m',d7:'7-8m',d9:'9-10m',d11:'11-12m',d13:'13-17m',d18:'18-20m'};
+  const pt={};PTDISTS.forEach(k=>{pt[k]={m:0,a:0}});
+  (get('putti_sessions')||[]).forEach(s=>PTDISTS.forEach(k=>{if(s[k]){pt[k].m+=s[k].m;pt[k].a+=s[k].a}}));
+  const puttiRows=PTDISTS.map(k=>pt[k].a>0?`  ${PLBLS[k]}: ${Math.round(pt[k].m/pt[k].a*100)}% (${pt[k].m}/${pt[k].a})`:'').filter(Boolean).join('\n');
+  const today=new Date().toLocaleDateString('fi',{day:'numeric',month:'numeric',year:'numeric'});
+  let txt=`Hei Claude! Jatketaan valmennusta. Tilanne ${today}:
+
+PELAAJA: Jesse Virtanen · PDGA #252010 · MPO · Valmentaja: Claude
+
+RATING
+  PDGA: ${lastPDGA}${p.target?' (tavoite: '+p.target+')':''}
+  Metrix: ${lastMx}${p.metrix_target?' (tavoite: '+p.metrix_target+')':''}
+
+LÄHTÖNOPEUS (paras)
+  BH: ${bestBH?bestBH.toFixed(1)+' km/h':'ei testattu'}${p.bh_target?' (tavoite: '+p.bh_target+' km/h)':''}
+  FH: ${bestFH?bestFH.toFixed(1)+' km/h':'ei testattu'}${p.fh_target?' (tavoite: '+p.fh_target+' km/h)':''}`;
+
+  if(disc&&disc.sessions&&disc.sessions.length){
+    const d=disc.sessions[disc.sessions.length-1];
+    txt+=`\n\nÄLYKIEKKO DATA (${d.date})
+  BH (${d.bh.throws} h): avg ${d.bh.speed_avg} km/h, spin ${d.bh.spin_avg} RPM, wobble ${d.bh.wobble_avg}°, hyzer ${d.bh.hyzer_avg}°
+  FH (${d.fh.throws} h): avg ${d.fh.speed_avg} km/h, spin ${d.fh.spin_avg} RPM, wobble ${d.fh.wobble_avg}°, hyzer ${d.fh.hyzer_avg}°`;
+  }
+
+  if(puttiRows)txt+=`\n\nPUTTAUSPROSENTIT\n${puttiRows}`;
+
+  const recentComps=comps.slice(0,5).map(c=>`  ${c.date} ${c.name}: Metrix ${c.mrating||'–'}${c.rrating?' / PDGA '+c.rrating:''}${c.place?' sija '+c.place:''}`).join('\n');
+  if(recentComps)txt+=`\n\nVIIMEISIMMÄT KISAT\n${recentComps}`;
+
+  if(goals.length)txt+=`\n\nTAVOITTEET\n${goals.map(g=>`  ${g.desc}: nyt ${g.cur||g.from} → ${g.to} (${g.deadline})`).join('\n')}`;
+
+  const upEv=events.slice(0,5).map(e=>`  ${e.date}: ${e.name}`).join('\n');
+  if(upEv)txt+=`\n\nTULEVAT TAPAHTUMAT\n${upEv}`;
+
+  if(chatHist.length){
+    txt+=`\n\nAIEMMAN VALMENNUKSEN TIIVISTELMÄ`;
+    chatHist.forEach(c=>{txt+=`\n  [${c.title}]: ${c.body.slice(0,200)}${c.body.length>200?'...':''}`});
+  }
+
+  txt+=`\n\n---\nMitä haluaisit käydä läpi?`;
+  return txt;
+}
+
+function copyToClaudeChat(){
+  const txt=buildCtx();
+  navigator.clipboard.writeText(txt).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(ta);
+  });
+  const el=document.getElementById('copy-ok');if(el){el.style.display='block';setTimeout(()=>{el.style.display='none'},3000)}
+}
+
+// ===== SPEED =====
+function renderSpeed(){
+  const p=get('profile')||DEF;
+  const speeds=(get('speeds')||[]).sort((a,b)=>a.date.localeCompare(b.date));
+  const disc=get('disc_analytics');
+  const bhSp=speeds.filter(s=>s.bh5>0);
+  const fhSp=speeds.filter(s=>s.fh5>0);
+  const bestBH=bhSp.length?Math.max(...bhSp.map(s=>s.bh5)):null;
+  const bestFH=fhSp.length?Math.max(...fhSp.map(s=>s.fh5)):null;
+  let h='';
+  if(bestBH||bestFH){
+    h+=`<div class="speed-hero">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div><div style="font-size:9px;opacity:.7;font-weight:600;text-transform:uppercase;margin-bottom:3px">BH paras<\/div><div style="font-size:44px;font-weight:700;line-height:1">${bestBH?bestBH.toFixed(1):'–'}<\/div><div style="font-size:12px;opacity:.75">km/h${p.bh_target?' · tavoite '+p.bh_target:''}<\/div><\/div>
+        <div><div style="font-size:9px;opacity:.7;font-weight:600;text-transform:uppercase;margin-bottom:3px">FH paras<\/div><div style="font-size:44px;font-weight:700;line-height:1">${bestFH?bestFH.toFixed(1):'–'}<\/div><div style="font-size:12px;opacity:.75">km/h${p.fh_target?' · tavoite '+p.fh_target:''}<\/div><\/div>
+      <\/div>
+    <\/div>
+    <div class="speed-grid">
+      ${[['BH 5m',Math.max(...speeds.map(s=>s.bh5||0)).toFixed(1),'bd'],['BH SS',Math.max(...speeds.map(s=>s.bhss||0)).toFixed(1),'bd'],['BH KN',Math.max(...speeds.map(s=>s.bhkn||0)||[0]).toFixed(1),'bd'],['FH 5m',Math.max(...speeds.map(s=>s.fh5||0)).toFixed(1),'pd'],['FH SS',Math.max(...speeds.map(s=>s.fhss||0)).toFixed(1),'pd'],['FH KN',Math.max(...speeds.map(s=>s.fhkn||0)||[0]).toFixed(1),'pd']].map(([l,val,col])=>`<div class="stc"><div class="stc-l">${l}<\/div><div class="stc-v" style="color:var(--${col})">${parseFloat(val)>0?val:'–'}<\/div><\/div>`).join('')}
+    <\/div>`;
+    if(bhSp.length>=2){
+      const mx=Math.max(...bhSp.map(s=>s.bh5)),mn=Math.min(...bhSp.map(s=>s.bh5)),rng=mx-mn||5;
+      h+=`<div class="chart-wrap"><div style="font-size:13px;font-weight:600;margin-bottom:10px">BH kehitys<\/div><div class="bar-chart">`;
+      bhSp.slice(-12).forEach(s=>{const pct=Math.round(((s.bh5-mn)/rng)*75)+15;h+=`<div class="bc"><div class="bv">${s.bh5.toFixed(0)}<\/div><div class="bb" style="height:${pct}%;background:${s.bh5===mx?'#1D9E75':'#85B7EB'}"><\/div><div class="bl">${s.date.slice(5)}<\/div><\/div>`;});
+      h+=`<\/div><\/div>`;
+    }
+  }else{
+    h+=`<div class="empty"><div class="ei">⚡<\/div><div class="et">Ei nopeustestejä vielä.<br>Kopioi tulokset älykiekosta alta.<\/div><\/div>`;
+  }
+  // Disc analytics
+  if(disc&&disc.sessions&&disc.sessions.length){
+    const d=disc.sessions[disc.sessions.length-1];
+    h+=`<div class="sect">Älykiekon tarkka data – ${d.date}<\/div>
+    <div class="card card-p"><div class="disc-grid">
+      <div>
+        <div class="disc-col-title" style="color:var(--bd)">Backhand – ${d.bh.throws} h<\/div>
+        ${[['Nopeus avg',d.bh.speed_avg,'km/h',d.bh.speed_avg>100],['Nopeus max',d.bh.speed_max,'km/h',true],['Spin avg',d.bh.spin_avg,'RPM',d.bh.spin_avg>1100],['Hyzer avg',d.bh.hyzer_avg,'°',d.bh.hyzer_avg<15],['Wobble avg',d.bh.wobble_avg,'°',d.bh.wobble_avg<5],['Launch avg',d.bh.launch_avg,'°',true]].map(([l,v,u,good])=>`<div class="disc-metric"><span style="color:var(--t2)">${l}<\/span><span style="font-weight:500;color:${good?'var(--g)':'var(--text)'}">${v} ${u}<\/span><\/div>`).join('')}
+      <\/div>
+      <div>
+        <div class="disc-col-title" style="color:var(--pd)">Forehand – ${d.fh.throws} h<\/div>
+        ${[['Nopeus avg',d.fh.speed_avg,'km/h',d.fh.speed_avg>95],['Nopeus max',d.fh.speed_max,'km/h',true],['Spin avg',d.fh.spin_avg,'RPM',d.fh.spin_avg>750],['Hyzer avg',d.fh.hyzer_avg,'°',d.fh.hyzer_avg<15],['Wobble avg',d.fh.wobble_avg,'°',d.fh.wobble_avg<5],['Launch avg',d.fh.launch_avg,'°',true]].map(([l,v,u,good])=>`<div class="disc-metric"><span style="color:var(--t2)">${l}<\/span><span style="font-weight:500;color:${!good&&(l.includes('Wobble')||l.includes('Hyzer'))?'#E24B4A':good?'var(--g)':'var(--text)'}">${v} ${u}<\/span><\/div>`).join('')}
+      <\/div>
+    <\/div>
+    <div style="background:var(--al);border-radius:var(--rs);padding:7px 9px;font-size:11px;color:var(--ad);margin-top:8px">⚠ FH wobble ${d.fh.wobble_avg}° → alle 5°. FH hyzer ${d.fh.hyzer_avg}° → 12–15°.<\/div>
+    <div style="background:var(--gl);border-radius:var(--rs);padding:7px 9px;font-size:11px;color:var(--gd);margin-top:5px">✓ BH wobble ${d.bh.wobble_avg}° erinomainen. Spin ${d.bh.spin_avg} RPM hyvä.<\/div>
+    <\/div>`;
+  }
+  h+=`<button class="btn" onclick="openM('m-speed')" style="margin-bottom:12px">+ Kirjaa nopeustesti<\/button>`;
+  if(speeds.length){
+    h+=`<div class="sect">Testihistoria<\/div>`;
+    speeds.slice().reverse().forEach(s=>{
+      h+=`<div class="row">
+        <div style="flex:1">
+          <div style="font-size:12px;color:var(--t3)">${s.date}${s.disc?' · '+s.disc:''}<\/div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:2px">
+            ${s.bh5?`<span style="font-size:12px;font-weight:600;color:var(--bd)">BH ${s.bh5.toFixed(1)}<\/span>`:''}
+            ${s.bhss?`<span style="font-size:11px;color:var(--bd);opacity:.7">SS ${s.bhss.toFixed(1)}<\/span>`:''}
+            ${s.fh5?`<span style="font-size:12px;font-weight:600;color:var(--pd)">FH ${s.fh5.toFixed(1)}<\/span>`:''}
+            ${s.fhss?`<span style="font-size:11px;color:var(--pd);opacity:.7">SS ${s.fhss.toFixed(1)}<\/span>`:''}
+          <\/div>
+          ${s.notes?`<div style="font-size:10px;color:var(--t3);margin-top:1px">${s.notes.slice(0,80)}${s.notes.length>80?'...':''}<\/div>`:''}
+        <\/div>
+        <button onclick="delSpeed(${s.id})" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px;padding:0 3px">✕<\/button>
+      <\/div>`;
+    });
+  }
+  document.getElementById('sv').innerHTML=h;
+}
+function saveSpeed(){
+  const speeds=get('speeds')||[];
+  speeds.push({id:Date.now(),date:v('sp-date'),disc:v('sp-disc'),bh5:num('sp-bh5'),bhss:num('sp-bhss'),bhkn:num('sp-bhkn'),fh5:num('sp-fh5'),fhss:num('sp-fhss'),fhkn:num('sp-fhkn'),notes:v('sp-notes')});
+  set('speeds',speeds);flash('sp-msg');
+  ['sp-bh5','sp-bhss','sp-bhkn','sp-fh5','sp-fhss','sp-fhkn','sp-disc','sp-notes'].forEach(id=>setV(id,''));
+  setTimeout(()=>{closeM('m-speed');renderSpeed()},700);
+}
+function delSpeed(id){set('speeds',(get('speeds')||[]).filter(s=>s.id!==id));renderSpeed()}
+
+// ===== TRAINING =====
+
+
+// ===== COMPETITION DAY PROTOCOL =====
+function renderCompDay(){
+  var cont=document.getElementById('train-content');
+
+  var PROTOCOL=[
+    {
+      time:'-45 min',label:'Saapuminen',icon:'🚗',color:'var(--bl)',tcol:'var(--bd)',
+      steps:[
+        'Saavu kentälle 45 min ennen lähtöä',
+        'Pue vaatteet rauhassa – ei kiirettä',
+        'Juo 0.5L vettä heti saapuessa',
+        'Älä katso tulostaulua tai muiden tuloksia'
+      ]
+    },
+    {
+      time:'-40 min',label:'Kehon lämmittely',icon:'🔥',color:'var(--al)',tcol:'var(--ad)',
+      steps:[
+        '5 min kevyt kävely kentällä – katso väylälinjat rauhassa',
+        '10x käsien pyöritys molempiin suuntiin',
+        '10x lonkan pyöritys molempiin suuntiin',
+        '10x rintakehän kierto seisaaltaan',
+        '10x kyykky omalla painolla',
+        '5x Worlds greatest stretch per puoli'
+      ]
+    },
+    {
+      time:'-30 min',label:'Hengitys & hermosto',icon:'🧘',color:'var(--gl)',tcol:'var(--gd)',
+      steps:[
+        '5x syvää hengitystä: 4 sek sisään – 4 sek pidätys – 6 sek ulos',
+        'Tämä aktivoi parasympaattisen hermoston (rauhoittaa)',
+        'Kamppailutausta: hermostosi haluaa aktivoitua – anna sen rauhoittua',
+        'Toista jos jännitys tuntuu kovalta – ei rajaa toistoille'
+      ]
+    },
+    {
+      time:'-25 min',label:'Puttauslämmittely',icon:'🎯',color:'var(--gl)',tcol:'var(--gd)',
+      steps:[
+        '5 puttia 3 metristä – PELKKÄ RUTIINI, ei tulos',
+        '5 puttia 4 metristä – sama rutiini joka putilla',
+        '5 puttia 5 metristä – tarkista: teetkö kaikki 5 vaihetta?',
+        '3 puttia 7 metristä – ei paineita, vain rutiini',
+        'Lopeta puttaus tähän – älä yritä "löytää" puttia lämmittelyssä'
+      ]
+    },
+    {
+      time:'-15 min',label:'Heittolämmittely',icon:'🥏',color:'var(--pl)',tcol:'var(--pd)',
+      steps:[
+        '5 polviltaan BH-heittoa – pehmeä irrotus, ei voimaa',
+        '5 yhdeltä jalalta BH – rytmi mukaan',
+        '5 kahdella askeleella BH – noin 70% tehosta',
+        '3 täysillä BH – ei maksimivoima, vain rytmi',
+        '5 FH-heittoa samalla progressiolla',
+        'EI nopeustestiä kisapäivänä – älä mittaa'
+      ]
+    },
+    {
+      time:'-5 min',label:'Fokus & mieli',icon:'🧠',color:'var(--bl)',tcol:'var(--bd)',
+      steps:[
+        'Yksi syvä hengitys',
+        'Toista mielessä puttausrutiini: asetu → katso → hengitä → rytmi → seuraa läpi',
+        'Muistuta itsellesi: "Minulla on hyvä tekniikka – annan sen toimia"',
+        'Älä aseta pistetavoitetta kierrokselle – pelaa väylä kerrallaan',
+        'Ensimmäinen väylä: täysi rutiini, 80% teho'
+      ]
+    },
+    {
+      time:'Kierroksen aikana',label:'Kierrosprotokolla',icon:'⛳',color:'var(--card)',tcol:'var(--text)',
+      steps:[
+        'Jokaisen väylän jälkeen: yksi syvä hengitys ennen siirtymistä',
+        'Jos heitto meni pieleen: "Seuraava väylä on uusi alku" – ei analysoida kierroksen aikana',
+        'Jokainen putti: kaikki 5 rutiinivaihetta – EI poikkeuksia',
+        'Jos huomaat jännittyväsi: 3 syvää hengitystä ennen seuraavaa heittoa',
+        'Älä katso kilpailuasemaa kesken kierroksen'
+      ]
+    },
+    {
+      time:'Kierroksen jälkeen',label:'Palautuminen',icon:'✅',color:'var(--gl)',tcol:'var(--gd)',
+      steps:[
+        'Juo vettä ja syö jotain 30 min sisällä',
+        'Kirjaa sovellukseen: tulos, fiilis, mikä toimi',
+        'Yksi positiivinen havainto kierrokselta – aina löytyy',
+        'Analyysi vasta seuraavana päivänä – ei heti kierroksen jälkeen',
+        'Jos useampi kierros: 20 min lepoa, pieni välipala, ei tekniikka-ajattelua'
+      ]
+    }
+  ];
+
+  // Check status
+  var todayChecks=get('comp_day_checks')||{};
+  var totalSteps=PROTOCOL.reduce(function(a,p){return a+p.steps.length},0);
+  var doneSteps=Object.keys(todayChecks).length;
+
+  var h='';
+
+  // Header
+  h+='<div style="background:linear-gradient(135deg,#085041,#1D9E75);border-radius:var(--r);padding:16px;margin-bottom:12px;color:#fff">';
+  h+='<div style="font-size:16px;font-weight:700;margin-bottom:2px">🏆 Kisapäivän protokolla</div>';
+  h+='<div style="font-size:12px;opacity:.8;margin-bottom:10px">Jesse Virtanen · MPO · Optimoitu kamppailutaustaiselle</div>';
+  h+='<div style="display:flex;gap:12px">';
+  h+='<div style="text-align:center"><div style="font-size:22px;font-weight:700">'+doneSteps+'</div><div style="font-size:10px;opacity:.7">Tehty</div></div>';
+  h+='<div style="text-align:center"><div style="font-size:22px;font-weight:700">'+totalSteps+'</div><div style="font-size:10px;opacity:.7">Yhteensä</div></div>';
+  h+='<div style="flex:1"><div style="height:6px;background:rgba(255,255,255,.3);border-radius:3px;margin-top:10px;overflow:hidden"><div style="height:100%;width:'+Math.round(doneSteps/totalSteps*100)+'%;background:#fff;border-radius:3px"></div></div></div>';
+  h+='</div></div>';
+
+  // Reset button
+  h+='<div style="display:flex;gap:6px;margin-bottom:12px">';
+  h+='<button id="comp-reset" class="btn btn-out btn-sm" style="flex:1">↺ Nollaa kisapäivä</button>';
+  h+='<button id="comp-done" class="btn btn-sm" style="flex:1">✓ Kaikki tehty</button>';
+  h+='</div>';
+
+  // Protocol steps
+  PROTOCOL.forEach(function(phase,pi){
+    var phaseDone=phase.steps.every(function(s,si){return todayChecks[pi+'_'+si]});
+    h+='<div style="margin-bottom:10px">';
+    h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">';
+    h+='<span style="font-size:20px">'+phase.icon+'</span>';
+    h+='<div style="flex:1">';
+    h+='<div style="font-size:13px;font-weight:700;color:'+phase.tcol+'">'+phase.label+'</div>';
+    h+='<div style="font-size:10px;color:var(--t3)">'+phase.time+'</div>';
+    h+='</div>';
+    if(phaseDone)h+='<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:var(--gl);color:var(--gd);font-weight:600">✓ Valmis</span>';
+    h+='</div>';
+    h+='<div style="background:'+phase.color+';border-radius:var(--rs);padding:10px 12px">';
+    phase.steps.forEach(function(step,si){
+      var key=pi+'_'+si;
+      var checked=todayChecks[key];
+      h+='<div class="comp-step-row" data-key="'+key+'" style="display:flex;align-items:flex-start;gap:8px;padding:5px 0;cursor:pointer;border-bottom:'+(si<phase.steps.length-1?'.5px solid rgba(0,0,0,.08)':'none')+'">';
+      h+='<div style="width:20px;height:20px;border-radius:5px;border:1.5px solid '+(checked?phase.tcol:'rgba(0,0,0,.2)')+';background:'+(checked?phase.tcol:'transparent')+';flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px">';
+      h+=(checked?'<span style="color:#fff;font-size:11px">✓</span>':'');
+      h+='</div>';
+      h+='<div style="font-size:12px;color:'+phase.tcol+';line-height:1.5;'+(checked?'opacity:.6;text-decoration:line-through':'')+'">'+step+'</div>';
+      h+='</div>';
+    });
+    h+='</div></div>';
+  });
+
+  // Coach note
+  h+='<div class="coach-msg" style="margin-top:8px">';
+  h+='💬 <strong>Valmentaja</strong><br>';
+  h+='Kamppailutausta aktivoi hermostosi paineessa. Hengitysharjoitus (-30 min) on siksi kriittinen – se on ainoa tapa ohjata hermosto rauhoittumistilaan ennen kilpailua. Älä ohita sitä.';
+  h+='</div>';
+
+  cont.innerHTML=h;
+
+  // Wire up step checkboxes
+  cont.querySelectorAll('.comp-step-row').forEach(function(row){
+    row.addEventListener('click',function(){
+      var key=row.dataset.key;
+      var checks=get('comp_day_checks')||{};
+      if(checks[key])delete checks[key];
+      else checks[key]=1;
+      set('comp_day_checks',checks);
+      renderCompDay();
+    });
+  });
+
+  // Reset button
+  var resetBtn=cont.querySelector('#comp-reset');
+  if(resetBtn)resetBtn.addEventListener('click',function(){
+    set('comp_day_checks',{});
+    renderCompDay();
+  });
+
+  // Done all button
+  var doneBtn=cont.querySelector('#comp-done');
+  if(doneBtn)doneBtn.addEventListener('click',function(){
+    var checks={};
+    PROTOCOL.forEach(function(phase,pi){
+      phase.steps.forEach(function(s,si){checks[pi+'_'+si]=1});
+    });
+    set('comp_day_checks',checks);
+    renderCompDay();
+  });
+}
+
+// ===== WEEK & MONTH PROGRAM =====
+const WEEK_STRUCTURE = {
+  // Base week: optimized for disc golf athlete
+  base: [
+    {day:'Ma', label:'Maanantai', sessions:['heitto_tek','putti'], icon:'🥏', intensity:'medium', note:'Tekniikkaheitto + putti'},
+    {day:'Ti', label:'Tiistai',   sessions:['voima_a'],            icon:'💪', intensity:'high',   note:'Voima A – alaraaja + rotaatio'},
+    {day:'Ke', label:'Keskiviikko',sessions:['putti','mob'],       icon:'🎯', intensity:'low',    note:'Putti + liikkuvuus'},
+    {day:'To', label:'Torstai',  sessions:['heitto_nop'],          icon:'⚡', intensity:'high',   note:'Nopeusheitto'},
+    {day:'Pe', label:'Perjantai', sessions:['voima_b'],            icon:'💪', intensity:'medium', note:'Voima B – keskivartalo + yläraaja'},
+    {day:'La', label:'Lauantai',  sessions:['putti','kierros'],    icon:'🎯', intensity:'medium', note:'Putti + kenttäkierros'},
+    {day:'Su', label:'Sunnuntai', sessions:['lepo'],               icon:'😴', intensity:'rest',   note:'Täysi lepo – palautuminen'},
+  ],
+  // Competition day replaces training
+  comp: {sessions:['kisa'], icon:'🏆', intensity:'comp', note:'KISA – lepo'},
+  // Day before comp: activation only
+  pre_comp: {sessions:['aktivointi','putti'], icon:'⚡', intensity:'low', note:'Aktivointi + putti'},
+  // Deload week (before heavy comp weekend)
+  deload: {sessions:['kevyt'], icon:'🧘', intensity:'low', note:'Deload – kevyt liike, palautuminen'}
+};
+
+const SESSION_COLORS = {
+  heitto_tek: {bg:'#E6F1FB', col:'#0C447C', lbl:'Tekniikkaheitto'},
+  heitto_nop: {bg:'#EEEDFE', col:'#3C3489', lbl:'Nopeusheitto'},
+  voima_a:    {bg:'#FCEBEB', col:'#791F1F', lbl:'Voima A'},
+  voima_b:    {bg:'#FAECE7', col:'#712B13', lbl:'Voima B'},
+  putti:      {bg:'#E1F5EE', col:'#085041', lbl:'Puttausrutiini'},
+  mob:        {bg:'#FAEEDA', col:'#633806', lbl:'Liikkuvuus'},
+  kierros:    {bg:'#E1F5EE', col:'#085041', lbl:'Kenttäkierros'},
+  kisa:       {bg:'#FCEBEB', col:'#E24B4A', lbl:'KISA'},
+  aktivointi: {bg:'#E6F1FB', col:'#0C447C', lbl:'Aktivointi'},
+  kevyt:      {bg:'#FAEEDA', col:'#633806', lbl:'Kevyt treeni'},
+  lepo:       {bg:'#f5f5f3', col:'#999',    lbl:'Lepo'}
+};
+
+function getWeekDates(offsetWeeks) {
+  const today = new Date();
+  const dow = today.getDay(); // 0=su, 1=ma
+  const mondayOffset = dow === 0 ? -6 : 1 - dow;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + mondayOffset + offsetWeeks * 7);
+  const dates = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    dates.push(d);
+  }
+  return dates;
+}
+
+function dateStr(d) {
+  return d.toISOString().slice(0, 10);
+}
+
+function getCompDatesInRange(startDate, endDate) {
+  const events = get('events') || [];
+  const comps = get('comps') || [];
+  const start = dateStr(startDate);
+  const end = dateStr(endDate);
+  const compDates = new Set();
+  events.filter(e => e.type === 'kisa' && e.date >= start && e.date <= end)
+        .forEach(e => compDates.add(e.date));
+  comps.filter(c => c.date >= start && c.date <= end)
+       .forEach(c => compDates.add(c.date));
+  return compDates;
+}
+
+function buildWeekPlan(weekDates) {
+  const compDates = getCompDatesInRange(weekDates[0], weekDates[6]);
+  const plan = [];
+  const base = WEEK_STRUCTURE.base;
+
+  for (let i = 0; i < 7; i++) {
+    const ds = dateStr(weekDates[i]);
+    const isComp = compDates.has(ds);
+    // Check if tomorrow is a comp (pre-comp day)
+    const tomorrowDs = i < 6 ? dateStr(weekDates[i+1]) : null;
+    const isPreComp = tomorrowDs && compDates.has(tomorrowDs);
+
+    let dayPlan;
+    if (isComp) {
+      dayPlan = { ...WEEK_STRUCTURE.comp, day: base[i].day, label: base[i].label, date: ds };
+    } else if (isPreComp) {
+      dayPlan = { ...WEEK_STRUCTURE.pre_comp, day: base[i].day, label: base[i].label, date: ds };
+    } else {
+      dayPlan = { ...base[i], date: ds };
+    }
+    plan.push(dayPlan);
+  }
+  return plan;
+}
+
+let weekViewOffset = 0;
+
+function renderWeekView() {
+  const cont = document.getElementById('train-content');
+  const weekDates = getWeekDates(weekViewOffset);
+  const plan = buildWeekPlan(weekDates);
+  const today = new Date().toISOString().slice(0, 10);
+  const weekStart = dateStr(weekDates[0]).slice(5).replace('-', '.');
+  const weekEnd = dateStr(weekDates[6]).slice(5).replace('-', '.');
+
+  // Week nav
+  let h = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <button onclick="weekViewOffset--;renderTrain()" style="background:none;border:1px solid var(--border);border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center">‹</button>
+    <div style="text-align:center">
+      <div style="font-size:14px;font-weight:600">${weekViewOffset===0?'Tämä viikko':weekViewOffset===1?'Ensi viikko':weekViewOffset===-1?'Viime viikko':'Viikko '+(weekViewOffset>0?'+':'')+weekViewOffset}</div>
+      <div style="font-size:11px;color:var(--t3)">${weekStart} – ${weekEnd}</div>
+    </div>
+    <button onclick="weekViewOffset++;renderTrain()" style="background:none;border:1px solid var(--border);border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center">›</button>
+  </div>`;
+
+  // Week summary bar
+  const compCount = plan.filter(d => d.intensity === 'comp').length;
+  const trainCount = plan.filter(d => d.intensity !== 'rest' && d.intensity !== 'comp').length;
+  const restCount = plan.filter(d => d.intensity === 'rest').length;
+  h += `<div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
+    <div style="flex:1;background:var(--gl);border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--gd)">${trainCount}</div><div style="font-size:10px;color:var(--gd);font-weight:500">Treeniä</div></div>
+    <div style="flex:1;background:var(--rl);border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--rd)">${compCount}</div><div style="font-size:10px;color:var(--rd);font-weight:500">Kisaa</div></div>
+    <div style="flex:1;background:var(--bg);border:0.5px solid var(--border);border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--t3)">${restCount}</div><div style="font-size:10px;color:var(--t3);font-weight:500">Lepoa</div></div>
+  </div>`;
+
+  // Day cards
+  plan.forEach(day => {
+    const isToday = day.date === today;
+    const isPast = day.date < today;
+    const sessions = Array.isArray(day.sessions) ? day.sessions : [day.sessions];
+    const mainSession = sessions[0];
+    const sc = SESSION_COLORS[mainSession] || SESSION_COLORS.lepo;
+    const badges = sessions.map(s => {
+      const ssc = SESSION_COLORS[s] || SESSION_COLORS.lepo;
+      return '<span style=\"font-size:10px;padding:2px 7px;border-radius:20px;background:'+ssc.bg+';color:'+ssc.col+';font-weight:500;flex-shrink:0\">'+ssc.lbl+'</span>';
+    }).join('');
+    const cardBg = isToday ? sc.bg : 'var(--card)';
+    const cardBorder = isToday ? '2px solid '+sc.col : '1.5px solid transparent';
+    const textCol = isToday ? sc.col : 'var(--text)';
+    const dayCol = isToday ? sc.col : 'var(--t3)';
+    const opacity = isPast && !isToday ? '.55' : '1';
+
+    h += '<div style=\"display:flex;align-items:center;gap:8px;padding:10px 12px;background:'+cardBg+';border-radius:var(--r);margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:'+cardBorder+';opacity:'+opacity+'\">';
+    h += '<div style=\"width:36px;flex-shrink:0;text-align:center\">';
+    h += '<div style=\"font-size:10px;font-weight:700;color:'+dayCol+';text-transform:uppercase\">'+day.day+'</div>';
+    h += '<div style=\"font-size:22px;line-height:1.2\">'+day.icon+'</div>';
+    h += '<div style=\"font-size:10px;color:var(--t3)\">'+day.date.slice(8)+'.</div>';
+    h += '</div>';
+    h += '<div style=\"flex:1;min-width:0\">';
+    h += '<div style=\"font-size:12px;font-weight:600;color:'+textCol+';margin-bottom:4px;line-height:1.3\">'+day.note+'</div>';
+    h += '<div style=\"display:flex;gap:3px;flex-wrap:wrap\">'+badges+'</div>';
+    h += '</div>';
+    if(isToday) h += '<div style=\"font-size:16px;color:'+sc.col+';flex-shrink:0\">›</div>';
+    h += '</div>';
+  });
+
+  // Month view button
+  h += `<div class="sect" style="margin-top:14px">Kuukausinäkymä</div>`;
+  h += buildMonthView();
+
+  // Jump to today button if not on current week
+  if (weekViewOffset !== 0) {
+    h += `<button onclick="weekViewOffset=0;renderTrain()" class="btn btn-out" style="margin-top:10px">Tänään</button>`;
+  }
+
+  cont.innerHTML = h;
+}
+
+function buildMonthView() {
+  const today = new Date();
+  let h = `<div style="background:var(--card);border-radius:var(--r);padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)">`;
+
+  // Show 4 weeks starting from current week
+  for (let w = 0; w < 4; w++) {
+    const weekDates = getWeekDates(w);
+    const plan = buildWeekPlan(weekDates);
+    const weekStart = dateStr(weekDates[0]).slice(5).replace('-', '.');
+    const weekEnd = dateStr(weekDates[6]).slice(5).replace('-', '.');
+    const compCount = plan.filter(d => d.intensity === 'comp').length;
+    const isCurrentWeek = w === 0;
+
+    h += `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:.5px solid var(--border);cursor:pointer" onclick="weekViewOffset=${w};renderTrain()">
+      <div style="min-width:80px;font-size:11px;color:var(--t3)">${weekStart}–${weekEnd}</div>
+      <div style="flex:1;display:flex;gap:3px">`;
+
+    plan.forEach(day => {
+      const sc = SESSION_COLORS[day.sessions?.[0]] || SESSION_COLORS.lepo;
+      h += `<div style="flex:1;height:8px;border-radius:2px;background:${sc.bg};border:1px solid ${sc.col}22" title="${day.day}: ${day.note}"></div>`;
+    });
+
+    h += `</div>
+      ${compCount > 0 ? `<span style="font-size:10px;padding:1px 7px;border-radius:20px;background:var(--rl);color:var(--rd);font-weight:600">${compCount} kisa</span>` : ''}
+      ${isCurrentWeek ? `<span style="font-size:10px;padding:1px 7px;border-radius:20px;background:var(--gl);color:var(--gd);font-weight:600">nyt</span>` : ''}
+    </div>`;
+  }
+
+  h += `<div style="font-size:11px;color:var(--t3);text-align:center;margin-top:8px">Napauta viikkoa nähdäksesi päiväohjelma</div></div>`;
+  return h;
+}
+
+const THROW_SESSIONS={
+  1:[
+    {id:'t1',name:'Tekniikka 1 – Rysty + Fore',exercises:[
+      {id:'e1',name:'Supersarja 1A+B+C Rysty',totalSets:3,rpe:'low',detail:'Yhdeltä polvelta / yhdeltä jalalta / polviltaan · 9/sarja'},
+      {id:'e2',name:'Supersarja 1A+B+C Fore',totalSets:3,rpe:'low',detail:'Yhdeltä jalalta / polviltaan 45° / etujalka edessä · 9/sarja'},
+      {id:'e3',name:'Nopeusheitot BH+FH',totalSets:3,rpe:'high',detail:'Yhdellä + kahdella askeleella · 4/sarja'},
+      {id:'e4',name:'Luisteluhyppy taakse + heitto',totalSets:3,rpe:'med',detail:'BH ja FH vuorotellen · 4/sarja'}
+    ]},
+    {id:'t2',name:'Tekniikka 2 – Rysty + Fore',exercises:[
+      {id:'e5',name:'Supersarja A+B+C+D Rysty',totalSets:6,rpe:'low',detail:'Polviltaan / kaksi hyppyä / yhdeltä polvelta / askelkyykky · 8/sarja'},
+      {id:'e6',name:'Supersarja A+B+C+D Fore',totalSets:6,rpe:'low',detail:'Polviltaan / kaksi hyppyä / lantio kohteeseen / askelkyykky · 8/sarja'}
+    ]},
+    {id:'t3',name:'Tekniikka 3 – Rysty + Fore',exercises:[
+      {id:'e7',name:'Supersarja 1A+B+C Rysty',totalSets:3,rpe:'low',detail:'Puoliaskelkyykky / yhdeltä jalalta / luisteluloikka · 9/sarja'},
+      {id:'e8',name:'Supersarja 1A+B+C Fore',totalSets:3,rpe:'low',detail:'Polviltaan / luisteluloikka / yhdeltä jalalta · 9/sarja'},
+      {id:'e9',name:'Pakitusheitto BH+FH',totalSets:3,rpe:'med',detail:'4/sarja'}
+    ]},
+    {id:'t4',name:'Tekniikka 4 – Rysty + Fore',exercises:[
+      {id:'e10',name:'Supersarja 1A+B Rysty',totalSets:4,rpe:'low',detail:'Yhdeltä polvelta / askelkyykky taakse · 8/sarja'},
+      {id:'e11',name:'Supersarja 1A+B Fore',totalSets:4,rpe:'low',detail:'Polviltaan / askelkyykky taakse · 8/sarja'},
+      {id:'e12',name:'Kaksi hyppyä eteen + heitto',totalSets:3,rpe:'med',detail:'4/sarja'}
+    ]}
+  ]
+};
+for(let w=2;w<=4;w++)THROW_SESSIONS[w]=THROW_SESSIONS[1].map(s=>({...s,id:s.id+'w'+w,exercises:s.exercises.map(e=>({...e,id:e.id+'w'+w}))}));
+for(let w=5;w<=8;w++){
+  const ns=w<=6?3:w===7?4:5;
+  THROW_SESSIONS[w]=[
+    {id:'n1w'+w,name:'Nopeus 1 – BH + FH',exercises:[
+      {id:'n1e1w'+w,name:'Polviltaan BH+FH (ylläpito)',totalSets:2,rpe:'low',detail:'10 heittoa kumpaakin'},
+      {id:'n1e2w'+w,name:'Pakitusheitot BH+FH',totalSets:2,rpe:'med',detail:'6 heittoa'},
+      {id:'n1e3w'+w,name:'BH Maksiminopeus',totalSets:ns,rpe:'high',detail:'Polviltaan/yhdeltä jalalta/yhdellä/kahdella · 4/sarja'},
+      {id:'n1e4w'+w,name:'FH Maksiminopeus',totalSets:ns,rpe:'high',detail:'Polviltaan/yhdeltä jalalta/yhdellä/kahdella · 4/sarja'}
+    ]},
+    {id:'n2w'+w,name:'Nopeus 2 – BH + FH',exercises:[
+      {id:'n2e1w'+w,name:'Puoliaskelkyykky BH+FH (ylläpito)',totalSets:2,rpe:'low',detail:'10 heittoa'},
+      {id:'n2e2w'+w,name:'Kaksi hyppyä eteen BH+FH',totalSets:2,rpe:'med',detail:'8 heittoa'},
+      {id:'n2e3w'+w,name:'BH Maksiminopeus – pitkät',totalSets:ns,rpe:'high',detail:'Polviltaan/yhdeltä jalalta/kahdella/kolmella · 4/sarja'},
+      {id:'n2e4w'+w,name:'FH Maksiminopeus – pitkät',totalSets:ns,rpe:'high',detail:'Polviltaan/yhdeltä jalalta/kahdella/kolmella · 4/sarja'}
+    ]},
+    {id:'t1mw'+w,name:'Tekniikka 1 ylläpito',exercises:[
+      {id:'tm1w'+w,name:'Polviltaan BH+FH',totalSets:2,rpe:'low',detail:'10 heittoa'},
+      {id:'tm2w'+w,name:'Yhdeltä jalalta BH+FH',totalSets:2,rpe:'low',detail:'8 heittoa'},
+      {id:'tm3w'+w,name:'Kahdella askeleella BH+FH',totalSets:(w<=6?3:4),rpe:'med',detail:'6 heittoa'}
+    ]}
+  ];
+}
+
+const STR_DATA=[
+  {id:'strA',name:'Voima A – Alaraaja + rotaatio',exercises:[
+    {id:'sa1',name:'Romanian maastaveto (RDL)',sets:3,reps:'6–8',detail:'Lonkan saranan hallinta',hint:'Selkä neutraalina, lantio taaksepäin',bw:false},
+    {id:'sa2',name:'Bulgarian split-kyykky',sets:3,reps:'8/jalka',detail:'Etujalka edessä, paino kantapäällä',hint:'Takajalka penkin päällä',bw:false},
+    {id:'sa3',name:'Pallonheitto seinään – rotaatio',sets:3,reps:'8/suunta',detail:'Maksimaalinen rotaatiovoima',hint:'3–4 kg medicine ball',bw:false},
+    {id:'sa4',name:'Hip thrust',sets:3,reps:'10–12',detail:'Gluteaalien aktivointi',hint:'Hartiat penkin reunalla',bw:false},
+    {id:'sa5',name:'Lateral band walk',sets:2,reps:'15/suunta',detail:'Lonkan abduktorit',hint:'Vastuskummi polvien yläpuolella',bw:true},
+    {id:'sa6',name:'Copenhagen plank',sets:2,reps:'20–30 sek',detail:'Adduktorit + lantio',hint:'Päällimmäinen jalka penkin päällä',bw:true}
+  ]},
+  {id:'strB',name:'Voima B – Keskivartalo + yläraaja',exercises:[
+    {id:'sb1',name:'Pallonheitto lattiaan – diagonal',sets:3,reps:'8/suunta',detail:'Koko kehon rotaatio',hint:'4–5 kg pallo',bw:false},
+    {id:'sb2',name:'Paloff press',sets:3,reps:'10/puoli',detail:'Anti-rotaatio',hint:'Kaapeli tai vastuskummi',bw:false},
+    {id:'sb3',name:'Yhden käden soutu',sets:3,reps:'10/käsi',detail:'Scapular retraktio',hint:'Tuki vapaalla kädellä penkille',bw:false},
+    {id:'sb4',name:'External rotation',sets:3,reps:'15/käsi',detail:'Rotator cuff – olkapään terveys',hint:'Kyynärpää kiinni kyljessä',bw:false},
+    {id:'sb5',name:'Dead bug',sets:3,reps:'8/puoli',detail:'Syvä ydinlihaskoordinaatio',hint:'Alaselkä kiinni lattiassa',bw:true},
+    {id:'sb6',name:'Side plank + lonkan abduktio',sets:2,reps:'10/puoli',detail:'Lateraalivakavuus',hint:'Lantio korkealla',bw:true},
+    {id:'sb7',name:'Face pull',sets:3,reps:'15',detail:'Olkapään ennaltaehkäisy',hint:'Kaapeli silmien korkeudella',bw:false}
+  ]}
+];
+
+// PTDISTS defined above
+
+const MOB_EX=[
+  {id:'m1',name:'90/90 lonkan avaus',desc:'Istu 90/90. Nojaa eteen etujalan yli, selkä suorana.',reps:'30 sek/puoli',area:'a-lo'},
+  {id:'m2',name:'Rintakehän kierto lattialla',desc:'Kyljelläsi, polvet 90°. Vie käsi auki taaksepäin.',reps:'8 toistoa/puoli',area:'a-se'},
+  {id:'m3',name:'Kissalehmä',desc:'Nelinkontin. Pyöristä ja laske selkä hengityksen rytmissä.',reps:'10 toistoa',area:'a-se'},
+  {id:'m4',name:'Lonkan koukistajan venytys',desc:'Yhden polven polvistuminen. Eteen kunnes tuntuu etupuolella.',reps:'30–40 sek/puoli',area:'a-lo'},
+  {id:'m5',name:"World's greatest stretch",desc:'Askelkyykky + rintakehän avaus kiertämällä ylös.',reps:'5 toistoa/puoli',area:'a-ko'},
+  {id:'m6',name:'Thoracic extension',desc:'Kädet niskan taakse, kyynärpäät taaksepäin.',reps:'8–10 toistoa',area:'a-se'},
+  {id:'m7',name:'Diaphragm breathing',desc:'Selällään. Nenän kautta sisään, vatsa nousee.',reps:'10 hengitystä',area:'a-co'},
+  {id:'m8',name:'Olkapään kierto lattialla',desc:'Selällään 90°. Ulko- ja sisäkierto hitaasti.',reps:'10 toistoa/puoli',area:'a-ol'},
+  {id:'m9',name:'Hamstring venytys selinmakuulla',desc:'Jalka ylös, polvi suorana. Kädet takareiden taakse.',reps:'30–40 sek/jalka',area:'a-lo'},
+  {id:'m10',name:'Lapapumppaus seisaaltaan',desc:'Kädet eteen – lapaluut etääntyy. Vedä takaisin.',reps:'10 toistoa',area:'a-ol'}
+];
+const AREA_LBLS={'a-lo':'Lonkka','a-se':'Selkä','a-ol':'Olkapää','a-ko':'Koko keho','a-co':'Core'};
+
+function getSets(k){return get('sets_'+k)||0}
+function setSets(k,n){set('sets_'+k,n)}
+function getW(k){return get('wt_'+k)||''}
+function mkWkTabs(cid,cur,max,fn){
+  let h='';for(let i=1;i<=max;i++)h+=`<button class="wk-btn${i===cur?' on':''}" onclick="${fn}(${i})">Vk ${i}<\/button>`;
+  document.getElementById(cid).innerHTML=h;
+}
+function rpeCol(r){return r==='high'?'#791F1F':r==='med'?'#633806':'#085041'}
+function rpeBg(r){return r==='high'?'#FCEBEB':r==='med'?'#FAEEDA':'#E1F5EE'}
+function rpeLbl(r){return r==='high'?'RPE 9–10':r==='med'?'RPE 5–6':'RPE 2–4'}
+
+function trainTab(tab,el){
+  trainTabCur=tab;
+  document.querySelectorAll('#pg-train .tb').forEach(b=>b.classList.remove('on'));
+  if(el)el.classList.add('on');
+  renderTrain();
+}
+function renderTrain(){
+  if(trainTabCur==='week')renderWeekView();
+  else if(trainTabCur==='throw')renderThrow();
+  else if(trainTabCur==='str')renderStr();
+  else if(trainTabCur==='putti')renderPuttiTrain();
+  else if(trainTabCur==='mob')renderMob();
+  else if(trainTabCur==='comp_day')renderCompDay();
+}
+
+function renderThrow(){
+  const cont=document.getElementById('train-content');
+  const phase=throwWk<=4?'Tekniikkablokki':'Nopeusblokki';
+  const sessions=THROW_SESSIONS[throwWk]||THROW_SESSIONS[1];
+  let h=`<div class="wk-scroll" id="throw-wk"><\/div><div class="sect">${phase} – viikko ${throwWk}<\/div>`;
+  sessions.forEach(sess=>{
+    const allDone=sess.exercises.every(e=>getSets('th_'+throwWk+'_'+sess.id+'_'+e.id)>=e.totalSets);
+    h+=`<div class="str-card">
+      <div class="str-head" onclick="toggleCard('thr_${throwWk}_${sess.id}')">
+        <div style="flex:1"><div style="font-size:13px;font-weight:600">${sess.name}<\/div><div style="font-size:10px;color:var(--t2)">${sess.exercises.filter(e=>getSets('th_'+throwWk+'_'+sess.id+'_'+e.id)>=e.totalSets).length}/${sess.exercises.length} valmis<\/div><\/div>
+        ${allDone?`<span class="badge" style="background:var(--gl);color:var(--gd)">✓ Valmis<\/span>`:''}
+        <span style="color:var(--t3);font-size:12px">${get('card_thr_'+throwWk+'_'+sess.id)!==false?'▾':'▸'}<\/span>
+      <\/div>
+      <div class="str-body${get('card_thr_'+throwWk+'_'+sess.id)!==false?' open':''}">`;
+    sess.exercises.forEach(ex=>{
+      const ek='th_'+throwWk+'_'+sess.id+'_'+ex.id;
+      const done=getSets(ek);const allS=done>=ex.totalSets;
+      h+=`<div class="ex-block${allS?' all-done':''}">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px"><span class="ex-name" style="${allS?'color:var(--g)':''}">${ex.name}<\/span><span class="rpe-pill" style="background:${rpeBg(ex.rpe)};color:${rpeCol(ex.rpe)}">${rpeLbl(ex.rpe)}<\/span><\/div>
+        <div class="ex-detail">${ex.detail}<\/div>
+        <div style="font-size:11px;color:var(--t2);margin:5px 0 6px">Sarjat: ${done}/${ex.totalSets}<\/div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap">`;
+      for(let s=1;s<=ex.totalSets;s++){const d=done>=s;h+=`<button class="si-btn${d?' done-s':''}" onclick="clickThSet('${ek}',${s},${ex.totalSets})"><span style="font-size:8px;opacity:.7">S${s}<\/span><span style="font-size:13px">${d?'✓':'·'}<\/span><\/button>`;}
+      h+=`<\/div><button class="reset-btn" onclick="resetSets('${ek}','throw')">↺ Nollaa<\/button><\/div>`;
+    });
+    const nk='throw_notes_w'+throwWk+'_'+sess.id;
+    h+=`<textarea style="width:100%;min-height:50px;font-size:12px;padding:7px;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg);color:var(--text);resize:none;margin-top:6px;font-family:inherit" placeholder="Muistiinpanot..." id="thn_${sess.id}" onchange="set('${nk}',this.value)">${get(nk)||''}<\/textarea>
+    <\/div><\/div>`;
+  });
+  cont.innerHTML=h;
+  mkWkTabs('throw-wk',throwWk,8,'setThrowWk');
+}
+function clickThSet(k,s,t){const c=getSets(k);setSets(k,c>=s?s-1:s);renderThrow()}
+function resetSets(k,pg){setSets(k,0);if(pg==='throw')renderThrow();else if(pg==='str')renderStr()}
+function setThrowWk(w){throwWk=w;renderThrow()}
+function toggleCard(key){set('card_'+key,get('card_'+key)===false?true:false);renderTrain()}
+
+function renderStr(){
+  const cont=document.getElementById('train-content');
+  const phase=strWk<=4?'Jakso 1':'Jakso 2 – ylläpito';
+  let h=`<div class="wk-scroll" id="str-wk"><\/div><div class="sect">${phase} – viikko ${strWk}<\/div>`;
+  STR_DATA.forEach(sess=>{
+    const ts=(ex)=>strWk>=5?Math.max(2,ex.sets-1):ex.sets;
+    const allDone=sess.exercises.every(ex=>getSets('str_'+strWk+'_'+sess.id+'_'+ex.id)>=ts(ex));
+    const doneCount=sess.exercises.filter(ex=>getSets('str_'+strWk+'_'+sess.id+'_'+ex.id)>=ts(ex)).length;
+    h+=`<div class="str-card">
+      <div class="str-head" onclick="toggleCard('str_${strWk}_${sess.id}')">
+        <div style="flex:1"><div style="font-size:13px;font-weight:600">${sess.name}<\/div><div style="font-size:10px;color:var(--t2)">${doneCount}/${sess.exercises.length} harjoitetta<\/div><\/div>
+        ${allDone?`<span class="badge" style="background:var(--gl);color:var(--gd)">✓ Valmis<\/span>`:''}
+        <span style="color:var(--t3);font-size:12px">${get('card_str_'+strWk+'_'+sess.id)!==false?'▾':'▸'}<\/span>
+      <\/div>
+      <div class="str-body${get('card_str_'+strWk+'_'+sess.id)!==false?' open':''}">`;
+    sess.exercises.forEach(ex=>{
+      const ek='str_'+strWk+'_'+sess.id+'_'+ex.id;
+      const t=ts(ex);const done=getSets(ek);const allS=done>=t;
+      const wKey='str_w'+strWk+'_'+ex.id;const curW=getW(wKey);
+      // Find prev week weight
+      let prevW=null;
+      for(let w=strWk-1;w>=1;w--){const pw=get('wt_str_w'+w+'_'+ex.id);if(pw){prevW={v:pw,w};break}}
+      h+=`<div class="ex-block">
+        <div class="ex-name" style="${allS?'color:var(--g)':''}">${ex.name}${allS?' ✓':''}<\/div>
+        <div class="ex-detail">${t} sarjaa × ${ex.reps}<\/div>
+        <div class="ex-hint">${ex.hint}<\/div>`;
+      if(!ex.bw){
+        h+=`<div class="weight-row">
+          <span style="font-size:12px;color:var(--t2);flex:1">Paino kg${prevW?` · Vk${prevW.w}: ${prevW.v}`:''}<\/span>
+          <input class="weight-in" type="number" min="0" step="0.5" placeholder="0" value="${curW}" onchange="set('wt_${wKey}',this.value)" inputmode="decimal">
+          <span style="font-size:12px;color:var(--t3)">kg<\/span>
+        <\/div>`;
+      }else{h+=`<div style="font-size:11px;color:var(--t3);margin-bottom:7px;font-style:italic">Kehon paino<\/div>`}
+      h+=`<div style="font-size:11px;color:var(--t2);margin-bottom:6px">Sarjat: ${done}/${t}<\/div>
+        <div class="sets-row">`;
+      for(let s=1;s<=t;s++){const d=done>=s;h+=`<button class="set-btn${d?' done':''}" onclick="clickStrSet('${ek}',${s},${t})"><span class="set-sn">S${s}<\/span><span class="set-tick">${d?'✓':'·'}<\/span><\/button>`}
+      h+=`<\/div><button class="reset-btn" onclick="resetSets('${ek}','str')">↺ Nollaa<\/button><\/div>`;
+    });
+    const nk='str_notes_'+strWk+'_'+sess.id;
+    h+=`<textarea style="width:100%;min-height:50px;font-size:12px;padding:7px;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg);color:var(--text);resize:none;margin-top:6px;font-family:inherit" placeholder="Painot, tuntemukset..." id="strn_${sess.id}" onchange="set('${nk}',this.value)">${get(nk)||''}<\/textarea>
+    <\/div><\/div>`;
+  });
+  cont.innerHTML=h;
+  mkWkTabs('str-wk',strWk,8,'setStrWk');
+}
+function clickStrSet(k,s,t){const c=getSets(k);setSets(k,c>=s?s-1:s);renderStr()}
+function setStrWk(w){strWk=w;renderStr()}
+
+function renderPuttiTrain(){
+  const cont=document.getElementById('train-content');
+  const sessions=get('putti_sessions')||[];
+  const totals={};
+  PTDISTS.forEach(d=>{totals[d.key]={m:0,a:0}});
+  sessions.forEach(s=>PTDISTS.forEach(d=>{if(s[d.key]){totals[d.key].m+=s[d.key].m;totals[d.key].a+=s[d.key].a}}));
+
+  const puttiPhase=get('putti_phase')||1;
+  const todayKey='putti_today_'+new Date().toISOString().slice(0,10);
+  const todayDone=get(todayKey)||0;
+  const todayTarget=puttiPhase===1?50:puttiPhase===2?60:30;
+  const pct_today=Math.min(100,Math.round(todayDone/todayTarget*100));
+
+  const steps=[['ASETU','Takajalka linjaan kohteeseen'],['KATSO','Ketjun alareuna – ei koko koria'],['HENGITÄ','Yksi syvä hengitys ulos ennen liikettä'],['RYTMI','Vakio tahti – ei liian hidas eikä nopea'],['SEURAA LÄPI','Käsi jatkuu kohti ketjua irrotuksen jälkeen']];
+  const phases=[
+    {n:1,title:'Vaihe 1 – Rutiinin oppiminen',weeks:'Vk 1–2',freq:'3x viikossa · 20 min',focus:'Vain 3–5 metriä · 50 puttia · Rutiini joka putilla · Ei väliä meneekö sisään',col:'var(--gl)',tcol:'var(--gd)'},
+    {n:2,title:'Vaihe 2 – Vakiinnus',weeks:'Vk 3–4',freq:'3x viikossa · 25 min',focus:'3–5 m ja 6–8 m vuorotellen · 60 puttia · Kirjaa C1X% · Tavoite yli 85%',col:'var(--bl)',tcol:'var(--bd)'},
+    {n:3,title:'Vaihe 3 – Kisapaine',weeks:'Vk 5–6',freq:'2x viikossa · 20 min',focus:'5 puttia sisään peräkkäin ennen lopetusta · Jos missaat → aloita alusta',col:'var(--al)',tcol:'var(--ad)'}
+  ];
+  const ph=phases[puttiPhase-1];
+
+  const div=document.createElement('div');
+  let h='';
+
+  // Rutiini
+  h+='<div class=\"card card-p\" style=\"margin-bottom:10px\">';
+  h+='<div style=\"display:flex;align-items:center;gap:8px;margin-bottom:10px\">';
+  h+='<span style=\"font-size:20px\">🎯</span>';
+  h+='<div style=\"flex:1\"><div style=\"font-size:14px;font-weight:600\">Puttausrutiini</div>';
+  h+='<div style=\"font-size:11px;color:var(--t2)\">Tee joka putilla – alle 10 sekuntia</div></div></div>';
+  h+='<div style=\"display:flex;flex-direction:column;gap:5px\">';
+  steps.forEach((s,i)=>{
+    h+='<div style=\"display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--bg);border-radius:var(--rs)\">';
+    h+='<div style=\"width:22px;height:22px;border-radius:50%;background:var(--g);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0\">'+(i+1)+'</div>';
+    h+='<div><div style=\"font-size:13px;font-weight:500\">'+s[0]+'</div>';
+    h+='<div style=\"font-size:11px;color:var(--t2)\">'+s[1]+'</div></div></div>';
+  });
+  h+='</div></div>';
+
+  // Vaihevalinnat (käytetään data-attr onclickiä)
+  h+='<div class=\"sect\">Treeniohjelma – 6 viikon protokolla</div>';
+  h+='<div style=\"display:flex;gap:5px;margin-bottom:10px\">';
+  phases.forEach(p=>{
+    const sel=p.n===puttiPhase;
+    h+='<button data-phase=\"'+p.n+'\" class=\"putti-phase-btn\" style=\"flex:1;padding:7px 4px;border-radius:var(--rs);border:1.5px solid '+(sel?p.tcol:'var(--border)')+';background:'+(sel?p.col:'none')+';color:'+(sel?p.tcol:'var(--t2)')+';font-size:11px;font-weight:600;cursor:pointer\">Vaihe '+p.n+'</button>';
+  });
+  h+='</div>';
+
+  h+='<div style=\"background:'+ph.col+';border-radius:var(--r);padding:13px 14px;margin-bottom:12px\">';
+  h+='<div style=\"font-size:13px;font-weight:700;color:'+ph.tcol+';margin-bottom:2px\">'+ph.title+'</div>';
+  h+='<div style=\"font-size:11px;color:'+ph.tcol+';opacity:.8;margin-bottom:8px\">'+ph.weeks+' · '+ph.freq+'</div>';
+  h+='<div style=\"font-size:12px;color:'+ph.tcol+';line-height:1.6\">'+ph.focus+'</div></div>';
+
+  // Tänään
+  h+='<div class=\"card card-p\" style=\"margin-bottom:10px\">';
+  h+='<div style=\"display:flex;justify-content:space-between;margin-bottom:8px\">';
+  h+='<div style=\"font-size:13px;font-weight:600\">Tänään</div>';
+  h+='<div style=\"font-size:12px;color:var(--t2)\">'+todayDone+' / '+todayTarget+' puttia</div></div>';
+  h+='<div class=\"prog-bar\" style=\"margin-bottom:10px\"><div class=\"prog-fill\" style=\"width:'+pct_today+'%;background:'+(pct_today>=100?'var(--g)':'var(--gm)')+'\"></div></div>';
+  h+='<div style=\"display:flex;gap:6px\">';
+  h+='<button id=\"putti-plus\" class=\"btn btn-out btn-sm\" style=\"flex:1\">+10 puttia</button>';
+  h+='<button id=\"putti-minus\" class=\"btn btn-out btn-sm\" style=\"flex:1\">-10</button>';
+  h+='<button id=\"putti-log\" class=\"btn btn-sm\" style=\"flex:1\">Kirjaa %</button>';
+  h+='</div></div>';
+
+  // Prosentit
+  h+='<div class=\"sect\">Puttausprosentit</div>';
+  h+='<div class=\"putti-grid\">';
+  PTDISTS.forEach(d=>{
+    const t=totals[d.key];const p=t.a>0?Math.round(t.m/t.a*100):null;
+    const col=p===null?'#ccc':p>=d.goal?'#1D9E75':p>=(d.goal*.75)?'#EF9F27':'#E24B4A';
+    h+='<div class=\"pd\"><div class=\"pd-lbl\">'+d.label+'</div>';
+    h+='<div class=\"pd-pct\" style=\"color:'+col+'\">'+(p===null?'–':p+'%')+'</div>';
+    h+='<div class=\"pd-bar\"><div class=\"pd-fill\" style=\"width:'+(p===null?0:Math.min(100,p))+'%;background:'+col+'\"></div></div>';
+    h+='<div class=\"pd-sub\">'+(t.a>0?t.m+'/'+t.a:'Ei dataa')+' · '+d.goal+'%</div></div>';
+  });
+  h+='</div>';
+
+  if(sessions.length){
+    h+='<div class=\"sect\">Sessiohistoria</div>';
+    sessions.slice().reverse().slice(0,8).forEach(s=>{
+      const tot=PTDISTS.reduce((a,d)=>s[d.key]?a+s[d.key].a:a,0);
+      const made=PTDISTS.reduce((a,d)=>s[d.key]?a+s[d.key].m:a,0);
+      const pct=tot>0?Math.round(made/tot*100):0;
+      h+='<div class=\"row\"><span class=\"rl\">'+s.date+' · '+tot+' putausta</span>';
+      h+='<span class=\"rv\" style=\"color:'+(pct>=70?'var(--g)':'var(--t2)')+'\">'+pct+'%</span>';
+      h+='<button data-del-putti=\"'+s.id+'\" style=\"background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px;padding:0 3px\">✕</button></div>';
+    });
+  }else{
+    h+='<div class=\"empty\"><div class=\"ei\">🎯</div><div class=\"et\">Ei sessioita vielä.<br>Aloita tänään: 3–5 m, 50 puttia, rutiini joka putilla.</div></div>';
+  }
+
+  div.innerHTML=h;
+
+  // Wire up event listeners after DOM insert
+  cont.innerHTML='';
+  cont.appendChild(div);
+
+  // Phase buttons
+  cont.querySelectorAll('.putti-phase-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{set('putti_phase',parseInt(btn.dataset.phase));renderTrain();});
+  });
+
+  // Plus/minus/log
+  const plusBtn=cont.querySelector('#putti-plus');
+  const minusBtn=cont.querySelector('#putti-minus');
+  const logBtn=cont.querySelector('#putti-log');
+  if(plusBtn)plusBtn.addEventListener('click',()=>{const k='putti_today_'+new Date().toISOString().slice(0,10);set(k,Math.min(todayTarget,(get(k)||0)+10));renderTrain();});
+  if(minusBtn)minusBtn.addEventListener('click',()=>{const k='putti_today_'+new Date().toISOString().slice(0,10);set(k,Math.max(0,(get(k)||0)-10));renderTrain();});
+  if(logBtn)logBtn.addEventListener('click',()=>openM('m-putti-sess'));
+
+  // Delete buttons
+  cont.querySelectorAll('[data-del-putti]').forEach(btn=>{
+    btn.addEventListener('click',()=>delPutti(parseInt(btn.dataset.delPutti)));
+  });
+}
+function renderPuttiInputs(){
+  document.getElementById('pt-dists').innerHTML=PTDISTS.map(d=>`
+    <div class="field"><div class="label">${d.label} – sisään / yht.<\/div>
+    <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center">
+      <input type="number" id="pt-m-${d.key}" placeholder="0" inputmode="numeric">
+      <span style="color:var(--t3);font-size:13px">/<\/span>
+      <input type="number" id="pt-a-${d.key}" placeholder="0" inputmode="numeric">
+    <\/div><\/div>`).join('');
+}
+function savePutti(){
+  const sess={id:Date.now(),date:v('pt-date')};
+  PTDISTS.forEach(d=>{const m=parseInt(document.getElementById('pt-m-'+d.key)?.value)||0;const a=parseInt(document.getElementById('pt-a-'+d.key)?.value)||0;if(a>0)sess[d.key]={m:Math.min(m,a),a}});
+  const s=get('putti_sessions')||[];s.push(sess);set('putti_sessions',s);
+  flash('pt-msg');setTimeout(()=>{closeM('m-putti-sess');renderTrain()},700);
+}
+function delPutti(id){set('putti_sessions',(get('putti_sessions')||[]).filter(s=>s.id!==id));renderTrain()}
+
+function renderMob(){
+  const cont=document.getElementById('train-content');
+
+  // 4 different weekly rotations - each focuses on different areas
+  const MOB_ROTATIONS = {
+    A: {
+      label:'Rotaatio A – Lonkka & Selkä',
+      subtitle:'Heittoliikkeen perusta',
+      color:'var(--gl)', tcol:'var(--gd)',
+      exercises:[
+        {id:'a1',name:'90/90 lonkan avaus',desc:'Istu 90/90. Nojaa eteen etujalan yli, selkä suorana.',reps:'45 sek / puoli',area:'a-lo'},
+        {id:'a2',name:'Rintakehän kierto lattialla',desc:'Kyljelläsi, polvet 90°. Vie käsi auki taaksepäin hitaasti.',reps:'10 toistoa / puoli',area:'a-se'},
+        {id:'a3',name:'Kissalehmä hengityksen rytmissä',desc:'Nelinkontin. Pyöristä ja laske selkä sisäänhengityksen rytmissä.',reps:'12 toistoa',area:'a-se'},
+        {id:'a4',name:'Lonkan koukistajan venytys',desc:'Yhden polven polvistuminen. Eteen kunnes tuntuu etupuolella.',reps:'45 sek / puoli',area:'a-lo'},
+        {id:'a5',name:"World's greatest stretch",desc:'Askelkyykky + rintakehän avaus kiertämällä ylös.',reps:'5 toistoa / puoli',area:'a-ko'},
+        {id:'a6',name:'Hamstring selinmakuulla',desc:'Jalka ylös, polvi suorana. Vedä jalka kohti rintaa.',reps:'40 sek / jalka',area:'a-lo'},
+        {id:'a7',name:'Thoracic extension',desc:'Kädet niskan taakse, kyynärpäät taaksepäin – avaa rintakehä.',reps:'10 toistoa',area:'a-se'},
+      ]
+    },
+    B: {
+      label:'Rotaatio B – Olkapää & Yläraaja',
+      subtitle:'Heittoterveyttä & voimansiirtoa',
+      color:'var(--bl)', tcol:'var(--bd)',
+      exercises:[
+        {id:'b1',name:'Olkapään kierto lattialla',desc:'Selällään 90°. Ulko- ja sisäkierto hitaasti, kyynärpää paikallaan.',reps:'12 toistoa / puoli',area:'a-ol'},
+        {id:'b2',name:'Lapapumppaus seisaaltaan',desc:'Kädet eteen – lapaluut loittonee. Vedä takaisin. Hidas tempo.',reps:'12 toistoa',area:'a-ol'},
+        {id:'b3',name:'Banded external rotation',desc:'Vastuskummi, kyynärpää 90°. Kierrä kättä ulospäin hitaasti.',reps:'15 toistoa / käsi',area:'a-ol'},
+        {id:'b4',name:'Doorway chest stretch',desc:'Käsi seinään 90°. Kierrä keho poispäin kunnes tuntuu rinnassa.',reps:'30 sek / puoli',area:'a-ol'},
+        {id:'b5',name:'Thread the needle',desc:'Nelinkontin. Vie käsi lattian kautta toiselle puolelle.',reps:'10 toistoa / puoli',area:'a-se'},
+        {id:'b6',name:'Diaphragm breathing',desc:'Selällään. Nenän kautta sisään (vatsa nousee), suu auki ulos.',reps:'10 rauhallista hengitystä',area:'a-co'},
+        {id:'b7',name:'Ranteen liikkuvuus',desc:'Nelinkontin, sormet taaksepäin. Kallista keho varovasti eteen.',reps:'20 sek + 10 toistoa',area:'a-ol'},
+      ]
+    },
+    C: {
+      label:'Rotaatio C – Koko keho & Rotaatio',
+      subtitle:'Heittospesifi liikkuvuus',
+      color:'var(--pl)', tcol:'var(--pd)',
+      exercises:[
+        {id:'c1',name:'Hip 90/90 aktiivinen siirto',desc:'Istu 90/90. Nosta takajalka ylös pitäen asento. Vaihda puolta.',reps:'8 toistoa / suunta',area:'a-lo'},
+        {id:'c2',name:'Pallonheitto seinään – lämmittely',desc:'3 kg pallo. Koko kehon kierto, ei maksimivoimaa.',reps:'20 heittoa / suunta',area:'a-ko'},
+        {id:'c3',name:'Kossack squat',desc:'Leveä haara-asento. Kyykky sivulle, toinen jalka suorana.',reps:'8 toistoa / puoli',area:'a-lo'},
+        {id:'c4',name:'Rintakehän kiertokulma seisaaltaan',desc:'Kädet rinnalle. Kierrä yläkeho max eteen ja taakse.',reps:'10 toistoa / suunta',area:'a-se'},
+        {id:'c5',name:'Hip flexor + rotaatio',desc:'Lonkan koukistajan venytys + lisää ylärangan kierto samalla.',reps:'30 sek + 5 kierrosta / puoli',area:'a-ko'},
+        {id:'c6',name:'Inchworm kävelyyn',desc:'Seiso, taivuta eteen, kävele käsillä lankku-asentoon ja takaisin.',reps:'6 toistoa',area:'a-ko'},
+        {id:'c7',name:'Side lying rotation reach',desc:'Kyljelläsi. Kierrä yläkäsi taaksepäin, katse seuraa.',reps:'10 toistoa / puoli',area:'a-se'},
+      ]
+    },
+    D: {
+      label:'Rotaatio D – Palautuminen & Core',
+      subtitle:'Kevyt viikko tai kisaviikko',
+      color:'var(--al)', tcol:'var(--ad)',
+      exercises:[
+        {id:'d1',name:'Lapsi-asento',desc:'Polvillaan, kädet eteen. Hengitä vatsan kautta, rentouta.',reps:'60 sekuntia',area:'a-lo'},
+        {id:'d2',name:'Supine twist',desc:'Selällään, polvi ristiin toiselle puolelle. Katse vastakkaiseen.',reps:'45 sek / puoli',area:'a-se'},
+        {id:'d3',name:'Dead bug',desc:'Selällään, kaikki raajat ylös. Laske vastakkainen käsi+jalka hitaasti.',reps:'8 toistoa / puoli',area:'a-co'},
+        {id:'d4',name:'Pirifomis venytys',desc:'Selällään, toinen jalka toisen polven yli. Vedä jalat kohti rintaa.',reps:'45 sek / puoli',area:'a-lo'},
+        {id:'d5',name:'Cat cow hengityksellä',desc:'Hidas kissalehmä: 4 sek sisään, 4 sek ulos. Täysi liike.',reps:'10 hengitystä',area:'a-se'},
+        {id:'d6',name:'Legs up the wall',desc:'Selällään, jalat seinää vasten 90°. Täysi rentoutuminen.',reps:'2–3 minuuttia',area:'a-co'},
+        {id:'d7',name:'Olkapään pendelum',desc:'Nojaa eteen, anna käden roikkua vapaasti. Pienet ympyrät.',reps:'30 sek / puoli',area:'a-ol'},
+      ]
+    }
+  };
+
+  const AREA_LBLS={'a-lo':'Lonkka','a-se':'Selkä','a-ol':'Olkapää','a-ko':'Koko keho','a-co':'Core'};
+
+  // Determine rotation based on week number
+  const rotKeys=['A','B','C','D'];
+  const rotKey=rotKeys[(mobWk-1)%4];
+  const rot=MOB_ROTATIONS[rotKey];
+  const done=rot.exercises.filter(ex=>getSets('mob_'+mobWk+'_'+ex.id)>0).length;
+  const total=rot.exercises.length;
+
+  let h='<div class="wk-scroll" id="mob-wk"></div>';
+
+  // Rotation header
+  h+='<div style="background:'+rot.color+';border-radius:var(--r);padding:12px 14px;margin-bottom:12px">';
+  h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">';
+  h+='<div style="font-size:13px;font-weight:700;color:'+rot.tcol+'">'+rot.label+'</div>';
+  h+='<span style="font-size:11px;padding:2px 9px;border-radius:20px;background:'+rot.tcol+';color:#fff;font-weight:600">'+done+'/'+total+'</span>';
+  h+='</div>';
+  h+='<div style="font-size:11px;color:'+rot.tcol+';opacity:.8">'+rot.subtitle+' · Viikko '+mobWk+'</div>';
+  h+='</div>';
+
+  // Progress bar
+  const pct=Math.round(done/total*100);
+  h+='<div class="prog-bar" style="margin-bottom:14px"><div class="prog-fill" style="width:'+pct+'%;background:var(--g)"></div></div>';
+
+  // Exercise list
+  h+='<div class="card card-p" id="mob-ex-list">';
+  rot.exercises.forEach(function(ex){
+    var mobKey='mob_'+mobWk+'_'+ex.id;
+    var ck=getSets(mobKey)>0;
+    h+='<div class="mob-row" data-mobkey="'+mobKey+'">';
+    h+='<div class="mob-cb'+(ck?' c':'')+'">'+(ck?'✓':'')+'</div>';
+    h+='<div style="flex:1">';
+    h+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">';
+    h+='<span style="font-size:13px;font-weight:600">'+ex.name+'</span>';
+    h+='<span class="area-tag '+ex.area+'">'+AREA_LBLS[ex.area]+'</span>';
+    h+='</div>';
+    h+='<div style="font-size:11px;color:var(--t2);margin-top:1px;line-height:1.4">'+ex.desc+'</div>';
+    h+='<div style="font-size:10px;color:var(--gd);font-weight:500;margin-top:2px">'+ex.reps+'</div>';
+    h+='</div></div>';
+  });  h+='</div>';
+
+  // Rotation overview
+  h+='<div class="sect">4 viikon kiertokalenteri</div>';
+  h+='<div style="background:var(--card);border-radius:var(--r);padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
+  rotKeys.forEach(function(k){
+    const r=MOB_ROTATIONS[k];
+    const isCur=k===rotKey;
+    h+='<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:.5px solid var(--border)'+(k==='D'?';border:none':'')+';">';
+    h+='<div style="width:28px;height:28px;border-radius:50%;background:'+(isCur?r.tcol:'var(--border)')+';color:'+(isCur?'#fff':'var(--t2)')+';display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">'+k+'</div>';
+    h+='<div style="flex:1"><div style="font-size:12px;font-weight:'+(isCur?'600':'400')+';color:'+(isCur?r.tcol:'var(--text)')+'">'+r.label+'</div>';
+    h+='<div style="font-size:10px;color:var(--t3)">'+r.subtitle+'</div></div>';
+    if(isCur)h+='<span style="font-size:10px;padding:1px 7px;border-radius:20px;background:'+r.color+';color:'+r.tcol+';font-weight:600">Nyt</span>';
+    h+='</div>';
+  });
+  h+='</div>';
+
+  if(done===total&&total>0){
+    h+='<div style="text-align:center;padding:14px;background:var(--gl);border-radius:var(--r);margin-top:8px">';
+    h+='<div style="font-size:28px">🎉</div>';
+    h+='<div style="font-size:14px;font-weight:600;color:var(--gd);margin-top:4px">Kaikki liikkeet tehty!</div>';
+    h+='</div>';
+  }
+
+  cont.innerHTML=h;
+  mkWkTabs('mob-wk',mobWk,8,'setMobWk');
+  // Wire up exercise toggles via event delegation
+  var exList=cont.querySelector('#mob-ex-list');
+  if(exList){
+    exList.addEventListener('click',function(e){
+      var row=e.target.closest('[data-mobkey]');
+      if(row){toggleMob(row.dataset.mobkey);}
+    });
+  }
+}
+
+function renderCal(){
+  const MNAMES=['Tammikuu','Helmikuu','Maaliskuu','Huhtikuu','Toukokuu','Kesäkuu','Heinäkuu','Elokuu','Syyskuu','Lokakuu','Marraskuu','Joulukuu'];
+  document.getElementById('cal-lbl').textContent=MNAMES[calM]+' '+calY;
+  const events=get('events')||[];
+  const fd=new Date(calY,calM,1).getDay();
+  const offset=(fd+6)%7;
+  const dim=new Date(calY,calM+1,0).getDate();
+  const today=new Date();
+  let h='';
+  ['Ma','Ti','Ke','To','Pe','La','Su'].forEach(d=>{h+='<div class="cal-dh">'+d+'<\/div>'});
+  for(let i=0;i<offset;i++)h+='<div></div>';
+  for(let d=1;d<=dim;d++){
+    const ds=calY+'-'+String(calM+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const de=events.filter(e=>e.date===ds);
+    const isT=today.getFullYear()===calY&&today.getMonth()===calM&&today.getDate()===d;
+    const hc=de.some(e=>e.type==='kisa'),he=de.length>0;
+    h+='<div class="cal-day'+(isT?' today':'')+(hc?' has-comp':he?' has-event':'')+'" onclick="openDayModal(\''+ds+'\')">'+d+'<\/div>';
+  }
+  document.getElementById('cal-grid').innerHTML=h;
+  const me=events.filter(e=>{const[y,m]=e.date.split('-').map(Number);return y===calY&&m===calM+1}).sort((a,b)=>a.date.localeCompare(b.date));
+  document.getElementById('cal-ev').innerHTML=me.length?me.map(e=>{
+    const dotCol={kisa:'#E24B4A',treeni:'#1D9E75',lepo:'#888',muu:'#378ADD'}[e.type]||'#888';
+    return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:.5px solid var(--border)">'+
+      '<div style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:'+dotCol+'"><\/div>'+
+      '<div style="flex:1"><div style="font-size:13px;font-weight:500">'+e.name+'<\/div>'+
+      '<div style="font-size:11px;color:var(--t3)">'+e.date+(e.note?' · '+e.note:'')+'<\/div><\/div>'+
+      '<button data-del-ev="'+e.id+'" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px;padding:0 3px">✕<\/button>'+
+      '<\/div>';
+  }).join(''):'<div class="empty" style="padding:14px 0"><div class="ei" style="font-size:24px">📅<\/div><div class="et">Ei tapahtumia<\/div><\/div>';
+  // Wire delete buttons
+  document.getElementById('cal-ev').querySelectorAll('[data-del-ev]').forEach(btn=>{
+    btn.addEventListener('click',()=>delEvent(parseInt(btn.dataset.delEv)));
+  });
+}
+function openDayModal(date){setV('ev-date',date);openM('m-event')}
+function calPrev(){calM--;if(calM<0){calM=11;calY--}renderCal()}
+function calNext(){calM++;if(calM>11){calM=0;calY++}renderCal()}
+function saveEvent(){
+  const ev=get('events')||[];ev.push({id:Date.now(),type:v('ev-type'),name:v('ev-name'),date:v('ev-date'),note:v('ev-note')});
+  set('events',ev);flash('ev-msg');setTimeout(()=>{closeM('m-event');renderCal()},700);
+}
+function delEvent(id){set('events',(get('events')||[]).filter(e=>e.id!==id));renderCal()}
+
+// ===== COMPETITIONS =====
+function renderComp(){
+  const comps=(get('comps')||[]).sort(function(a,b){return b.date.localeCompare(a.date)});
+  const today=new Date().toISOString().slice(0,10);
+  const events=get('events')||[];
+  const compDates=new Set(comps.map(function(c){return c.date}));
+
+  // Pull future kisa events from calendar not already in comps
+  const calKisat=events
+    .filter(function(e){return e.type==='kisa'&&e.date>=today&&!compDates.has(e.date)})
+    .map(function(e){return {
+      id:'cal_'+e.id, name:e.name, date:e.date, course:e.note||'',
+      div:'MPO', score:'', place:'', rrating:null, mrating:null,
+      c1x:null, c2:null, fhpct:null,
+      notes:'Kalenteritapahtuma – lisää kisatulos kun kisa on pelattu.',
+      fromCalendar:true
+    }});
+
+  const allUpcoming=[...comps.filter(function(c){return c.date>=today}),...calKisat]
+    .sort(function(a,b){return a.date.localeCompare(b.date)});
+  const past=comps.filter(function(c){return c.date<today});
+  const list=compTab==='upcoming'?allUpcoming:past;
+
+  // Build tabs using DOM to avoid quote issues
+  var tabsEl=document.getElementById('comp-tabs');
+  tabsEl.innerHTML='';
+  var btn1=document.createElement('button');
+  btn1.className='tb'+(compTab==='upcoming'?' on':'');
+  btn1.textContent='Tulevat ('+allUpcoming.length+')';
+  btn1.addEventListener('click',function(){setCompTab('upcoming')});
+  tabsEl.appendChild(btn1);
+  var btn2=document.createElement('button');
+  btn2.className='tb'+(compTab==='past'?' on':'');
+  btn2.textContent='Menneet ('+past.length+')';
+  btn2.addEventListener('click',function(){setCompTab('past')});
+  tabsEl.appendChild(btn2);
+
+  if(!list.length){
+    document.getElementById('comp-content').innerHTML='<div class="empty"><div class="ei">🏆</div><div class="et">'+(compTab==='upcoming'?'Ei tulevia kisoja – lisää kisa tai kalenteritapahtuma':'Ei kirjattuja kisoja')+'</div></div>';
+    return;
+  }
+
+  const p=get('profile')||DEF;
+  var html='';
+  list.forEach(function(c){
+    var isOpen=get('comp_open_'+c.id);
+    var isCalOnly=c.fromCalendar;
+    var pdgaDiff=c.rrating&&p.rating?c.rrating-p.rating:null;
+    var mDiff=c.mrating&&p.metrix?c.mrating-p.metrix:null;
+
+    html+='<div class="comp-card">';
+    html+='<div class="comp-head" data-compid="'+c.id+'">';
+    if(isCalOnly) html+='<span style="font-size:10px;padding:1px 7px;border-radius:20px;background:var(--bl);color:var(--bd);font-weight:500;display:inline-block;margin-bottom:3px">📅 Kalenteri</span><br>';
+    html+='<div class="comp-name">'+c.name+'</div>';
+    html+='<div class="comp-meta">'+c.date+(c.course?' · '+c.course:'')+(c.div?' · '+c.div:'')+'</div>';
+    if(c.place) html+='<span class="badge" style="background:var(--al);color:var(--ad);margin-top:3px;display:inline-block">Sija: '+c.place+'</span>';
+    html+='</div>';
+
+    html+='<div class="comp-body'+(isOpen?' show':'')+'">';
+    if(isCalOnly){
+      html+='<div style="background:var(--bl);border-radius:var(--rs);padding:10px 12px;font-size:13px;color:var(--bd);margin-bottom:8px">Kisa ei ole vielä pelattu.</div>';
+      html+='<button class="btn btn-sm" id="promote_'+c.id+'" style="margin-bottom:6px">+ Lisää kisatulos</button>';
+    } else {
+      html+='<div class="stat-3" style="margin-bottom:8px">';
+      html+='<div class="sc"><div class="sn">'+(c.score!==''&&c.score!==undefined?c.score:'–')+'</div><div class="sl">Tulos</div></div>';
+      html+='<div class="sc"><div class="sn" style="color:'+(mDiff>=0?'var(--g)':mDiff<0?'#E24B4A':'var(--text)')+'">'+( c.mrating||'–')+'</div><div class="sl">Metrix</div></div>';
+      html+='<div class="sc"><div class="sn" style="color:'+(pdgaDiff>=0?'var(--g)':pdgaDiff<0?'#E24B4A':'var(--text)')+'">'+( c.rrating||'–')+'</div><div class="sl">PDGA</div></div>';
+      html+='</div>';
+      if(c.c1x||c.c2||c.fhpct){
+        html+='<div class="stat-3" style="margin-bottom:8px">';
+        html+='<div class="sc"><div class="sn">'+(c.c1x||'–')+'%</div><div class="sl">C1X%</div></div>';
+        html+='<div class="sc"><div class="sn">'+(c.c2||'–')+'%</div><div class="sl">C2%</div></div>';
+        html+='<div class="sc"><div class="sn">'+(c.fhpct||'–')+'%</div><div class="sl">FW%</div></div>';
+        html+='</div>';
+      }
+      if(mDiff!==null) html+='<div style="font-size:12px;color:'+(mDiff>=0?'var(--gd)':'var(--rd)')+';margin-bottom:5px">Metrix ero: '+(mDiff>0?'+':'')+mDiff+'</div>';
+      if(c.notes) html+='<div style="font-size:12px;color:var(--t2);background:var(--bg);padding:7px 9px;border-radius:var(--rs);line-height:1.5">'+c.notes+'</div>';
+      html+='<button class="btn btn-sm btn-red" id="del_'+c.id+'" style="margin-top:9px">Poista</button>';
+    }
+    html+='</div></div>';
+  });
+
+  document.getElementById('comp-content').innerHTML=html;
+
+  // Wire up comp-head toggles via event delegation
+  document.getElementById('comp-content').addEventListener('click',function(e){
+    var head=e.target.closest('.comp-head[data-compid]');
+    if(head) toggleComp(head.dataset.compid);
+  });
+  // Wire up buttons via event listeners
+  list.forEach(function(c){
+    var promBtn=document.getElementById('promote_'+c.id);
+    if(promBtn){
+      promBtn.addEventListener('click',function(){
+        setV('co-name',c.name);setV('co-date',c.date);setV('co-course',c.course||'');
+        openM('m-comp');
+      });
+    }
+    var delBtn=document.getElementById('del_'+c.id);
+    if(delBtn) delBtn.addEventListener('click',function(){delComp(c.id)});
+  });
+}
+function toggleComp(id){const k='comp_open_'+id;set(k,!get(k));renderComp()}
+function setCompTab(t){compTab=t;renderComp()}
+function saveComp(){
+  const id=Date.now();
+  const comps=get('comps')||[];
+  const name=v('co-name');
+  const date=v('co-date');
+  const course=v('co-course');
+  comps.push({id:id,name:name,date:date,course:course,div:v('co-div'),score:v('co-score'),place:v('co-place'),rrating:parseInt(v('co-rrating'))||null,mrating:parseInt(v('co-mrating'))||null,c1x:parseFloat(v('co-c1x'))||null,c2:parseFloat(v('co-c2'))||null,fhpct:parseFloat(v('co-fhpct'))||null,notes:v('co-notes')});
+  set('comps',comps);
+  // Auto-sync to calendar
+  if(name&&date){
+    const events=get('events')||[];
+    const alreadyInCal=events.some(function(e){return e.type==='kisa'&&e.date===date&&e.name===name;});
+    if(!alreadyInCal){
+      events.push({id:id+1,type:'kisa',name:name,date:date,note:course||''});
+      set('events',events);
+    }
+  }
+  if(v('co-rrating')||v('co-mrating')){
+    const r=get('ratings')||[];
+    r.push({id:id+2,date:date,val:parseInt(v('co-rrating'))||null,mval:parseInt(v('co-mrating'))||null,note:name});
+    set('ratings',r);
+  }
+  flash('co-msg');
+  setTimeout(function(){closeM('m-comp');renderComp();},700);
+}
+function delComp(id){
+  const comp=(get('comps')||[]).find(c=>c.id===id);
+  set('comps',(get('comps')||[]).filter(c=>c.id!==id));
+  // Remove matching calendar event
+  if(comp){
+    const events=get('events')||[];
+    set('events',events.filter(e=>!(e.type==='kisa'&&e.date===comp.date&&e.name===comp.name)));
+  }
+  renderComp();
+}
+
+// ===== DEVELOPMENT =====
+function devTab(tab,el){
+  devTabCur=tab;
+  document.querySelectorAll('#pg-dev .tb').forEach(b=>b.classList.remove('on'));
+  if(el)el.classList.add('on');
+  renderDev();
+}
+function renderDev(){
+  if(devTabCur==='rating')renderRatingDev();
+  else if(devTabCur==='speed')renderSpeedDev();
+  else if(devTabCur==='putti')renderPuttiDev();
+  else if(devTabCur==='metrix')renderMetrixDev();
+  else if(devTabCur==='goals')renderGoalsDev();
+  else if(devTabCur==='chat')renderChatDev();
+}
+function renderRatingDev(){
+  const ratings=(get('ratings')||[]).sort((a,b)=>a.date.localeCompare(b.date));
+  const p=get('profile')||DEF;
+  let h=`<button class="btn btn-out btn-sm" onclick="openM('m-rating')" style="margin-bottom:12px">+ Lisää rating-kirjaus<\/button>`;
+  if(ratings.length>=2){
+    const pdgaV=ratings.map(r=>r.val).filter(Boolean);
+    if(pdgaV.length>=2){
+      const mx=Math.max(...pdgaV),mn=Math.min(...pdgaV),rng=mx-mn||10;
+      h+=`<div class="chart-wrap"><div style="font-size:13px;font-weight:600;margin-bottom:9px">PDGA-rating kehitys<\/div><div class="bar-chart">`;
+      ratings.filter(r=>r.val).slice(-12).forEach(r=>{const pct=Math.round(((r.val-mn)/rng)*75)+15;h+=`<div class="bc"><div class="bv">${r.val}<\/div><div class="bb" style="height:${pct}%;background:${r.val>=(p.target||9999)?'#1D9E75':'#85B7EB'}"><\/div><div class="bl">${r.date.slice(5)}<\/div><\/div>`});
+      const f=ratings.filter(r=>r.val)[0]?.val,l=ratings.filter(r=>r.val).slice(-1)[0]?.val;
+      h+=`<\/div><div style="font-size:12px;color:var(--t2);display:flex;gap:12px">Lähtö: <b>${f}<\/b><span>Nyt: <b style="color:var(--g)">${l}<\/b><\/span><span>Muutos: <b style="color:${l-f>=0?'var(--g)':'#E24B4A'}">${l-f>0?'+':''}${l-f}<\/b><\/span><\/div><\/div>`;
+    }
+    const mxV=ratings.filter(r=>r.mval);
+    if(mxV.length>=2){
+      const mm=Math.max(...mxV.map(r=>r.mval)),mn=Math.min(...mxV.map(r=>r.mval)),rng=mm-mn||10;
+      h+=`<div class="chart-wrap"><div style="font-size:13px;font-weight:600;margin-bottom:9px">Metrix-rating kehitys<\/div><div class="bar-chart">`;
+      mxV.slice(-12).forEach(r=>{const pct=Math.round(((r.mval-mn)/rng)*75)+15;h+=`<div class="bc"><div class="bv">${r.mval}<\/div><div class="bb" style="height:${pct}%;background:${r.mval>=(p.metrix_target||9999)?'#1D9E75':'#378ADD'}"><\/div><div class="bl">${r.date.slice(5)}<\/div><\/div>`});
+      h+=`<\/div><\/div>`;
+    }
+  }
+  if(ratings.length){
+    h+=`<div class="sect">Historia<\/div>`;
+    ratings.slice().reverse().forEach(r=>{
+      h+=`<div class="row"><div style="flex:1"><div style="font-size:12px;color:var(--t2)">${r.date}${r.note?' · '+r.note:''}<\/div><\/div><div style="text-align:right"><div style="font-size:13px;font-weight:600;color:var(--gd)">PDGA ${r.val||'–'}<\/div>${r.mval?`<div style="font-size:12px;color:var(--bd)">Metrix ${r.mval}<\/div>`:''}<\/div><button onclick="delRating(${r.id})" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:15px;padding:0 3px">✕<\/button><\/div>`;
+    });
+  }else h+=`<div class="empty"><div class="ei">📊<\/div><div class="et">Lisää ensimmäinen rating-kirjaus yllä<br>Lähtötaso: PDGA 919 / Metrix 939<\/div><\/div>`;
+  document.getElementById('dev-content').innerHTML=h;
+}
+function saveRating(){
+  const r=get('ratings')||[];r.push({id:Date.now(),date:v('rat-date'),val:parseInt(v('rat-val'))||null,mval:parseInt(v('rat-mval'))||null,note:v('rat-note')});
+  set('ratings',r);flash('rat-msg');setTimeout(()=>{closeM('m-rating');renderDev()},700);
+}
+function delRating(id){set('ratings',(get('ratings')||[]).filter(r=>r.id!==id));renderDev()}
+
+function renderSpeedDev(){
+  const speeds=(get('speeds')||[]).sort((a,b)=>a.date.localeCompare(b.date));
+  const bhSp=speeds.filter(s=>s.bh5>0);
+  let h=`<button class="btn btn-out btn-sm" onclick="showPg('speed')" style="margin-bottom:12px">→ Kirjaa nopeustesti (Nopeus-välilehti)<\/button>`;
+  if(bhSp.length>=2){
+      // Group by month, take max per month to avoid duplicates
+      var bhByMo={};
+      bhSp.forEach(function(s){var mo=s.date.slice(0,7);if(!bhByMo[mo]||s.bh5>bhByMo[mo].bh5)bhByMo[mo]=s;});
+      var bhMo=Object.keys(bhByMo).sort().map(function(k){return bhByMo[k]});
+      var mxBH=Math.max(...bhMo.map(function(s){return s.bh5}));
+      var mnBH=Math.min(...bhMo.map(function(s){return s.bh5}));
+      var rngBH=mxBH-mnBH||5;
+      h+='<div class=\"chart-wrap\"><div style=\"font-size:13px;font-weight:600;margin-bottom:10px\">BH kehitys (kuukauden paras)<\/div><div class=\"bar-chart\">';
+      bhMo.slice(-12).forEach(function(s){
+        var pct=Math.round(((s.bh5-mnBH)/rngBH)*75)+15;
+        var lbl=s.date.slice(5,7)+'/'+s.date.slice(2,4);
+        h+='<div class=\"bc\"><div class=\"bv\">'+s.bh5.toFixed(0)+'<\/div>';
+        h+='<div class=\"bb\" style=\"height:'+pct+'%;background:'+(s.bh5===mxBH?'#1D9E75':'#85B7EB')+'\"><\/div>';
+        h+='<div class=\"bl\">'+lbl+'<\/div><\/div>';
+      });
+      h+='<\/div>';
+      if(p.bh_target){h+='<div style=\"font-size:12px;color:var(--t2);margin-top:4px\">Tavoite: '+p.bh_target+' km/h · Ero: '+(p.bh_target-mxBH).toFixed(1)+' km/h<\/div>';}
+      h+='<\/div>';
+    }
+}
+function renderSpeedDev(){
+  const speeds=(get('speeds')||[]).sort((a,b)=>a.date.localeCompare(b.date));
+  const bhSp=speeds.filter(s=>s.bh5>0);
+  let h='<button class=\"btn btn-out btn-sm\" onclick=\"showPg(\'speed\')\" style=\"margin-bottom:12px\">→ Kirjaa nopeustesti (Nopeus-välilehti)</button>';
+  if(bhSp.length>=2){
+    var bhByMo3={};bhSp.forEach(function(s){var mo=s.date.slice(0,7);if(!bhByMo3[mo]||s.bh5>bhByMo3[mo].bh5)bhByMo3[mo]=s;});
+    var bhMo3=Object.keys(bhByMo3).sort().map(function(k){return bhByMo3[k]});
+    var mxS=Math.max(...bhMo3.map(s=>s.bh5)),mnS=Math.min(...bhMo3.map(s=>s.bh5)),rngS=mxS-mnS||5;
+    h+='<div class=\"chart-wrap\"><div style=\"font-size:13px;font-weight:600;margin-bottom:9px\">BH kehitys</div><div class=\"bar-chart\">';
+    bhMo3.slice(-12).forEach(function(s){
+      var pct=Math.round(((s.bh5-mnS)/rngS)*75)+15;
+      var lbl=s.date.slice(5,7)+'/'+s.date.slice(2,4);
+      h+='<div class=\"bc\"><div class=\"bv\">'+s.bh5.toFixed(0)+'</div><div class=\"bb\" style=\"height:'+pct+'%;background:'+(s.bh5===mxS?'#1D9E75':'#85B7EB')+'\"></div><div class=\"bl\">'+lbl+'</div></div>';
+    });
+    h+='</div></div>';
+  }
+  if(speeds.length){
+    h+='<div class=\"sect\">Testihistoria</div>';
+    speeds.slice().reverse().forEach(function(s){
+      h+='<div class=\"row\"><div style=\"flex:1\"><div style=\"font-size:11px;color:var(--t3)\">'+s.date+'</div>';
+      h+='<div style=\"font-size:12px;display:flex;gap:8px;margin-top:2px\">';
+      if(s.bh5)h+='<span style=\"color:var(--bd);font-weight:600\">BH '+s.bh5.toFixed(1)+'</span>';
+      if(s.fh5)h+='<span style=\"color:var(--pd);font-weight:600\">FH '+s.fh5.toFixed(1)+'</span>';
+      h+='</div></div></div>';
+    });
+  }else{h+='<div class=\"empty\"><div class=\"ei\">⚡</div><div class=\"et\">Ei nopeustestejä</div></div>';}
+  document.getElementById('dev-content').innerHTML=h;
+}
+function saveRating(){
+  const r=get('ratings')||[];r.push({id:Date.now(),date:v('rat-date'),val:parseInt(v('rat-val'))||null,mval:parseInt(v('rat-mval'))||null,note:v('rat-note')});
+  set('ratings',r);flash('rat-msg');setTimeout(()=>{closeM('m-rating');renderDev()},700);
+}
+function delRating(id){set('ratings',(get('ratings')||[]).filter(r=>r.id!==id));renderDev()}
+
+function renderPuttiDev(){
+  const sessions=get('putti_sessions')||[];
+  const totals={};PTDISTS.forEach(d=>{totals[d.key]={m:0,a:0}});
+  sessions.forEach(s=>PTDISTS.forEach(d=>{if(s[d.key]){totals[d.key].m+=s[d.key].m;totals[d.key].a+=s[d.key].a}}));
+  let h='<button class=\"btn btn-out btn-sm\" onclick=\"openM(\'m-putti-sess\')\" style=\"margin-bottom:12px\">+ Lisää sessio</button>';
+  h+='<div class=\"putti-grid\">';
+  PTDISTS.forEach(d=>{
+    const t=totals[d.key];const p=t.a>0?Math.round(t.m/t.a*100):null;
+    const col=p===null?'#ccc':p>=d.goal?'#1D9E75':p>=(d.goal*.75)?'#EF9F27':'#E24B4A';
+    h+='<div class=\"pd\"><div class=\"pd-lbl\">'+d.label+'</div>';
+    h+='<div class=\"pd-pct\" style=\"color:'+col+'\">'+(p===null?'–':p+'%')+'</div>';
+    h+='<div class=\"pd-bar\"><div class=\"pd-fill\" style=\"width:'+(p===null?0:Math.min(100,p))+'%;background:'+col+'\"></div></div>';
+    h+='<div class=\"pd-sub\">'+(t.a>0?t.m+'/'+t.a:'Ei dataa')+' · '+d.goal+'%</div></div>';
+  });
+  h+='</div>';
+  document.getElementById('dev-content').innerHTML=h;
+}
+
+function renderMetrixDev(){
+  const courses=get('metrix')||[];
+  let h='<div class=\"info-box\" style=\"margin-bottom:10px\">Kopioi layout-ratingit Metrix.fi-palvelusta.</div>';
+  h+='<button class=\"btn btn-out btn-sm\" onclick=\"openM(\'m-metrix\')\" style=\"margin-bottom:12px\">+ Lisää rata</button>';
+  if(!courses.length){
+    h+='<div class=\"empty\"><div class=\"ei\">📋</div><div class=\"et\">Ei ratoja</div></div>';
+  }else{
+    const myR=(get('profile')||DEF).metrix||939;
+    h+='<div class=\"sect\">Radat – Metrix '+myR+'</div>';
+    courses.slice().sort((a,b)=>(b.rating||0)-(a.rating||0)).forEach((c,i)=>{
+      const diff=c.myrating&&myR?c.myrating-myR:null;
+      h+='<div class=\"mx-row\"><div style=\"font-size:14px;font-weight:700;width:24px;color:var(--t3);flex-shrink:0\">'+(i+1)+'</div>';
+      h+='<div style=\"flex:1;min-width:0\"><div style=\"font-size:13px;font-weight:500\">'+c.course+'</div>';
+      h+='<div style=\"font-size:11px;color:var(--t2)\">'+( c.layout||'')+(c.ssa?' · SSA '+c.ssa:'')+'</div>';
+      if(c.best!==''&&c.best!==undefined)h+='<div style=\"font-size:10px;color:var(--t3)\">Paras: '+c.best+' · Round: '+(c.myrating||'–')+'</div>';
+      h+='</div><div style=\"text-align:right;flex-shrink:0\">';
+      h+='<div style=\"font-size:15px;font-weight:700;color:var(--g)\">'+(c.rating||'–')+'</div>';
+      if(diff!==null)h+='<span style=\"font-size:10px;padding:1px 6px;border-radius:20px;font-weight:500;background:'+(diff>=0?'var(--gl)':'var(--rl)')+';color:'+(diff>=0?'var(--gd)':'var(--rd)')+'\">'+( diff>0?'+':'')+diff+'</span>';
+      h+='</div>';
+      h+='<button data-del-mx=\"'+c.id+'\" style=\"background:none;border:none;color:var(--t3);cursor:pointer;font-size:15px;padding:0 0 0 5px\">✕</button></div>';
+    });
+  }
+  document.getElementById('dev-content').innerHTML=h;
+  document.getElementById('dev-content').querySelectorAll('[data-del-mx]').forEach(function(btn){
+    btn.addEventListener('click',function(){delMetrix(parseInt(btn.dataset.delMx))});
+  });
+}
+function saveMetrix(){
+  const c=get('metrix')||[];
+  c.push({id:Date.now(),course:v('mx-course'),layout:v('mx-layout'),rating:parseInt(v('mx-rating'))||null,ssa:parseFloat(v('mx-ssa'))||null,best:v('mx-best'),myrating:parseInt(v('mx-myrating'))||null});
+  set('metrix',c);flash('mx-msg');setTimeout(()=>{closeM('m-metrix');renderDev()},700);
+}
+function delMetrix(id){set('metrix',(get('metrix')||[]).filter(c=>c.id!==id));renderDev()}
+
+function renderGoalsDev(){
+  const goals=get('goals')||[];
+  const icons={rating:'📊',metrix:'📊',speed:'⚡',speedfh:'⚡',putti:'🎯',kisa:'🏆',muu:'⭐'};
+  let h='<button class=\"btn btn-out btn-sm\" onclick=\"openM(\'m-goal\')\" style=\"margin-bottom:12px\">+ Lisää tavoite</button>';
+  if(!goals.length){
+    h+='<div class=\"coach-msg\">💬 Jesse, lisää ensimmäiset tavoitteet: 1) PDGA 919→940, 2) BH nopeus →110 km/h, 3) Kisatavoite tälle kaudelle.</div>';
+    h+='<div class=\"empty\"><div class=\"ei\">⭐</div><div class=\"et\">Ei tavoitteita</div></div>';
+  }else{
+    goals.forEach(function(g){
+      const from=parseFloat(g.from)||0,to=parseFloat(g.to)||1,cur=parseFloat(g.cur)||from;
+      const pct=to!==from?Math.min(100,Math.max(0,Math.round((cur-from)/(to-from)*100))):0;
+      const col=pct>=100?'#1D9E75':pct>=50?'#EF9F27':'#E24B4A';
+      h+='<div class=\"goal-card\"><div style=\"display:flex;align-items:flex-start;gap:8px;margin-bottom:8px\">';
+      h+='<span style=\"font-size:18px;flex-shrink:0\">'+(icons[g.type]||'⭐')+'</span>';
+      h+='<div style=\"flex:1\"><div style=\"font-size:13px;font-weight:600\">'+g.desc+'</div>';
+      h+='<div style=\"font-size:10px;color:var(--t3)\">Aikaraja: '+g.deadline+' · '+from+' → nyt '+cur+' → '+to+'</div></div>';
+      h+='<button data-del-goal=\"'+g.id+'\" style=\"background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px\">✕</button></div>';
+      h+='<div style=\"display:flex;justify-content:space-between;margin-bottom:3px;font-size:12px\"><span style=\"color:var(--t2)\">'+cur+' / '+to+'</span><span style=\"color:'+col+';font-weight:600\">'+pct+'%</span></div>';
+      h+='<div class=\"prog-bar\"><div class=\"prog-fill\" style=\"width:'+pct+'%;background:'+col+'\"></div></div>';
+      if(g.coach)h+='<div style=\"font-size:11px;color:var(--bd);background:var(--bl);padding:6px 9px;border-radius:var(--rs);margin-top:7px\">💬 '+g.coach+'</div>';
+      h+='<button data-upd-goal=\"'+g.id+'\" class=\"btn btn-out btn-sm\" style=\"width:100%;margin-top:8px\">Päivitä arvo</button></div>';
+    });
+  }
+  document.getElementById('dev-content').innerHTML=h;
+  document.getElementById('dev-content').querySelectorAll('[data-del-goal]').forEach(function(btn){
+    btn.addEventListener('click',function(){delGoal(parseInt(btn.dataset.delGoal))});
+  });
+  document.getElementById('dev-content').querySelectorAll('[data-upd-goal]').forEach(function(btn){
+    btn.addEventListener('click',function(){updateGoal(parseInt(btn.dataset.updGoal))});
+  });
+}
+function saveGoal(){
+  const goals=get('goals')||[];
+  goals.push({id:Date.now(),type:v('gl-type'),desc:v('gl-desc'),from:v('gl-from'),to:v('gl-to'),cur:v('gl-cur')||v('gl-from'),deadline:v('gl-deadline'),coach:v('gl-coach')});
+  set('goals',goals);flash('gl-msg');setTimeout(()=>{closeM('m-goal');renderDev()},700);
+}
+function delGoal(id){set('goals',(get('goals')||[]).filter(g=>g.id!==id));renderDev()}
+function updateGoal(id){const val=prompt('Anna nykyinen arvo:');if(val===null)return;set('goals',(get('goals')||[]).map(g=>g.id===id?{...g,cur:val}:g));renderDev()}
+
+function renderChatDev(){
+  const history=(get('chat_history')||[]).sort((a,b)=>b.id-a.id);
+  const tagLabels={tekniikka:'🥏 Tekniikka',viikko:'📋 Viikko-ohjelma',kisa:'🏆 Kisa-analyysi',tavoite:'⭐ Tavoite',nopeus:'⚡ Nopeus',muu:'💬 Yleinen'};
+  const tagColors={tekniikka:'var(--bl)',viikko:'var(--pl)',kisa:'var(--al)',tavoite:'var(--gl)',nopeus:'var(--cl)',muu:'var(--bg)'};
+  const tagTxtColors={tekniikka:'var(--bd)',viikko:'var(--pd)',kisa:'var(--ad)',tavoite:'var(--gd)',nopeus:'var(--cd)',muu:'var(--t2)'};
+  let h='<div class=\"info-box\" style=\"margin-bottom:10px\">Chat-historia kopioituu automaattisesti mukaan Kopioi tilanne -nappiin.</div>';
+  h+='<button class=\"btn btn-out btn-sm\" onclick=\"openM(\'m-chat\')\" style=\"margin-bottom:12px\">+ Tallenna chatista</button>';
+  if(!history.length){
+    h+='<div class=\"empty\"><div class=\"ei\">💬</div><div class=\"et\">Ei tallennettuja keskusteluja.</div></div>';
+  }else{
+    history.forEach(function(c){
+      const date=new Date(c.id).toLocaleDateString('fi',{day:'numeric',month:'numeric',year:'numeric'});
+      h+='<div class=\"chat-item\"><div class=\"ci-head\"><div style=\"font-size:18px\">💬</div>';
+      h+='<div style=\"flex:1\"><div class=\"ci-topic\">'+c.title+'</div><div class=\"ci-date\">'+date+'</div></div>';
+      h+='<button data-del-chat=\"'+c.id+'\" style=\"background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px;padding:0\">✕</button></div>';
+      h+='<span class=\"ci-tag\" style=\"background:'+(tagColors[c.tag]||'var(--bg)')+';color:'+(tagTxtColors[c.tag]||'var(--t2)')+';margin-bottom:8px;display:inline-block\">'+(tagLabels[c.tag]||'💬 Yleinen')+'</span>';
+      h+='<div class=\"ci-body\">'+c.body+'</div></div>';
+    });
+  }
+  document.getElementById('dev-content').innerHTML=h;
+  document.getElementById('dev-content').querySelectorAll('[data-del-chat]').forEach(function(btn){
+    btn.addEventListener('click',function(){delChatEntry(Number(btn.dataset.delChat))});
+  });
+}
+function saveChatEntry(){
+  const title=v('ch-title');const body=v('ch-body');
+  if(!body.trim()){alert('Kirjoita sisältö ensin');return}
+  const h=get('chat_history')||[];
+  h.push({id:Date.now(),title:title||'Valmennuskeskustelu',tag:v('ch-tag'),body:body});
+  set('chat_history',h);flash('ch-msg');
+  setTimeout(()=>{closeM('m-chat');setV('ch-title','');setV('ch-body','')},700);
+}
+function delChatEntry(id){set('chat_history',(get('chat_history')||[]).filter(c=>c.id!==id));renderDev()}
+
+function renderSettings(){
+  const p=get('profile')||DEF;
+  setV('s-rating',p.rating||919);setV('s-metrix',p.metrix||939);
+  setV('s-target',p.target||940);setV('s-mtarget',p.metrix_target||960);
+  setV('s-bh',p.bh_target||110);setV('s-fh',p.fh_target||88);setV('s-home',p.home||'');
+  const d=ld();
+  document.getElementById('data-summary').innerHTML=[
+    'Nopeustestit: <b>'+(d.speeds||[]).length+'</b>',
+    'Kisoja: <b>'+(d.comps||[]).length+'</b>',
+    'Rating-kirjaukset: <b>'+(d.ratings||[]).length+'</b>',
+    'Chat-historia: <b>'+(d.chat_history||[]).length+'</b>',
+    'Puttaussessiot: <b>'+(d.putti_sessions||[]).length+'</b>',
+    'Tavoitteet: <b>'+(d.goals||[]).length+'</b>',
+    'Tapahtumat: <b>'+(d.events||[]).length+'</b>',
+    'Metrix-radat: <b>'+(d.metrix||[]).length+'</b>'
+  ].join('<br>');
+}
+function saveSettings(){
+  const p=get('profile')||DEF;
+  set('profile',{...p,rating:parseInt(v('s-rating'))||p.rating,metrix:parseInt(v('s-metrix'))||p.metrix,target:parseInt(v('s-target'))||p.target,metrix_target:parseInt(v('s-mtarget'))||p.metrix_target,bh_target:parseFloat(v('s-bh'))||p.bh_target,fh_target:parseFloat(v('s-fh'))||p.fh_target,home:v('s-home')});
+  flash('s-msg');setTimeout(()=>renderProfile(),900);
+}
+function exportData(){
+  const data=localStorage.getItem(SK)||'{}';
+  const date=new Date().toISOString().slice(0,10);
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
+  const box=document.createElement('div');
+  box.style.cssText='background:var(--card);border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))';
+  box.innerHTML='<div style=\"font-size:16px;font-weight:600;margin-bottom:6px\">Tallenna varmuuskopio</div>'+
+    '<div id=\"exp-summary\" style=\"font-size:12px;color:var(--t2);background:var(--bg);padding:8px 10px;border-radius:var(--rs);margin-bottom:12px\">Lasketaan...</div>'+
+    '<button id=\"exp-dl\" style=\"width:100%;background:var(--g);color:#fff;border:none;padding:13px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:8px;cursor:pointer\">⬇ Lataa tiedostona (JSON)</button>'+
+    '<button id=\"exp-cp\" style=\"width:100%;background:none;border:1.5px solid var(--border);color:var(--text);padding:13px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:8px;cursor:pointer\">📋 Kopioi leikepöydälle</button>'+
+    '<button id=\"exp-cancel\" style=\"width:100%;background:none;border:none;color:var(--t3);padding:10px;font-size:14px;cursor:pointer\">Peruuta</button>';
+  modal.appendChild(box);document.body.appendChild(modal);
+  document.getElementById('exp-cancel').onclick=()=>modal.remove();
+  // Show data summary
+  try{
+    const d2=JSON.parse(data);
+    const summary=document.getElementById('exp-summary');
+    if(summary)summary.innerHTML=
+      'Kisat: <b>'+(d2.comps||[]).length+'</b> · '+
+      'Nopeudet: <b>'+(d2.speeds||[]).length+'</b> · '+
+      'Rating: <b>'+(d2.ratings||[]).length+'</b> · '+
+      'Chat: <b>'+(d2.chat_history||[]).length+'</b> · '+
+      'Koko: <b>'+Math.round(data.length/1024)+'KB</b>';
+  }catch(e){}
+  document.getElementById('exp-dl').onclick=()=>{
+    try{const blob=new Blob([data],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='frisbeepro_jesse_'+date+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);modal.remove();}catch(e){alert('Lataus ei onnistunut: '+e.message);}
+  };
+  document.getElementById('exp-cp').onclick=()=>{
+    // Try clipboard API first
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(data).then(()=>{
+        modal.remove();
+        alert('✓ Kopioitu!\nMene uuteen sovellukseen → Asetukset → Tuo varmuuskopio → Liitä tekstikenttään');
+      }).catch(()=>showPasteModal(data,modal));
+    }else{
+      showPasteModal(data,modal);
+    }
+  };
+}
+function showPasteModal(data,modal){
+  if(modal)modal.remove();
+  const m=document.createElement('div');
+  m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
+  const box=document.createElement('div');
+  box.style.cssText='background:var(--card);border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px;max-height:70vh;overflow-y:auto';
+  box.innerHTML='<div style=\"font-size:15px;font-weight:600;margin-bottom:6px\">Kopioi data manuaalisesti</div>'+
+    '<div style=\"font-size:12px;color:var(--t2);margin-bottom:8px\">Valitse KAIKKI teksti alla → pidä pohjassa → Kopioi → mene uuteen sovellukseen → Asetukset → Tuo → Liitä tekstikenttään</div>';
+  const ta=document.createElement('textarea');
+  ta.value=data;ta.readOnly=true;
+  ta.style.cssText='width:100%;height:150px;font-size:9px;border:1px solid var(--border);border-radius:8px;padding:6px;font-family:monospace;margin-bottom:8px';
+  const closeBtn=document.createElement('button');
+  closeBtn.textContent='Sulje';
+  closeBtn.style.cssText='width:100%;background:var(--g);color:#fff;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer';
+  closeBtn.onclick=()=>m.remove();
+  box.appendChild(ta);box.appendChild(closeBtn);
+  m.appendChild(box);document.body.appendChild(m);
+  setTimeout(()=>{ta.focus();ta.select()},100);
+}
+function importData(){
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
+  const box=document.createElement('div');
+  box.style.cssText='background:var(--card);border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))';
+  box.innerHTML='<div style=\"font-size:16px;font-weight:600;margin-bottom:14px\">Tuo varmuuskopio</div>'+
+    '<button id=\"imp-file\" style=\"width:100%;background:var(--g);color:#fff;border:none;padding:13px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:8px;cursor:pointer\">Tiedostosta</button>'+
+    '<button id=\"imp-paste\" style=\"width:100%;background:none;border:1.5px solid var(--border);color:var(--text);padding:13px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:8px;cursor:pointer\">Liitä tekstikenttaan</button>'+
+    '<button id=\"imp-cancel\" style=\"width:100%;background:none;border:none;color:var(--t3);padding:10px;font-size:14px;cursor:pointer\">Peruuta</button>';
+  modal.appendChild(box);document.body.appendChild(modal);
+  document.getElementById('imp-cancel').onclick=()=>modal.remove();
+  document.getElementById('imp-file').onclick=()=>{modal.remove();const input=document.createElement('input');input.type='file';input.accept='.json';input.onchange=e=>{const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=ev=>{processImportData(ev.target.result,null)};reader.readAsText(file)};input.click()};
+  document.getElementById('imp-paste').onclick=()=>{modal.remove();importFromPaste(null)};
+}
+function processImportData(jsonStr,modal){
+  try{
+    const inc=JSON.parse(jsonStr.trim());
+    // Array fields - merge by ID
+    const ARRAY_FIELDS=['ratings','speeds','events','comps','metrix','goals','putti_sessions','chat_history','coach_notes'];
+    // Object fields - copy directly
+    const OBJ_FIELDS=['profile','disc_analytics'];
+    let cur={};try{cur=JSON.parse(localStorage.getItem(SK)||'{}')}catch(e){}
+    // Merge arrays
+    ARRAY_FIELDS.forEach(f=>{
+      if(!inc[f]||!Array.isArray(inc[f]))return;
+      if(!cur[f])cur[f]=[];
+      const ids=new Set(cur[f].map(x=>x.id));
+      cur[f]=[...cur[f],...inc[f].filter(x=>!ids.has(x.id))];
+    });
+    // Copy objects
+    OBJ_FIELDS.forEach(f=>{if(inc[f])cur[f]=inc[f]});
+    // Copy individual keys (set tracking, weights etc)
+    Object.keys(inc).forEach(k=>{
+      if(ARRAY_FIELDS.includes(k)||OBJ_FIELDS.includes(k))return;
+      if(cur[k]===undefined)cur[k]=inc[k];
+    });
+    localStorage.setItem(SK,JSON.stringify(cur));
+    if(modal)modal.remove();
+    alert('✓ Tiedot tuotu onnistuneesti!\nKomponentit:\n- Kisat: '+( inc.comps||[]).length+'\n- Nopeudet: '+(inc.speeds||[]).length+'\n- Profiili: '+(inc.profile?'kyllä':'ei')+'\n\nLadataan uudelleen...');
+    location.reload();
+  }catch(err){alert('Tuontivirhe: '+err.message+'\n\nVarmista että tiedosto on oikea varmuuskopio.')}
+}
+function importFromPaste(modal){
+  if(modal)modal.remove();
+  const m2=document.createElement('div');
+  m2.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
+  const box=document.createElement('div');
+  box.style.cssText='background:var(--card);border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px';
+  const ta=document.createElement('textarea');ta.placeholder='Liita JSON-data tahan...';
+  ta.style.cssText='width:100%;height:160px;font-size:11px;border:1.5px solid var(--border);border-radius:8px;padding:8px;font-family:monospace;margin:10px 0';
+  const importBtn=document.createElement('button');importBtn.textContent='Tuo data';
+  importBtn.style.cssText='width:100%;background:var(--g);color:#fff;border:none;padding:13px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer';
+  importBtn.onclick=()=>processImportData(ta.value,m2);
+  const cancelBtn=document.createElement('button');cancelBtn.textContent='Peruuta';
+  cancelBtn.style.cssText='width:100%;background:none;border:none;color:var(--t3);padding:10px;font-size:14px;cursor:pointer';
+  cancelBtn.onclick=()=>m2.remove();
+  box.appendChild(ta);box.appendChild(importBtn);box.appendChild(cancelBtn);
+  m2.appendChild(box);document.body.appendChild(m2);
+}
+
+function exportToUrl(){
+  const data = localStorage.getItem(SK)||'{}';
+  const d = JSON.parse(data);
+  // Only export essential arrays + profile (not migration flags etc)
+  const FIELDS=['ratings','speeds','events','comps','metrix','goals','putti_sessions','chat_history','coach_notes'];
+  const exportData={};
+  FIELDS.forEach(f=>{if(d[f]&&d[f].length)exportData[f]=d[f]});
+  if(d.profile)exportData.profile=d.profile;
+  if(d.disc_analytics)exportData.disc_analytics=d.disc_analytics;
+  
+  const json=JSON.stringify(exportData);
+  const encoded=encodeURIComponent(json);
+  const url=window.location.href.split('#')[0]+'#import='+encoded;
+  
+  if(url.length>50000){
+    alert('Data on liian suuri URL-siirtoon ('+Math.round(url.length/1024)+'KB).\nKäytä Lataa tiedostona -vaihtoehtoa.');
+    return;
+  }
+  
+  // Show the URL with copy button
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  const box=document.createElement('div');
+  box.style.cssText='background:var(--card);border-radius:16px;padding:20px;width:100%;max-width:440px';
+  const ta=document.createElement('textarea');
+  ta.value=url;ta.readOnly=true;
+  ta.style.cssText='width:100%;height:100px;font-size:9px;border:1px solid var(--border);border-radius:8px;padding:6px;font-family:monospace;margin:10px 0;word-break:break-all';
+  const info=document.createElement('div');
+  info.innerHTML='<b>Ohjeet:</b><br>1. Kopioi URL alla<br>2. Avaa uusi sovellus<br>3. Liitä URL osoitekenttään<br>4. Data siirtyy automaattisesti!';
+  info.style.cssText='font-size:12px;color:var(--t2);margin-bottom:10px;line-height:1.6';
+  const copyBtn=document.createElement('button');
+  copyBtn.textContent='Kopioi URL leikepöydälle';
+  copyBtn.style.cssText='width:100%;background:var(--g);color:#fff;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px';
+  copyBtn.onclick=()=>{
+    navigator.clipboard.writeText(url).then(()=>{
+      copyBtn.textContent='✓ Kopioitu!';
+      setTimeout(()=>{copyBtn.textContent='Kopioi URL leikepöydälle'},2000);
+    }).catch(()=>{ta.select();document.execCommand('copy')});
+  };
+  const closeBtn=document.createElement('button');
+  closeBtn.textContent='Sulje';
+  closeBtn.style.cssText='width:100%;background:none;border:none;color:var(--t3);padding:8px;font-size:13px;cursor:pointer';
+  closeBtn.onclick=()=>modal.remove();
+  box.appendChild(info);box.appendChild(ta);box.appendChild(copyBtn);box.appendChild(closeBtn);
+  modal.appendChild(box);document.body.appendChild(modal);
+  setTimeout(()=>{ta.select()},100);
+}
+
+function syncAllCompsToCalendar(){
+  const comps=get('comps')||[];
+  if(!comps.length){alert('Ei kisoja lisättäväksi.');return;}
+  const events=get('events')||[];
+  const kisaDates=new Set(events.filter(e=>e.type==='kisa').map(e=>e.date));
+  let added=0;
+  comps.forEach(c=>{
+    if(!c.name||!c.date) return;
+    if(!kisaDates.has(c.date)){
+      events.push({id:Date.now()+added,type:'kisa',name:c.name,date:c.date,note:c.course||''});
+      kisaDates.add(c.date);added++;
+    }
+  });
+  if(added>0){set('events',events);alert('Lisätty '+added+' kisaa kalenteriin!');}
+  else alert('Kaikki kisat ovat jo kalenterissa ('+comps.length+' kisaa).');
+}
+
+
+// ===== URL-BASED DATA IMPORT =====
+// If URL contains #import=... load data automatically on first open
+(function checkUrlImport(){
+  try{
+    const hash = window.location.hash;
+    if(!hash.startsWith('#import=')) return;
+    const encoded = hash.slice(8);
+    const jsonStr = decodeURIComponent(encoded);
+    const inc = JSON.parse(jsonStr);
+    const ARRAY_FIELDS=['ratings','speeds','events','comps','metrix','goals','putti_sessions','chat_history','coach_notes'];
+    let cur={};try{cur=JSON.parse(localStorage.getItem(SK)||'{}')}catch(e){}
+    ARRAY_FIELDS.forEach(f=>{
+      if(!inc[f]||!Array.isArray(inc[f]))return;
+      if(!cur[f])cur[f]=[];
+      const ids=new Set(cur[f].map(x=>x.id));
+      cur[f]=[...cur[f],...inc[f].filter(x=>!ids.has(x.id))];
+    });
+    if(inc.profile)cur.profile=inc.profile;
+    if(inc.disc_analytics)cur.disc_analytics=inc.disc_analytics;
+    localStorage.setItem(SK,JSON.stringify(cur));
+    // Clear URL hash after import
+    history.replaceState(null,'',window.location.pathname);
+    console.log('[FrisbeePro] Data imported from URL');
+  }catch(e){
+    console.log('[FrisbeePro] No URL import or error:',e.message);
+  }
+})();
+
+renderProfile();
+</script>
+</body>
+</html>
