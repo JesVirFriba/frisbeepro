@@ -473,6 +473,7 @@ function set(k,v){
     const d=ld();
     d[k]=v;
     sv(d);
+    gistScheduleSave();
   }catch(e){
     console.error('FrisbeePro: set error for key',k,e);
     showStorageError('Tallentaminen epäonnistui');
@@ -578,17 +579,13 @@ async function gistLoad(){
   }catch(e){gistUpdateStatus('error','Latausvirhe');return false;}
 }
 
-// Auto-save: triggered after any set() call, debounced 4 seconds
+// Auto-save: debounced 4 seconds after any set() call
 function gistScheduleSave(){
   if(!getGistToken())return;
   clearTimeout(gistSaveTimer);
   gistSaveTimer=setTimeout(()=>gistSave(),4000);
   gistUpdateStatus('saving','Odottaa...');
 }
-
-// Patch set() to trigger auto-save
-const _origSet=set;
-function set(k,val){_origSet(k,val);gistScheduleSave();}
 
 // Save before page unload
 window.addEventListener('beforeunload',()=>{
