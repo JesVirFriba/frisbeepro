@@ -1070,21 +1070,21 @@ function renderWeekView() {
     const sessionRoute = {heitto_tek:'throw',heitto_nop:'throw',voima_a:'str',voima_b:'str',putti:'putti',mob:'mob',aktivointi:'aktivointi',comp_day:'comp_day'};
     const clickTarget = sessionRoute[mainSession];
     const clickable = clickTarget && !isPast;
-    const tag = clickable ? 'button' : 'div';
-    const clickExtra = clickable ? ' onclick="trainTab(\''+clickTarget+'\',null);renderTrain()"' : '';
+    const onclickAttr = clickable ? ' onclick="trainTab(\''+clickTarget+'\',null);renderTrain()"' : '';
+    const tagStyle = 'display:flex;align-items:center;gap:8px;padding:10px 12px;background:'+cardBg+';border-radius:var(--r);margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:'+cardBorder+';opacity:'+opacity+';width:100%;text-align:left;font-family:inherit;cursor:'+(clickable?'pointer':'default');
 
-    h += '<'+tag+clickExtra+' style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:'+cardBg+';border-radius:var(--r);margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:'+cardBorder+';opacity:'+opacity+';width:100%;text-align:left;font-family:inherit;cursor:'+(clickable?'pointer':'default')+'">';
-    h += '<div style=\"width:36px;flex-shrink:0;text-align:center\">';
-    h += '<div style=\"font-size:10px;font-weight:700;color:'+dayCol+';text-transform:uppercase\">'+day.day+'</div>';
-    h += '<div style=\"font-size:22px;line-height:1.2\">'+day.icon+'</div>';
-    h += '<div style=\"font-size:10px;color:var(--t3)\">'+day.date.slice(8)+'.</div>';
+    h += '<div'+onclickAttr+' style="'+tagStyle+'">';
+    h += '<div style="width:36px;flex-shrink:0;text-align:center">';
+    h += '<div style="font-size:10px;font-weight:700;color:'+dayCol+';text-transform:uppercase">'+day.day+'</div>';
+    h += '<div style="font-size:22px;line-height:1.2">'+day.icon+'</div>';
+    h += '<div style="font-size:10px;color:var(--t3)">'+day.date.slice(8)+'.</div>';
     h += '</div>';
-    h += '<div style=\"flex:1;min-width:0\">';
-    h += '<div style=\"font-size:12px;font-weight:600;color:'+textCol+';margin-bottom:4px;line-height:1.3\">'+day.note+'</div>';
-    h += '<div style=\"display:flex;gap:3px;flex-wrap:wrap\">'+badges+'</div>';
+    h += '<div style="flex:1;min-width:0">';
+    h += '<div style="font-size:12px;font-weight:600;color:'+textCol+';margin-bottom:4px;line-height:1.3">'+day.note+'</div>';
+    h += '<div style="display:flex;gap:3px;flex-wrap:wrap">'+badges+'</div>';
     h += '</div>';
     if(clickable) h += '<div style="font-size:16px;color:'+sc.col+';flex-shrink:0">›</div>';
-    h += '</'+tag+'>';
+    h += '</div>';
   });
 
   // Month view button
@@ -1666,6 +1666,8 @@ function renderAktivointi(){
 
   cont.innerHTML=h;
 }
+
+function renderCal(){
   const MNAMES=['Tammikuu','Helmikuu','Maaliskuu','Huhtikuu','Toukokuu','Kesäkuu','Heinäkuu','Elokuu','Syyskuu','Lokakuu','Marraskuu','Joulukuu'];
   document.getElementById('cal-lbl').textContent=MNAMES[calM]+' '+calY;
   const events=get('events')||[];
