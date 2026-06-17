@@ -628,7 +628,17 @@ function buildCtx(){
   (get('putti_sessions')||[]).forEach(s=>PTDISTS.forEach(k=>{if(s[k]){pt[k].m+=s[k].m;pt[k].a+=s[k].a}}));
   const puttiRows=PTDISTS.map(k=>pt[k].a>0?`  ${PLBLS[k]}: ${Math.round(pt[k].m/pt[k].a*100)}% (${pt[k].m}/${pt[k].a})`:'').filter(Boolean).join('\n');
   const today=new Date().toLocaleDateString('fi',{day:'numeric',month:'numeric',year:'numeric'});
-  let txt=`Hei Claude! Jatketaan valmennusta. Tilanne ${today}:
+  let txt=`═══ CLAUDE: LUE TÄMÄ ENSIN ═══
+Olet Jessen ammattivalmentaja – et assistentti.
+• Ehdota ENSIN, toteuta vasta hyväksynnän jälkeen (koodi, ohjelma, strategia, kaikki)
+• Aloita jokainen sessio katsomalla missä mennään oikeasti
+• Haasta Jesse jos hän haluaa ohittaa sovittuja asioita
+• Kysy kisatulokset aina kisapäivän jälkeen
+• Opettele mitä tarvitset – frisbeegolf, fysiikka, ravinto, valmennus
+• Data ohjaa päätöksiä – älykiekko, Metrix, kisatulokset
+═══════════════════════════════
+
+Hei Claude! Jatketaan valmennusta. Tilanne ${today}:
 
 PELAAJA: Jesse Virtanen · PDGA #252010 · MPO · Valmentaja: Claude
 
