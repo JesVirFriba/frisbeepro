@@ -1002,10 +1002,9 @@ function delSpeed(id){set('speeds',(get('speeds')||[]).filter(s=>s.id!==id));ren
 
 
 // ===== COMPETITION DAY PROTOCOL =====
-function renderCompDay(){
-  var cont=document.getElementById('train-content');
 
-  var PROTOCOL=[
+function buildCompProtocol(){
+  return [
     {
       time:'-45 min',label:'Saapuminen',icon:'🚗',color:'var(--bl)',tcol:'var(--bd)',
       steps:[
@@ -1087,65 +1086,49 @@ function renderCompDay(){
       ]
     }
   ];
+}
 
-  // Check status
-  var todayChecks=get('comp_day_checks')||{};
-  var totalSteps=PROTOCOL.reduce(function(a,p){return a+p.steps.length},0);
-  var doneSteps=Object.keys(todayChecks).length;
-
-  var h='';
-
-  // Header
-  h+='<div style="background:linear-gradient(135deg,#085041,#1D9E75);border-radius:var(--r);padding:16px;margin-bottom:12px;color:#fff">';
+function buildCompHeader(doneSteps, totalSteps){
+  var pct=Math.round(doneSteps/totalSteps*100);
+  var h='<div style="background:linear-gradient(135deg,#085041,#1D9E75);border-radius:var(--r);padding:16px;margin-bottom:12px;color:#fff">';
   h+='<div style="font-size:16px;font-weight:700;margin-bottom:2px">🏆 Kisapäivän protokolla</div>';
   h+='<div style="font-size:12px;opacity:.8;margin-bottom:10px">Jesse Virtanen · MPO · Optimoitu kamppailutaustaiselle</div>';
   h+='<div style="display:flex;gap:12px">';
   h+='<div style="text-align:center"><div style="font-size:22px;font-weight:700">'+doneSteps+'</div><div style="font-size:10px;opacity:.7">Tehty</div></div>';
   h+='<div style="text-align:center"><div style="font-size:22px;font-weight:700">'+totalSteps+'</div><div style="font-size:10px;opacity:.7">Yhteensä</div></div>';
-  h+='<div style="flex:1"><div style="height:6px;background:rgba(255,255,255,.3);border-radius:3px;margin-top:10px;overflow:hidden"><div style="height:100%;width:'+Math.round(doneSteps/totalSteps*100)+'%;background:#fff;border-radius:3px"></div></div></div>';
+  h+='<div style="flex:1"><div style="height:6px;background:rgba(255,255,255,.3);border-radius:3px;margin-top:10px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:#fff;border-radius:3px"></div></div></div>';
   h+='</div></div>';
+  return h;
+}
 
-  // Reset button
-  h+='<div style="display:flex;gap:6px;margin-bottom:12px">';
-  h+='<button id="comp-reset" class="btn btn-out btn-sm" style="flex:1">↺ Nollaa kisapäivä</button>';
-  h+='<button id="comp-done" class="btn btn-sm" style="flex:1">✓ Kaikki tehty</button>';
+function buildCompPhase(phase, pi, todayChecks){
+  var phaseDone=phase.steps.every(function(s,si){return todayChecks[pi+'_'+si]});
+  var h='<div style="margin-bottom:10px">';
+  h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">';
+  h+='<span style="font-size:20px">'+phase.icon+'</span>';
+  h+='<div style="flex:1">';
+  h+='<div style="font-size:13px;font-weight:700;color:'+phase.tcol+'">'+phase.label+'</div>';
+  h+='<div style="font-size:10px;color:var(--t3)">'+phase.time+'</div>';
   h+='</div>';
-
-  // Protocol steps
-  PROTOCOL.forEach(function(phase,pi){
-    var phaseDone=phase.steps.every(function(s,si){return todayChecks[pi+'_'+si]});
-    h+='<div style="margin-bottom:10px">';
-    h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">';
-    h+='<span style="font-size:20px">'+phase.icon+'</span>';
-    h+='<div style="flex:1">';
-    h+='<div style="font-size:13px;font-weight:700;color:'+phase.tcol+'">'+phase.label+'</div>';
-    h+='<div style="font-size:10px;color:var(--t3)">'+phase.time+'</div>';
+  if(phaseDone)h+='<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:var(--gl);color:var(--gd);font-weight:600">✓ Valmis</span>';
+  h+='</div>';
+  h+='<div style="background:'+phase.color+';border-radius:var(--rs);padding:10px 12px">';
+  phase.steps.forEach(function(step,si){
+    var key=pi+'_'+si;
+    var checked=todayChecks[key];
+    var border=si<phase.steps.length-1?'.5px solid rgba(0,0,0,.08)':'none';
+    h+='<div class="comp-step-row" data-key="'+key+'" style="display:flex;align-items:flex-start;gap:8px;padding:5px 0;cursor:pointer;border-bottom:'+border+'">';
+    h+='<div style="width:20px;height:20px;border-radius:5px;border:1.5px solid '+(checked?phase.tcol:'rgba(0,0,0,.2)')+';background:'+(checked?phase.tcol:'transparent')+';flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px">';
+    h+=(checked?'<span style="color:#fff;font-size:11px">✓</span>':'');
     h+='</div>';
-    if(phaseDone)h+='<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:var(--gl);color:var(--gd);font-weight:600">✓ Valmis</span>';
+    h+='<div style="font-size:12px;color:'+phase.tcol+';line-height:1.5;'+(checked?'opacity:.6;text-decoration:line-through':'')+'">'+step+'</div>';
     h+='</div>';
-    h+='<div style="background:'+phase.color+';border-radius:var(--rs);padding:10px 12px">';
-    phase.steps.forEach(function(step,si){
-      var key=pi+'_'+si;
-      var checked=todayChecks[key];
-      h+='<div class="comp-step-row" data-key="'+key+'" style="display:flex;align-items:flex-start;gap:8px;padding:5px 0;cursor:pointer;border-bottom:'+(si<phase.steps.length-1?'.5px solid rgba(0,0,0,.08)':'none')+'">';
-      h+='<div style="width:20px;height:20px;border-radius:5px;border:1.5px solid '+(checked?phase.tcol:'rgba(0,0,0,.2)')+';background:'+(checked?phase.tcol:'transparent')+';flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px">';
-      h+=(checked?'<span style="color:#fff;font-size:11px">✓</span>':'');
-      h+='</div>';
-      h+='<div style="font-size:12px;color:'+phase.tcol+';line-height:1.5;'+(checked?'opacity:.6;text-decoration:line-through':'')+'">'+step+'</div>';
-      h+='</div>';
-    });
-    h+='</div></div>';
   });
+  h+='</div></div>';
+  return h;
+}
 
-  // Coach note
-  h+='<div class="coach-msg" style="margin-top:8px">';
-  h+='💬 <strong>Valmentaja</strong><br>';
-  h+='Kamppailutausta aktivoi hermostosi paineessa. Hengitysharjoitus (-30 min) on siksi kriittinen – se on ainoa tapa ohjata hermosto rauhoittumistilaan ennen kilpailua. Älä ohita sitä.';
-  h+='</div>';
-
-  cont.innerHTML=h;
-
-  // Wire up step checkboxes
+function wireCompEvents(cont, protocol){
   cont.querySelectorAll('.comp-step-row').forEach(function(row){
     row.addEventListener('click',function(){
       var key=row.dataset.key;
@@ -1156,24 +1139,47 @@ function renderCompDay(){
       renderCompDay();
     });
   });
-
-  // Reset button
   var resetBtn=cont.querySelector('#comp-reset');
   if(resetBtn)resetBtn.addEventListener('click',function(){
     set('comp_day_checks',{});
     renderCompDay();
   });
-
-  // Done all button
   var doneBtn=cont.querySelector('#comp-done');
   if(doneBtn)doneBtn.addEventListener('click',function(){
     var checks={};
-    PROTOCOL.forEach(function(phase,pi){
+    protocol.forEach(function(phase,pi){
       phase.steps.forEach(function(s,si){checks[pi+'_'+si]=1});
     });
     set('comp_day_checks',checks);
     renderCompDay();
   });
+}
+
+function renderCompDay(){
+  var cont=document.getElementById('train-content');
+  var protocol=buildCompProtocol();
+  var todayChecks=get('comp_day_checks')||{};
+  var totalSteps=protocol.reduce(function(a,p){return a+p.steps.length},0);
+  var doneSteps=Object.keys(todayChecks).length;
+
+  var h=buildCompHeader(doneSteps,totalSteps);
+
+  h+='<div style="display:flex;gap:6px;margin-bottom:12px">';
+  h+='<button id="comp-reset" class="btn btn-out btn-sm" style="flex:1">↺ Nollaa kisapäivä</button>';
+  h+='<button id="comp-done" class="btn btn-sm" style="flex:1">✓ Kaikki tehty</button>';
+  h+='</div>';
+
+  protocol.forEach(function(phase,pi){
+    h+=buildCompPhase(phase,pi,todayChecks);
+  });
+
+  h+='<div class="coach-msg" style="margin-top:8px">';
+  h+='💬 <strong>Valmentaja</strong><br>';
+  h+='Kamppailutausta aktivoi hermostosi paineessa. Hengitysharjoitus (-30 min) on siksi kriittinen – se on ainoa tapa ohjata hermosto rauhoittumistilaan ennen kilpailua. Älä ohita sitä.';
+  h+='</div>';
+
+  cont.innerHTML=h;
+  wireCompEvents(cont,protocol);
 }
 
 // ===== WEEK & MONTH PROGRAM =====
