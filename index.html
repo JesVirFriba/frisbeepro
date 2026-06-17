@@ -399,6 +399,13 @@ textarea{resize:none;min-height:65px}
   <button class="btn" onclick="saveSettings()">Tallenna</button>
   <div class="sv-msg" id="s-msg">✓ Tallennettu!</div>
   <div class="sect">Varmuuskopio & siirto</div>
+  <div class="field">
+    <div class="label">GitHub Gist -token (varmuuskopio)</div>
+    <input id="s-gist-token" type="password" placeholder="ghp_..." autocomplete="off">
+    <div style="font-size:10px;color:var(--t3);margin-top:3px">Luo token: github.com/settings/tokens → Classic → gist-oikeus</div>
+  </div>
+  <button class="btn" onclick="saveGistToken()" style="margin-bottom:8px">Tallenna & käynnistä synkronointi</button>
+  <div id="gist-status-settings" style="font-size:12px;color:var(--t2);margin-bottom:8px"></div>
   <div style="font-size:12px;color:var(--bd);background:var(--bl);padding:8px 10px;border-radius:var(--rs);margin-bottom:8px;line-height:1.5"><b>Helpoin tapa siirtää:</b> Luo siirto-URL → avaa uusi sovellus → liitä URL osoitekenttään → data siirtyy automaattisesti!</div>
   <button class="btn" onclick="exportToUrl()" style="margin-bottom:8px">🔗 Luo siirto-URL</button>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
@@ -421,6 +428,123 @@ function v(id){return document.getElementById(id)?.value||''}
 function setV(id,val){const el=document.getElementById(id);if(el)el.value=val}
 function flash(id){const el=document.getElementById(id);if(el){el.style.display='block';setTimeout(()=>{el.style.display='none'},2000)}}
 function now(){return new Date().toLocaleTimeString('fi',{hour:'2-digit',minute:'2-digit'})}
+
+// ===== GITHUB GIST SYNC =====
+const GIST_TOKEN_KEY='fpc_gist_token';
+const GIST_ID_KEY='fpc_gist_id';
+const GIST_FILENAME='frisbeepro-data.json';
+let gistSaveTimer=null;
+let gistStatus='idle'; // idle | saving | saved | error
+
+function getGistToken(){return localStorage.getItem(GIST_TOKEN_KEY)||''}
+function getGistId(){return localStorage.getItem(GIST_ID_KEY)||''}
+function setGistToken(t){localStorage.setItem(GIST_TOKEN_KEY,t)}
+function setGistId(id){localStorage.setItem(GIST_ID_KEY,id)}
+
+function gistUpdateStatus(status,msg){
+  gistStatus=status;
+  const el=document.getElementById('gist-status');
+  if(!el)return;
+  const icons={idle:'☁',saving:'⏳',saved:'✓',error:'⚠'};
+  const cols={idle:'var(--t3)',saving:'var(--ad)',saved:'var(--gd)',error:'#E24B4A'};
+  el.innerHTML=`<span style="color:${cols[status]}">${icons[status]} ${msg}</span>`;
+}
+
+async function gistInit(){
+  const token=getGistToken();
+  if(!token)return null;
+  // Check if existing gist ID works
+  const existingId=getGistId();
+  if(existingId){
+    try{
+      const r=await fetch(`https://api.github.com/gists/${existingId}`,
+        {headers:{Authorization:`token ${token}`,'User-Agent':'frisbeepro'}});
+      if(r.ok)return existingId;
+    }catch(e){}
+  }
+  // Create new gist
+  try{
+    const r=await fetch('https://api.github.com/gists',{
+      method:'POST',
+      headers:{Authorization:`token ${token}`,'Content-Type':'application/json','User-Agent':'frisbeepro'},
+      body:JSON.stringify({description:'FrisbeePro – Jesse Virtanen data backup',public:false,
+        files:{[GIST_FILENAME]:{content:JSON.stringify({version:1,created:new Date().toISOString(),data:{}})}}})
+    });
+    if(r.ok){const d=await r.json();setGistId(d.id);return d.id;}
+  }catch(e){}
+  return null;
+}
+
+async function gistSave(){
+  const token=getGistToken();
+  if(!token){gistUpdateStatus('idle','Ei tokenia');return;}
+  gistUpdateStatus('saving','Tallennetaan...');
+  let id=getGistId();
+  if(!id)id=await gistInit();
+  if(!id){gistUpdateStatus('error','Gist-virhe');return;}
+  try{
+    const payload={version:1,updated:new Date().toISOString(),data:ld()};
+    const r=await fetch(`https://api.github.com/gists/${id}`,{
+      method:'PATCH',
+      headers:{Authorization:`token ${token}`,'Content-Type':'application/json','User-Agent':'frisbeepro'},
+      body:JSON.stringify({files:{[GIST_FILENAME]:{content:JSON.stringify(payload,null,2)}}})
+    });
+    if(r.ok){
+      const t=new Date().toLocaleTimeString('fi',{hour:'2-digit',minute:'2-digit'});
+      gistUpdateStatus('saved',`Tallennettu ${t}`);
+    }else{gistUpdateStatus('error','Tallennus epäonnistui');}
+  }catch(e){gistUpdateStatus('error','Verkkovirhe');}
+}
+
+async function gistLoad(){
+  const token=getGistToken();
+  if(!token)return false;
+  const id=getGistId();
+  if(!id)return false;
+  try{
+    const r=await fetch(`https://api.github.com/gists/${id}`,
+      {headers:{Authorization:`token ${token}`,'User-Agent':'frisbeepro'}});
+    if(!r.ok)return false;
+    const gist=await r.json();
+    const raw=gist.files[GIST_FILENAME]?.content;
+    if(!raw)return false;
+    const parsed=JSON.parse(raw);
+    if(!parsed.data||!parsed.updated)return false;
+    // Compare timestamps – use newer
+    const localUpdated=ld()._updated||'1970-01-01';
+    if(parsed.updated>localUpdated){
+      const merged={...parsed.data,_updated:parsed.updated};
+      sv(merged);
+      gistUpdateStatus('saved',`Ladattu Gististä ${parsed.updated.slice(11,16)}`);
+      return true;
+    }
+    gistUpdateStatus('saved','Ajan tasalla');
+    return false;
+  }catch(e){gistUpdateStatus('error','Latausvirhe');return false;}
+}
+
+// Auto-save: triggered after any set() call, debounced 4 seconds
+function gistScheduleSave(){
+  if(!getGistToken())return;
+  clearTimeout(gistSaveTimer);
+  gistSaveTimer=setTimeout(()=>gistSave(),4000);
+  gistUpdateStatus('saving','Odottaa...');
+}
+
+// Patch set() to trigger auto-save
+const _origSet=set;
+function set(k,val){_origSet(k,val);gistScheduleSave();}
+
+// Save before page unload
+window.addEventListener('beforeunload',()=>{
+  if(getGistToken()&&gistStatus!=='saved'){
+    const token=getGistToken(),id=getGistId();
+    if(token&&id){
+      const payload=JSON.stringify({version:1,updated:new Date().toISOString(),data:ld()});
+      navigator.sendBeacon&&navigator.sendBeacon(`https://api.github.com/gists/${id}`,payload);
+    }
+  }
+});
 
 // ===== DEFAULT PROFILE =====
 const DEF={name:'Jesse Virtanen',pdga:'252010',rating:919,metrix:939,target:940,metrix_target:960,div:'MPO',home:'',coach:'Claude (AI-valmentaja)',bh_target:110,fh_target:88}
@@ -654,6 +778,10 @@ function renderProfile(){
 
   // Copy to Claude button
   h+=`<div class="sect">Valmentajakeskustelu<\/div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+    <div style="font-size:11px;color:var(--t3)" id="gist-status">☁ Ladataan...</div>
+    <button onclick="gistSave()" style="background:none;border:none;font-size:11px;color:var(--bd);cursor:pointer;padding:0">Synkronoi nyt</button>
+  </div>
   <button class="claude-btn" onclick="copyToClaudeChat()">📋 Kopioi tilanne Claude-chattiin<\/button>
   <div class="copy-ok" id="copy-ok">✓ Kopioitu! Avaa Claude.ai ja liitä.<\/div>
   <div style="font-size:11px;color:var(--t3);text-align:center;margin-bottom:12px;line-height:1.5">Kopioi kaikki datasi yhdellä napin painalluksella → liitä uuteen Claude-chattiin<\/div>
@@ -2134,11 +2262,40 @@ function saveChatEntry(){
 }
 function delChatEntry(id){set('chat_history',(get('chat_history')||[]).filter(c=>c.id!==id));renderDev()}
 
+function saveGistToken(){
+  const token=document.getElementById('s-gist-token')?.value?.trim();
+  if(!token){alert('Syötä token ensin');return;}
+  setGistToken(token);
+  const el=document.getElementById('gist-status-settings');
+  if(el)el.innerHTML='<span style="color:var(--ad)">⏳ Yhdistetään...</span>';
+  gistInit().then(id=>{
+    if(id){
+      if(el)el.innerHTML='<span style="color:var(--gd)">✓ Yhdistetty! Gist ID: '+id.slice(0,8)+'...</span>';
+      gistLoad().then(()=>gistSave());
+    }else{
+      if(el)el.innerHTML='<span style="color:#E24B4A">⚠ Virhe – tarkista token</span>';
+    }
+  });
+}
+
 function renderSettings(){
   const p=get('profile')||DEF;
   setV('s-rating',p.rating||919);setV('s-metrix',p.metrix||939);
   setV('s-target',p.target||940);setV('s-mtarget',p.metrix_target||960);
   setV('s-bh',p.bh_target||110);setV('s-fh',p.fh_target||88);setV('s-home',p.home||'');
+  // Show token status
+  const token=getGistToken();
+  const gistEl=document.getElementById('gist-status-settings');
+  if(gistEl){
+    if(token){
+      const id=getGistId();
+      gistEl.innerHTML=id
+        ?'<span style="color:var(--gd)">✓ Synkronointi aktiivinen · Gist: '+id.slice(0,8)+'...</span>'
+        :'<span style="color:var(--ad)">⚠ Token asetettu, ei vielä yhdistetty</span>';
+    }else{
+      gistEl.innerHTML='<span style="color:var(--t3)">Ei tokenia – synkronointi ei käytössä</span>';
+    }
+  }
   const d=ld();
   document.getElementById('data-summary').innerHTML=[
     'Nopeustestit: <b>'+(d.speeds||[]).length+'</b>',
@@ -2370,6 +2527,15 @@ function syncAllCompsToCalendar(){
 })();
 
 renderProfile();
+// Auto-load from Gist on startup
+if(getGistToken()){
+  gistLoad().then(loaded=>{
+    if(loaded)renderProfile();
+    else gistUpdateStatus('saved','Ajan tasalla');
+  });
+}else{
+  gistUpdateStatus('idle','Ei synkronointia – lisää token asetuksista');
+}
 </script>
 </body>
 </html>
