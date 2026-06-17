@@ -1828,31 +1828,6 @@ function delRating(id){set('ratings',(get('ratings')||[]).filter(r=>r.id!==id));
 function renderSpeedDev(){
   const speeds=(get('speeds')||[]).sort((a,b)=>a.date.localeCompare(b.date));
   const bhSp=speeds.filter(s=>s.bh5>0);
-  let h=`<button class="btn btn-out btn-sm" onclick="showPg('speed')" style="margin-bottom:12px">→ Kirjaa nopeustesti (Nopeus-välilehti)<\/button>`;
-  if(bhSp.length>=2){
-      // Group by month, take max per month to avoid duplicates
-      var bhByMo={};
-      bhSp.forEach(function(s){var mo=s.date.slice(0,7);if(!bhByMo[mo]||s.bh5>bhByMo[mo].bh5)bhByMo[mo]=s;});
-      var bhMo=Object.keys(bhByMo).sort().map(function(k){return bhByMo[k]});
-      var mxBH=Math.max(...bhMo.map(function(s){return s.bh5}));
-      var mnBH=Math.min(...bhMo.map(function(s){return s.bh5}));
-      var rngBH=mxBH-mnBH||5;
-      h+='<div class=\"chart-wrap\"><div style=\"font-size:13px;font-weight:600;margin-bottom:10px\">BH kehitys (kuukauden paras)<\/div><div class=\"bar-chart\">';
-      bhMo.slice(-12).forEach(function(s){
-        var pct=Math.round(((s.bh5-mnBH)/rngBH)*75)+15;
-        var lbl=s.date.slice(5,7)+'/'+s.date.slice(2,4);
-        h+='<div class=\"bc\"><div class=\"bv\">'+s.bh5.toFixed(0)+'<\/div>';
-        h+='<div class=\"bb\" style=\"height:'+pct+'%;background:'+(s.bh5===mxBH?'#1D9E75':'#85B7EB')+'\"><\/div>';
-        h+='<div class=\"bl\">'+lbl+'<\/div><\/div>';
-      });
-      h+='<\/div>';
-      if(p.bh_target){h+='<div style=\"font-size:12px;color:var(--t2);margin-top:4px\">Tavoite: '+p.bh_target+' km/h · Ero: '+(p.bh_target-mxBH).toFixed(1)+' km/h<\/div>';}
-      h+='<\/div>';
-    }
-}
-function renderSpeedDev(){
-  const speeds=(get('speeds')||[]).sort((a,b)=>a.date.localeCompare(b.date));
-  const bhSp=speeds.filter(s=>s.bh5>0);
   let h='<button class=\"btn btn-out btn-sm\" onclick=\"showPg(\'speed\')\" style=\"margin-bottom:12px\">→ Kirjaa nopeustesti (Nopeus-välilehti)</button>';
   if(bhSp.length>=2){
     var bhByMo3={};bhSp.forEach(function(s){var mo=s.date.slice(0,7);if(!bhByMo3[mo]||s.bh5>bhByMo3[mo].bh5)bhByMo3[mo]=s;});
@@ -1878,11 +1853,6 @@ function renderSpeedDev(){
   }else{h+='<div class=\"empty\"><div class=\"ei\">⚡</div><div class=\"et\">Ei nopeustestejä</div></div>';}
   document.getElementById('dev-content').innerHTML=h;
 }
-function saveRating(){
-  const r=get('ratings')||[];r.push({id:Date.now(),date:v('rat-date'),val:parseInt(v('rat-val'))||null,mval:parseInt(v('rat-mval'))||null,note:v('rat-note')});
-  set('ratings',r);flash('rat-msg');setTimeout(()=>{closeM('m-rating');renderDev()},700);
-}
-function delRating(id){set('ratings',(get('ratings')||[]).filter(r=>r.id!==id));renderDev()}
 
 function renderPuttiDev(){
   const sessions=get('putti_sessions')||[];
