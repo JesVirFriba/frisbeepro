@@ -419,10 +419,65 @@ textarea{resize:none;min-height:65px}
 <script>
 // ===== STORAGE =====
 const SK='fp_complete_v1';
-function ld(){try{return JSON.parse(localStorage.getItem(SK)||'{}')}catch{return {}}}
-function sv(d){try{localStorage.setItem(SK,JSON.stringify(d))}catch{}}
-function get(k){const d=ld();return d[k]}
-function set(k,v){const d=ld();d[k]=v;sv(d)}
+
+function showStorageError(msg){
+  let el=document.getElementById('storage-error-banner');
+  if(!el){
+    el=document.createElement('div');
+    el.id='storage-error-banner';
+    el.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;background:#E24B4A;color:#fff;padding:10px 16px;font-size:13px;font-weight:600;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.2)';
+    document.body.appendChild(el);
+  }
+  el.innerHTML=`⚠ ${msg} <button onclick="this.parentElement.remove()" style="margin-left:12px;background:rgba(255,255,255,.25);border:none;color:#fff;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:12px">OK</button>`;
+}
+
+function ld(){
+  try{
+    const raw=localStorage.getItem(SK);
+    if(!raw)return {};
+    const parsed=JSON.parse(raw);
+    if(typeof parsed!=='object'||parsed===null)throw new Error('Invalid data');
+    return parsed;
+  }catch(e){
+    console.error('FrisbeePro: localStorage read error',e);
+    showStorageError('Datan lukeminen epäonnistui – data saattaa olla korruptoitunut');
+    return {};
+  }
+}
+
+function sv(d){
+  try{
+    localStorage.setItem(SK,JSON.stringify(d));
+  }catch(e){
+    console.error('FrisbeePro: localStorage write error',e);
+    if(e.name==='QuotaExceededError'||e.code===22){
+      showStorageError('Tallennustila täynnä – vie varmuuskopio asetuksista ja tyhjennä vanha data');
+    }else{
+      showStorageError('Tallentaminen epäonnistui: '+e.message);
+    }
+  }
+}
+
+function get(k){
+  try{
+    const d=ld();
+    return d[k];
+  }catch(e){
+    console.error('FrisbeePro: get error for key',k,e);
+    return null;
+  }
+}
+
+function set(k,v){
+  try{
+    const d=ld();
+    d[k]=v;
+    sv(d);
+  }catch(e){
+    console.error('FrisbeePro: set error for key',k,e);
+    showStorageError('Tallentaminen epäonnistui');
+  }
+}
 function num(id){return parseFloat(document.getElementById(id)?.value)||null}
 function v(id){return document.getElementById(id)?.value||''}
 function setV(id,val){const el=document.getElementById(id);if(el)el.value=val}
