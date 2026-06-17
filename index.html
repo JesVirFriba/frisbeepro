@@ -572,8 +572,64 @@ function renderProfile(){
     <div class="sc"><div class="sn">${bestComp?bestComp.mrating||'–':'–'}<\/div><div class="sl">Paras Metrix-rating<\/div><\/div>
   <\/div>`;
 
-  // Coach message
-  h+=`<div class="coach-msg">💬 <strong>Valmentaja Claude<\/strong><br>Hei Jesse! Tavoitteena kisamenestys MPO-sarjassa. Älykiekon data näyttää BH-nopeus 107,4 avg – hyvä lähtötaso. FH wobble 10° ja hyzer 20° ovat seuraavat kehityskohteet. Lisää kisat kalenteriin ja kirjaa nopeustestitulokset säännöllisesti.<\/div>`;
+  // Dynamic today card
+  const todayStr=new Date().toISOString().slice(0,10);
+  const tomorrowStr=new Date(Date.now()+86400000).toISOString().slice(0,10);
+  const allEvents=(get('events')||[]);
+  const upcomingComps=allEvents.filter(e=>e.type==='kisa'&&e.date>=todayStr).sort((a,b)=>a.date.localeCompare(b.date));
+  const nextComp=upcomingComps[0]||null;
+  const daysToComp=nextComp?Math.ceil((new Date(nextComp.date)-new Date(todayStr))/(1000*60*60*24)):null;
+  const isCompToday=nextComp&&nextComp.date===todayStr;
+  const isPreComp=nextComp&&nextComp.date===tomorrowStr;
+
+  // Get today's session from week plan
+  const todayPlan=(()=>{
+    const base=[
+      {day:0,note:'Täysi lepo – palautuminen',icon:'😴'},
+      {day:1,note:'Tekniikkaheitto + putti',icon:'🥏'},
+      {day:2,note:'Voima A – alaraaja + rotaatio',icon:'💪'},
+      {day:3,note:'Aktivointi + putti',icon:'⚡'},
+      {day:4,note:'Nopeusheitto',icon:'⚡'},
+      {day:5,note:'Voima B – keskivartalo + yläraaja',icon:'💪'},
+      {day:6,note:'Putti + kenttäkierros',icon:'🎯'},
+    ];
+    const dow=new Date().getDay();
+    if(isCompToday)return{note:'KISAPÄIVÄ – seuraa protokollaa',icon:'🏆'};
+    if(isPreComp)return{note:'Aktivointi + putti – kisa huomenna',icon:'⚡'};
+    return base[dow]||base[0];
+  })();
+
+  // Coach message logic
+  const coachMsg=(()=>{
+    if(isCompToday)return'🏆 KISAPÄIVÄ. Muista protokolla: saapuminen ajoissa, hengitys -30min, putti rutiinilla. Aloita PAR-tavoitteella – ei birdie-jahti heti.';
+    if(isPreComp)return`⚡ Kisa huomenna (${nextComp.name||''}). Tänään kevyt aktivointi + putti. Väylästrategia mielessä ennen nukkumaanmenoa. Uni 8-9h.`;
+    if(daysToComp&&daysToComp<=7)return`📅 ${nextComp.name||'Kisa'} ${daysToComp} päivän päästä. Pidä harjoittelu suunnitelman mukaan – ei ylikuormitusta kisaviikolla.`;
+    if(daysToComp&&daysToComp<=14)return`🎯 SM-karsinnat ${daysToComp} päivää. Fokus: pre-shot rutiini joka heittoon. Bogey-recovery harjoittelussa.`;
+    return'💪 Perustreeni käynnissä. Muista kirjata nopeustestit ja puttitulokset sovellukseen.';
+  })();
+
+  const countdownColor=daysToComp&&daysToComp<=7?'var(--rd)':daysToComp&&daysToComp<=14?'var(--ad)':'var(--gd)';
+  const countdownBg=daysToComp&&daysToComp<=7?'var(--rl)':daysToComp&&daysToComp<=14?'var(--al)':'var(--gl)';
+
+  h+=`<div style="background:var(--card);border-radius:var(--r);padding:14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.07)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:22px">${todayPlan.icon}</span>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.04em">Tänään</div>
+          <div style="font-size:14px;font-weight:700;color:var(--text)">${todayPlan.note}</div>
+        </div>
+      </div>
+      ${nextComp?`<div style="text-align:center;background:${countdownBg};border-radius:var(--rs);padding:6px 10px;flex-shrink:0">
+        <div style="font-size:18px;font-weight:800;color:${countdownColor};line-height:1">${isCompToday?'🏆':daysToComp}</div>
+        <div style="font-size:9px;color:${countdownColor};font-weight:600">${isCompToday?'KISA':'päivää'}</div>
+      </div>`:''}
+    </div>
+    <div style="font-size:12px;color:var(--t2);line-height:1.5;background:var(--bg);border-radius:var(--rs);padding:9px 11px">
+      💬 <strong style="color:var(--text)">Valmentaja Claude:</strong> ${coachMsg}
+    </div>
+    ${nextComp&&!isCompToday?`<div style="margin-top:8px;font-size:11px;color:var(--t3);text-align:right">Seuraava: <strong>${nextComp.name||'Kisa'}</strong> ${nextComp.date}</div>`:''}
+  </div>`;
 
   // Active goals
   const activeGoals=(goals).slice(0,3);
@@ -1877,6 +1933,7 @@ function renderDev(){
 }
 function renderRatingDev(){
   const ratings=(get('ratings')||[]).sort((a,b)=>a.date.localeCompare(b.date));
+  const comps=(get('comps')||[]).filter(c=>c.mrating).sort((a,b)=>a.date.localeCompare(b.date));
   const p=get('profile')||DEF;
   let h=`<button class="btn btn-out btn-sm" onclick="openM('m-rating')" style="margin-bottom:12px">+ Lisää rating-kirjaus<\/button>`;
   if(ratings.length>=2){
@@ -1895,6 +1952,19 @@ function renderRatingDev(){
       mxV.slice(-12).forEach(r=>{const pct=Math.round(((r.mval-mn)/rng)*75)+15;h+=`<div class="bc"><div class="bv">${r.mval}<\/div><div class="bb" style="height:${pct}%;background:${r.mval>=(p.metrix_target||9999)?'#1D9E75':'#378ADD'}"><\/div><div class="bl">${r.date.slice(5)}<\/div><\/div>`});
       h+=`<\/div><\/div>`;
     }
+  }
+  // Kisatulosten Metrix-kehitys
+  if(comps.length>=2){
+    const mxC=Math.max(...comps.map(c=>c.mrating)),mnC=Math.min(...comps.map(c=>c.mrating)),rngC=mxC-mnC||20;
+    h+=`<div class="chart-wrap"><div style="font-size:13px;font-weight:600;margin-bottom:9px">Kisatulokset – Metrix per kierros<\/div><div class="bar-chart">`;
+    comps.slice(-16).forEach(c=>{
+      const pct=Math.round(((c.mrating-mnC)/rngC)*75)+15;
+      const isGood=c.mrating>=950;
+      const lbl=c.date.slice(5);
+      h+=`<div class="bc"><div class="bv" style="font-size:9px">${c.mrating}<\/div><div class="bb" style="height:${pct}%;background:${isGood?'#1D9E75':c.mrating>=900?'#378ADD':'#E24B4A'}" title="${c.name||''}"><\/div><div class="bl">${lbl}<\/div><\/div>`;
+    });
+    const avg=Math.round(comps.slice(-10).reduce((s,c)=>s+c.mrating,0)/Math.min(10,comps.length));
+    h+=`<\/div><div style="font-size:12px;color:var(--t2);display:flex;gap:12px;margin-top:4px"><span>Paras: <b style="color:var(--g)">${mxC}<\/b><\/span><span>Avg (10 vk): <b>${avg}<\/b><\/span><span>Heikoin: <b style="color:#E24B4A">${mnC}<\/b><\/span><\/div><\/div>`;
   }
   if(ratings.length){
     h+=`<div class="sect">Historia<\/div>`;
