@@ -1067,8 +1067,13 @@ function renderWeekView() {
     const textCol = isToday ? sc.col : 'var(--text)';
     const dayCol = isToday ? sc.col : 'var(--t3)';
     const opacity = isPast && !isToday ? '.55' : '1';
+    const sessionRoute = {heitto_tek:'throw',heitto_nop:'throw',voima_a:'str',voima_b:'str',putti:'putti',mob:'mob',aktivointi:'aktivointi',comp_day:'comp_day'};
+    const clickTarget = sessionRoute[mainSession];
+    const clickable = clickTarget && !isPast;
+    const tag = clickable ? 'button' : 'div';
+    const clickExtra = clickable ? ' onclick="trainTab(\''+clickTarget+'\',null);renderTrain()"' : '';
 
-    h += '<div style=\"display:flex;align-items:center;gap:8px;padding:10px 12px;background:'+cardBg+';border-radius:var(--r);margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:'+cardBorder+';opacity:'+opacity+'\">';
+    h += '<'+tag+clickExtra+' style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:'+cardBg+';border-radius:var(--r);margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:'+cardBorder+';opacity:'+opacity+';width:100%;text-align:left;font-family:inherit;cursor:'+(clickable?'pointer':'default')+'">';
     h += '<div style=\"width:36px;flex-shrink:0;text-align:center\">';
     h += '<div style=\"font-size:10px;font-weight:700;color:'+dayCol+';text-transform:uppercase\">'+day.day+'</div>';
     h += '<div style=\"font-size:22px;line-height:1.2\">'+day.icon+'</div>';
@@ -1078,8 +1083,8 @@ function renderWeekView() {
     h += '<div style=\"font-size:12px;font-weight:600;color:'+textCol+';margin-bottom:4px;line-height:1.3\">'+day.note+'</div>';
     h += '<div style=\"display:flex;gap:3px;flex-wrap:wrap\">'+badges+'</div>';
     h += '</div>';
-    if(isToday) h += '<div style=\"font-size:16px;color:'+sc.col+';flex-shrink:0\">›</div>';
-    h += '</div>';
+    if(clickable) h += '<div style="font-size:16px;color:'+sc.col+';flex-shrink:0">›</div>';
+    h += '</'+tag+'>';
   });
 
   // Month view button
@@ -1233,6 +1238,7 @@ function renderTrain(){
   else if(trainTabCur==='str')renderStr();
   else if(trainTabCur==='putti')renderPuttiTrain();
   else if(trainTabCur==='mob')renderMob();
+  else if(trainTabCur==='aktivointi')renderAktivointi();
   else if(trainTabCur==='comp_day')renderCompDay();
 }
 
@@ -1592,7 +1598,74 @@ function renderMob(){
   }
 }
 
-function renderCal(){
+function renderAktivointi(){
+  const cont=document.getElementById('train-content');
+  const STEPS=[
+    {id:'ak1',time:'10 min',title:'Dynaaminen lämmittely',color:'var(--gl)',tcol:'var(--gd)',icon:'🔥',exercises:[
+      {name:'Leg swing eteen-taakse',reps:'15 / jalka',desc:'Pidä käsi seinästä kiinni. Heiluta jalkaa suorana eteen ja taakse.'},
+      {name:'Leg swing sivulle',reps:'15 / jalka',desc:'Heiluta jalkaa sivulle ja ristiin. Lonkka auki.'},
+      {name:'Arm circle – pieni → iso',reps:'15 eteen + 15 taakse',desc:'Aloita pienistä ympyröistä, kasvata vähitellen maksimiin.'},
+      {name:'Torso rotation',reps:'20 toistoa',desc:'Jalat hartioiden leveydellä, kädet sivuille. Kierrä yläkeho rauhallisesti.'},
+      {name:'Inchworm',reps:'6 toistoa',desc:'Taivuta eteen, kävele käsillä lankku-asentoon ja takaisin.'},
+    ]},
+    {id:'ak2',time:'5 min',title:'Hengitys & hermosto',color:'var(--bl)',tcol:'var(--bd)',icon:'🧘',exercises:[
+      {name:'Boksi-hengitys (4-4-4-4)',reps:'6 kierrosta',desc:'Sisään 4 sek → pidätys 4 sek → ulos 4 sek → pidätys 4 sek. Aktivoi parasympaattinen hermosto.'},
+      {name:'Fysiologinen huokaus',reps:'3 kertaa',desc:'Kaksoishengitys nenän kautta sisään (vatsa + rinta) → pitkä ulos suun kautta. Laskee cortisolia välittömästi.'},
+    ]},
+    {id:'ak3',time:'8 min',title:'Heittoherääminen',color:'var(--pl)',tcol:'var(--pd)',icon:'🥏',exercises:[
+      {name:'Miniheitto 10 m – BH',reps:'10 heittoa',desc:'Ei voimaa. Tunnustele ranteen ja olkapään liikerata. Puhdas irrotus.'},
+      {name:'Miniheitto 10 m – FH',reps:'10 heittoa',desc:'Erityishuomio: ranne suorana irrotusvaiheessa, ei ylikierrosta.'},
+      {name:'50% tehoheitto – BH',reps:'8 heittoa',desc:'Kasvata matkaa rauhallisesti. Tarkkaile hyzer-kulmaa.'},
+      {name:'50% tehoheitto – FH',reps:'8 heittoa',desc:'Tunne spin kasvavan. Ei vielä täyttä voimaa.'},
+    ]},
+    {id:'ak4',time:'5 min',title:'Puttauskalibrointi',color:'var(--gl)',tcol:'var(--gd)',icon:'🎯',exercises:[
+      {name:'3–4 m putti',reps:'10 kertaa',desc:'Löydä tämän päivän rytmi. Ei paineita – vain mekaniikka.'},
+      {name:'6–7 m putti',reps:'10 kertaa',desc:'Tarkkaile jalka-asento ja vapautus. Sama rutiini joka heittoon.'},
+      {name:'Yksi vapaa heitto',reps:'1 kerta',desc:'Viimeinen heitto ennen kisaa: valitse linja, luota ja heitä. Se on se.'},
+    ]},
+  ];
+
+  let h='<div style="background:linear-gradient(135deg,#085041,#1D9E75);border-radius:var(--r);padding:16px;margin-bottom:12px;color:#fff">';
+  h+='<div style="font-size:11px;font-weight:600;opacity:.8;text-transform:uppercase;letter-spacing:.05em">Kisapäivän aktivointi</div>';
+  h+='<div style="font-size:20px;font-weight:700;margin-top:2px">~28 min ennen lähtöä</div>';
+  h+='<div style="font-size:12px;opacity:.85;margin-top:4px">Herätä keho ja hermosto – älä kuluta energiaa</div>';
+  h+='</div>';
+
+  STEPS.forEach(function(step){
+    const done=step.exercises.filter((_,i)=>getSets('ak_'+step.id+'_'+i)>0).length;
+    const total=step.exercises.length;
+    h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
+    h+='<div style="background:'+step.color+';padding:10px 14px;display:flex;align-items:center;justify-content:space-between">';
+    h+='<div style="display:flex;align-items:center;gap:8px">';
+    h+='<span style="font-size:20px">'+step.icon+'</span>';
+    h+='<div><div style="font-size:13px;font-weight:700;color:'+step.tcol+'">'+step.title+'</div>';
+    h+='<div style="font-size:10px;color:'+step.tcol+';opacity:.8">'+step.time+'</div></div></div>';
+    h+='<span style="font-size:11px;padding:2px 9px;border-radius:20px;background:'+step.tcol+';color:#fff;font-weight:600">'+done+'/'+total+'</span>';
+    h+='</div>';
+    h+='<div style="padding:4px 14px 8px">';
+    step.exercises.forEach(function(ex,i){
+      const key='ak_'+step.id+'_'+i;
+      const ck=getSets(key)>0;
+      h+='<div onclick="setSets(\''+key+'\','+(ck?'0':'1')+');renderTrain()" style="display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:.5px solid var(--border);cursor:pointer'+(i===step.exercises.length-1?';border:none':'')+'">';
+      h+='<div style="width:22px;height:22px;border-radius:50%;border:2px solid '+(ck?'var(--g)':'var(--border)')+';background:'+(ck?'var(--g)':'transparent')+';display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">';
+      h+=ck?'<span style="color:#fff;font-size:12px">✓</span>':'';
+      h+='</div>';
+      h+='<div style="flex:1"><div style="font-size:13px;font-weight:600;color:'+(ck?'var(--t3)':'var(--text)')+';'+(ck?'text-decoration:line-through':'')+'">'+ex.name+'</div>';
+      h+='<div style="font-size:11px;color:var(--t2);margin-top:1px">'+ex.desc+'</div>';
+      h+='<div style="font-size:10px;color:var(--gd);font-weight:500;margin-top:2px">'+ex.reps+'</div></div></div>';
+    });
+    h+='</div></div>';
+  });
+
+  h+='<div style="background:var(--al);border-radius:var(--r);padding:12px 14px;margin-top:4px">';
+  h+='<div style="font-size:12px;font-weight:600;color:var(--ad);margin-bottom:4px">🧠 Valmentajan muistutus</div>';
+  h+='<div style="font-size:12px;color:var(--ad);line-height:1.5">Kamppailutausta aktivoi hermostosi paineessa – tämä rutiini on tapa ohjata se hallitusti kisatilaan. Aktivointi ei väsytä, se herättää. Tee kaikki järjestyksessä, älä oikaise hengitysvaihetta.</div>';
+  h+='</div>';
+
+  h+='<button onclick="trainTab(\'week\',null);renderTrain()" class="btn btn-out" style="margin-top:10px">← Takaisin viikko-ohjelmaan</button>';
+
+  cont.innerHTML=h;
+}
   const MNAMES=['Tammikuu','Helmikuu','Maaliskuu','Huhtikuu','Toukokuu','Kesäkuu','Heinäkuu','Elokuu','Syyskuu','Lokakuu','Marraskuu','Joulukuu'];
   document.getElementById('cal-lbl').textContent=MNAMES[calM]+' '+calY;
   const events=get('events')||[];
