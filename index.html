@@ -2286,22 +2286,58 @@ function renderKierros(){
   h+='</div></div>';
 
   // Kierroksen jälkeen
+  const hasAfterData = result || positive || saved.kentta;
   h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:8px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
   h+='<div style="font-size:13px;font-weight:700;color:var(--pd);margin-bottom:8px">📊 Kierroksen jälkeen</div>';
-  h+='<div style="font-size:11px;color:var(--t3);margin-bottom:4px">Tulos (heitot)</div>';
-  h+='<input id="kierros-result" type="number" placeholder="esim. 60" value="'+result+'" style="width:100%;padding:8px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--bg);color:var(--text);margin-bottom:10px">';
+  h+='<div style="display:flex;gap:8px;margin-bottom:8px">';
+  h+='<div style="flex:1"><div style="font-size:11px;color:var(--t3);margin-bottom:4px">Tulos (heitot)</div>';
+  h+='<input id="kierros-result" type="number" placeholder="60" value="'+(result||'')+'" style="width:100%;padding:8px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--bg);color:var(--text)"></div>';
+  h+='<div style="flex:1"><div style="font-size:11px;color:var(--t3);margin-bottom:4px">Kenttä</div>';
+  h+='<input id="kierros-kentta" type="text" placeholder="esim. Tali" value="'+(saved.kentta||'')+'" style="width:100%;padding:8px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--bg);color:var(--text)"></div>';
+  h+='</div>';
   h+='<div style="font-size:11px;color:var(--t3);margin-bottom:4px">Yksi positiivinen havainto</div>';
-  h+='<textarea id="kierros-positive" placeholder="Mikä meni hyvin tänään?" style="width:100%;padding:8px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:13px;background:var(--bg);color:var(--text);min-height:70px;resize:none">'+positive+'</textarea>';
-  h+='<button id="kierros-save" class="btn" style="width:100%;margin-top:8px">💾 Tallenna kierros</button>';
+  h+='<textarea id="kierros-positive" placeholder="Mikä meni hyvin tänään?" style="width:100%;padding:8px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:13px;background:var(--bg);color:var(--text);min-height:60px;resize:none">'+(positive||'')+'</textarea>';
+  h+='<div style="display:flex;gap:6px;margin-top:8px">';
+  if(hasAfterData){
+    h+='<button id="kierros-reset" class="btn btn-out btn-sm" style="flex:1">↺ Nollaa</button>';
+  }
+  h+='<button id="kierros-save" class="btn btn-sm" style="flex:'+(hasAfterData?'2':'1')+'">💾 Tallenna kierros</button>';
+  h+='</div>';
   h+='<div id="kierros-msg" style="text-align:center;color:var(--gd);font-size:12px;margin-top:6px;display:none">✓ Tallennettu!</div>';
   h+='</div>';
 
-  h+='<div style="background:var(--al);border-radius:var(--r);padding:12px 14px;margin-bottom:4px">';
+  h+='<div style="background:var(--al);border-radius:var(--r);padding:12px 14px;margin-bottom:8px">';
   h+='<div style="font-size:12px;font-weight:600;color:var(--ad);margin-bottom:4px">💬 Valmentajan muistutus</div>';
   h+='<div style="font-size:12px;color:var(--ad);line-height:1.5">Harjoituskierros on laboratorio – ei kisapaine. Valitse yksi fokus ja tee se täydellisesti joka väylällä. Analyysi vasta kierroksen jälkeen.</div>';
   h+='</div>';
 
-  h+='<button onclick="trainTab(\'week\',null);renderTrain()" class="btn btn-out" style="margin-top:8px;width:100%">← Takaisin viikko-ohjelmaan</button>';
+  // Edellinen kierros
+  const allKierros=get('kierros_map')||{};
+  const prevDates=Object.keys(allKierros).filter(function(d){return d!==today;}).sort().reverse().slice(0,3);
+  if(prevDates.length){
+    h+='<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">📋 Edelliset kierrokset</div>';
+    prevDates.forEach(function(d){
+      const kd=allKierros[d];
+      const isOpen=saved._histOpen===d;
+      h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden">';
+      h+='<div class="kierros-hist-toggle" data-date="'+d+'" style="display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer">';
+      h+='<div style="flex:1">';
+      h+='<div style="font-size:12px;font-weight:600;color:var(--text)">'+d+(kd.kentta?' · '+kd.kentta:'')+'</div>';
+      h+='<div style="font-size:11px;color:var(--t2)">'+(kd.focus||'Ei fokusta')+(kd.result?' · '+kd.result+' ht':'')+'</div>';
+      h+='</div>';
+      h+='<div style="font-size:14px;color:var(--t3)">'+(isOpen?'▲':'▼')+'</div>';
+      h+='</div>';
+      if(isOpen){
+        h+='<div style="padding:0 14px 12px;border-top:.5px solid var(--border)">';
+        if(kd.positive)h+='<div style="font-size:12px;color:var(--gd);margin-top:8px">✓ '+kd.positive+'</div>';
+        if(kd.focus)h+='<div style="font-size:11px;color:var(--t2);margin-top:4px">Fokus: '+kd.focus+'</div>';
+        h+='</div>';
+      }
+      h+='</div>';
+    });
+  }
+
+  h+='<button onclick="trainTab(\'week\',null);renderTrain()" class="btn btn-out" style="margin-top:4px;width:100%">← Takaisin viikko-ohjelmaan</button>';
 
   cont.innerHTML=h;
 
@@ -2342,6 +2378,7 @@ function renderKierros(){
       var d=getKierros(today)||{};
       d.result=cont.querySelector('#kierros-result').value;
       d.positive=cont.querySelector('#kierros-positive').value;
+      d.kentta=cont.querySelector('#kierros-kentta').value;
       setKierros(today,d);
       setDone(today,1);
       var msg=cont.querySelector('#kierros-msg');
@@ -2350,6 +2387,33 @@ function renderKierros(){
     saveBtn.addEventListener('click',saveKierros);
     saveBtn.addEventListener('touchend',saveKierros);
   }
+
+  // Wire reset button
+  var resetBtn=cont.querySelector('#kierros-reset');
+  if(resetBtn){
+    function resetKierros(e){
+      e.preventDefault();
+      var d=getKierros(today)||{};
+      delete d.result; delete d.positive; delete d.kentta;
+      setKierros(today,d);
+      renderKierros();
+    }
+    resetBtn.addEventListener('click',resetKierros);
+    resetBtn.addEventListener('touchend',resetKierros);
+  }
+
+  // Wire history toggles
+  cont.querySelectorAll('.kierros-hist-toggle').forEach(function(el){
+    function toggleHist(e){
+      e.preventDefault();
+      var d=getKierros(today)||{};
+      d._histOpen=(d._histOpen===el.dataset.date)?null:el.dataset.date;
+      setKierros(today,d);
+      renderKierros();
+    }
+    el.addEventListener('click',toggleHist);
+    el.addEventListener('touchend',toggleHist);
+  });
 }
 
 function renderCal(){
