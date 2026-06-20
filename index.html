@@ -1130,29 +1130,43 @@ function buildCompPhase(phase, pi, todayChecks){
 
 function wireCompEvents(cont, protocol){
   cont.querySelectorAll('.comp-step-row').forEach(function(row){
-    row.addEventListener('click',function(){
+    function toggleRow(e){
+      e.preventDefault();
       var key=row.dataset.key;
       var checks=get('comp_day_checks')||{};
       if(checks[key])delete checks[key];
       else checks[key]=1;
       set('comp_day_checks',checks);
       renderCompDay();
-    });
+    }
+    row.addEventListener('click',toggleRow);
+    row.addEventListener('touchend',toggleRow);
   });
   var resetBtn=cont.querySelector('#comp-reset');
-  if(resetBtn)resetBtn.addEventListener('click',function(){
-    set('comp_day_checks',{});
-    renderCompDay();
-  });
+  if(resetBtn){
+    resetBtn.addEventListener('click',function(){set('comp_day_checks',{});renderCompDay();});
+    resetBtn.addEventListener('touchend',function(e){e.preventDefault();set('comp_day_checks',{});renderCompDay();});
+  }
   var doneBtn=cont.querySelector('#comp-done');
-  if(doneBtn)doneBtn.addEventListener('click',function(){
-    var checks={};
-    protocol.forEach(function(phase,pi){
-      phase.steps.forEach(function(s,si){checks[pi+'_'+si]=1});
+  if(doneBtn){
+    doneBtn.addEventListener('click',function(){
+      var checks={};
+      protocol.forEach(function(phase,pi){
+        phase.steps.forEach(function(s,si){checks[pi+'_'+si]=1});
+      });
+      set('comp_day_checks',checks);
+      renderCompDay();
     });
-    set('comp_day_checks',checks);
-    renderCompDay();
-  });
+    doneBtn.addEventListener('touchend',function(e){
+      e.preventDefault();
+      var checks={};
+      protocol.forEach(function(phase,pi){
+        phase.steps.forEach(function(s,si){checks[pi+'_'+si]=1});
+      });
+      set('comp_day_checks',checks);
+      renderCompDay();
+    });
+  }
 }
 
 function renderCompDay(){
