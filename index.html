@@ -2675,6 +2675,11 @@ function delChatEntry(id){set('chat_history',(get('chat_history')||[]).filter(c=
 function saveGistToken(){
   const token=document.getElementById('s-gist-token')?.value?.trim();
   if(!token){alert('Syötä token ensin');return;}
+  // Clear old Gist ID so gistInit creates/finds the right one
+  const oldToken=getGistToken();
+  if(oldToken!==token){
+    localStorage.removeItem(GIST_ID_KEY);
+  }
   setGistToken(token);
   const el=document.getElementById('gist-status-settings');
   if(el)el.innerHTML='<span style="color:var(--ad)">⏳ Yhdistetään...</span>';
