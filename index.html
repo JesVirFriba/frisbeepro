@@ -1333,7 +1333,7 @@ function renderWeekView() {
     const textCol = isToday ? sc.col : 'var(--text)';
     const dayCol = isToday ? sc.col : 'var(--t3)';
     const opacity = isPast && !isToday ? '.55' : '1';
-    const sessionRoute = {heitto_tek:'throw',heitto_nop:'throw',voima_a:'str',voima_b:'str',putti:'putti',mob:'mob',aktivointi:'aktivointi',comp_day:'comp_day'};
+    const sessionRoute = {heitto_tek:'throw',heitto_nop:'throw',voima_a:'str',voima_b:'str',putti:'putti',mob:'mob',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros'};
     const clickTarget = sessionRoute[mainSession];
     const clickable = clickTarget && !isPast;
     const onclickAttr = clickable ? ' onclick="trainTab(\''+clickTarget+'\',null);renderTrain()"' : '';
@@ -1505,6 +1505,7 @@ function renderTrain(){
   else if(trainTabCur==='putti')renderPuttiTrain();
   else if(trainTabCur==='mob')renderMob();
   else if(trainTabCur==='aktivointi')renderAktivointi();
+  else if(trainTabCur==='kierros')renderKierros();
   else if(trainTabCur==='comp_day')renderCompDay();
 }
 
@@ -1931,6 +1932,134 @@ function renderAktivointi(){
   h+='<button onclick="trainTab(\'week\',null);renderTrain()" class="btn btn-out" style="margin-top:10px">← Takaisin viikko-ohjelmaan</button>';
 
   cont.innerHTML=h;
+}
+
+function renderKierros(){
+  const cont=document.getElementById('train-content');
+  const today=new Date().toISOString().slice(0,10);
+  const saved=get('kierros_'+today)||{};
+
+  const CHECKLIST=[
+    {id:'k1',text:'Kiekot mukana – putter, midrange, driver'},
+    {id:'k2',text:'Vesi ja välipala pakattuna'},
+    {id:'k3',text:'Saavut ajoissa – ei kiire teepaikalle'},
+    {id:'k4',text:'Puhelin äänettömälle kierroksen ajaksi'},
+    {id:'k5',text:'Puttausrutiini mielessä: asetu → katso → hengitä → rytmi → seuraa läpi'},
+  ];
+
+  const FOCUS_OPTIONS=[
+    'Puttausrutiini joka putilla – ei poikkeuksia',
+    'Pre-shot rutiini joka heittoon',
+    'BH-tekniikka – hyzer ja irrotus',
+    'FH-tekniikka – wobble alle 5°',
+    'Henkinen peli – bogey-recovery',
+    'Reitti-IQ – A ja B-linja joka väylällä',
+    'Vapaa kierros – ei paineita',
+  ];
+
+  const checks=saved.checks||{};
+  const focus=saved.focus||'';
+  const result=saved.result||'';
+  const positive=saved.positive||'';
+  const donePre=CHECKLIST.filter(c=>checks[c.id]).length;
+
+  let h='<div style="background:linear-gradient(135deg,#085041,#1D9E75);border-radius:var(--r);padding:16px;margin-bottom:12px;color:#fff">';
+  h+='<div style="font-size:11px;font-weight:600;opacity:.8;text-transform:uppercase;letter-spacing:.05em">Kenttäkierros</div>';
+  h+='<div style="font-size:20px;font-weight:700;margin-top:2px">'+today+'</div>';
+  h+='<div style="font-size:12px;opacity:.85;margin-top:4px">Harjoituskierros – ei paineita, vain kehitystä</div>';
+  h+='</div>';
+
+  // Ennen kierrosta
+  h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
+  h+='<div style="background:var(--gl);padding:10px 14px;display:flex;align-items:center;justify-content:space-between">';
+  h+='<div style="font-size:13px;font-weight:700;color:var(--gd)">✅ Ennen kierrosta</div>';
+  h+='<span style="font-size:11px;padding:2px 9px;border-radius:20px;background:var(--gd);color:#fff;font-weight:600">'+donePre+'/'+CHECKLIST.length+'</span>';
+  h+='</div><div style="padding:4px 14px 10px" id="kierros-checks">';
+  CHECKLIST.forEach(function(item){
+    const ck=checks[item.id];
+    h+='<div class="kierros-check" data-id="'+item.id+'" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:.5px solid var(--border);cursor:pointer">';
+    h+='<div style="width:22px;height:22px;border-radius:50%;border:2px solid '+(ck?'var(--g)':'var(--border)')+';background:'+(ck?'var(--g)':'transparent')+';display:flex;align-items:center;justify-content:center;flex-shrink:0">';
+    h+=ck?'<span style="color:#fff;font-size:12px">✓</span>':'';
+    h+='</div>';
+    h+='<div style="font-size:13px;color:'+(ck?'var(--t3)':'var(--text)')+';'+(ck?'text-decoration:line-through':'')+'">'+item.text+'</div>';
+    h+='</div>';
+  });
+  h+='</div></div>';
+
+  // Kierroksen tavoite
+  h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:8px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
+  h+='<div style="font-size:13px;font-weight:700;color:var(--bd);margin-bottom:8px">🎯 Kierroksen fokus</div>';
+  h+='<div style="display:flex;flex-wrap:wrap;gap:6px" id="kierros-focus">';
+  FOCUS_OPTIONS.forEach(function(opt){
+    const sel=focus===opt;
+    h+='<button class="kierros-focus-btn" data-focus="'+opt+'" style="padding:6px 10px;border-radius:20px;border:1.5px solid '+(sel?'var(--bd)':'var(--border)')+';background:'+(sel?'var(--bl)':'transparent')+';color:'+(sel?'var(--bd)':'var(--t2)')+';font-size:11px;cursor:pointer">'+opt+'</button>';
+  });
+  h+='</div></div>';
+
+  // Kierroksen jälkeen
+  h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:8px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
+  h+='<div style="font-size:13px;font-weight:700;color:var(--pd);margin-bottom:8px">📊 Kierroksen jälkeen</div>';
+  h+='<div style="font-size:11px;color:var(--t3);margin-bottom:4px">Tulos (heitot)</div>';
+  h+='<input id="kierros-result" type="number" placeholder="esim. 60" value="'+result+'" style="width:100%;padding:8px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--bg);color:var(--text);margin-bottom:10px">';
+  h+='<div style="font-size:11px;color:var(--t3);margin-bottom:4px">Yksi positiivinen havainto</div>';
+  h+='<textarea id="kierros-positive" placeholder="Mikä meni hyvin tänään?" style="width:100%;padding:8px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:13px;background:var(--bg);color:var(--text);min-height:70px;resize:none">'+positive+'</textarea>';
+  h+='<button id="kierros-save" class="btn" style="width:100%;margin-top:8px">💾 Tallenna kierros</button>';
+  h+='<div id="kierros-msg" style="text-align:center;color:var(--gd);font-size:12px;margin-top:6px;display:none">✓ Tallennettu!</div>';
+  h+='</div>';
+
+  h+='<div style="background:var(--al);border-radius:var(--r);padding:12px 14px;margin-bottom:4px">';
+  h+='<div style="font-size:12px;font-weight:600;color:var(--ad);margin-bottom:4px">💬 Valmentajan muistutus</div>';
+  h+='<div style="font-size:12px;color:var(--ad);line-height:1.5">Harjoituskierros on laboratorio – ei kisapaine. Valitse yksi fokus ja tee se täydellisesti joka väylällä. Analyysi vasta kierroksen jälkeen.</div>';
+  h+='</div>';
+
+  h+='<button onclick="trainTab(\'week\',null);renderTrain()" class="btn btn-out" style="margin-top:8px;width:100%">← Takaisin viikko-ohjelmaan</button>';
+
+  cont.innerHTML=h;
+
+  // Wire checkboxes
+  cont.querySelectorAll('.kierros-check').forEach(function(row){
+    function toggle(e){
+      e.preventDefault();
+      var id=row.dataset.id;
+      var d=get('kierros_'+today)||{};
+      var c=d.checks||{};
+      if(c[id])delete c[id]; else c[id]=1;
+      d.checks=c;
+      set('kierros_'+today,d);
+      renderKierros();
+    }
+    row.addEventListener('click',toggle);
+    row.addEventListener('touchend',toggle);
+  });
+
+  // Wire focus buttons
+  cont.querySelectorAll('.kierros-focus-btn').forEach(function(btn){
+    function selectFocus(e){
+      e.preventDefault();
+      var d=get('kierros_'+today)||{};
+      d.focus=btn.dataset.focus;
+      set('kierros_'+today,d);
+      renderKierros();
+    }
+    btn.addEventListener('click',selectFocus);
+    btn.addEventListener('touchend',selectFocus);
+  });
+
+  // Wire save button
+  var saveBtn=cont.querySelector('#kierros-save');
+  if(saveBtn){
+    function saveKierros(e){
+      e.preventDefault();
+      var d=get('kierros_'+today)||{};
+      d.result=cont.querySelector('#kierros-result').value;
+      d.positive=cont.querySelector('#kierros-positive').value;
+      set('kierros_'+today,d);
+      var msg=cont.querySelector('#kierros-msg');
+      if(msg){msg.style.display='block';setTimeout(function(){msg.style.display='none';},2000);}
+    }
+    saveBtn.addEventListener('click',saveKierros);
+    saveBtn.addEventListener('touchend',saveKierros);
+  }
 }
 
 function renderCal(){
