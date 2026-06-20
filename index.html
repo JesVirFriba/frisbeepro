@@ -522,7 +522,17 @@ async function gistInit(){
       if(r.ok)return existingId;
     }catch(e){}
   }
-  // Create new gist
+  // Search existing gists for frisbeepro backup
+  try{
+    const r=await fetch('https://api.github.com/gists',
+      {headers:{Authorization:`token ${token}`,'User-Agent':'frisbeepro'}});
+    if(r.ok){
+      const gists=await r.json();
+      const found=gists.find(g=>g.files&&g.files[GIST_FILENAME]);
+      if(found){setGistId(found.id);return found.id;}
+    }
+  }catch(e){}
+  // Create new gist only if none found
   try{
     const r=await fetch('https://api.github.com/gists',{
       method:'POST',
