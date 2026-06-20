@@ -1929,6 +1929,9 @@ function savePutti(){
   const sess={id:Date.now(),date:v('pt-date')};
   PTDISTS.forEach(d=>{const m=parseInt(document.getElementById('pt-m-'+d.key)?.value)||0;const a=parseInt(document.getElementById('pt-a-'+d.key)?.value)||0;if(a>0)sess[d.key]={m:Math.min(m,a),a}});
   const s=get('putti_sessions')||[];s.push(sess);set('putti_sessions',s);
+  // Auto-mark training day as done
+  const sessDate=v('pt-date')||new Date().toISOString().slice(0,10);
+  setDone(sessDate,1);
   flash('pt-msg');setTimeout(()=>{closeM('m-putti-sess');renderTrain()},700);
 }
 function delPutti(id){set('putti_sessions',(get('putti_sessions')||[]).filter(s=>s.id!==id));renderTrain()}
@@ -2260,6 +2263,7 @@ function renderKierros(){
       d.result=cont.querySelector('#kierros-result').value;
       d.positive=cont.querySelector('#kierros-positive').value;
       setKierros(today,d);
+      setDone(today,1);
       var msg=cont.querySelector('#kierros-msg');
       if(msg){msg.style.display='block';setTimeout(function(){msg.style.display='none';},2000);}
     }
