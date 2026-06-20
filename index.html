@@ -1853,17 +1853,54 @@ function renderPuttiTrain(){
   h+='<div style=\"font-size:11px;color:'+ph.tcol+';opacity:.8;margin-bottom:8px\">'+ph.weeks+' · '+ph.freq+'</div>';
   h+='<div style=\"font-size:12px;color:'+ph.tcol+';line-height:1.6\">'+ph.focus+'</div></div>';
 
-  // Tänään
-  h+='<div class=\"card card-p\" style=\"margin-bottom:10px\">';
-  h+='<div style=\"display:flex;justify-content:space-between;margin-bottom:8px\">';
-  h+='<div style=\"font-size:13px;font-weight:600\">Tänään</div>';
-  h+='<div style=\"font-size:12px;color:var(--t2)\">'+todayDone+' / '+todayTarget+' puttia</div></div>';
-  h+='<div class=\"prog-bar\" style=\"margin-bottom:10px\"><div class=\"prog-fill\" style=\"width:'+pct_today+'%;background:'+(pct_today>=100?'var(--g)':'var(--gm)')+'\"></div></div>';
-  h+='<div style=\"display:flex;gap:6px\">';
-  h+='<button id=\"putti-plus\" class=\"btn btn-out btn-sm\" style=\"flex:1\">+10 puttia</button>';
-  h+='<button id=\"putti-minus\" class=\"btn btn-out btn-sm\" style=\"flex:1\">-10</button>';
-  h+='<button id=\"putti-log\" class=\"btn btn-sm\" style=\"flex:1\">Kirjaa %</button>';
-  h+='</div></div>';
+  // Sarjakirjaus
+  const today2=new Date().toISOString().slice(0,10);
+  const sarjat=get('putti_sarjat_'+today2)||[];
+  const sarjaTehty=sarjat.reduce((a,s)=>a+s,0);
+  const sarjaYht=sarjat.length*10;
+  const sarjaPct=sarjaYht>0?Math.round(sarjaTehty/sarjaYht*100):null;
+
+  h+='<div class="card card-p" style="margin-bottom:10px">';
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+  h+='<div style="font-size:13px;font-weight:600">Tänään – sarjat</div>';
+  h+='<div style="font-size:12px;color:var(--t2)">'+sarjaTehty+'/'+sarjaYht+(sarjaPct!==null?' · '+sarjaPct+'%':'')+'</div>';
+  h+='</div>';
+
+  // Sarjat listana
+  if(sarjat.length){
+    h+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">';
+    sarjat.forEach(function(s,i){
+      const pct=Math.round(s/10*100);
+      const col=pct>=80?'var(--gd)':pct>=60?'var(--ad)':'#E24B4A';
+      h+='<div style="background:var(--bg);border-radius:var(--rs);padding:6px 10px;text-align:center;min-width:52px">';
+      h+='<div style="font-size:11px;color:var(--t3)">Sarja '+(i+1)+'</div>';
+      h+='<div style="font-size:16px;font-weight:700;color:'+col+'">'+s+'/10</div>';
+      h+='</div>';
+    });
+    h+='</div>';
+  }
+
+  // Uusi sarja input
+  const sarjaMax=Math.ceil(todayTarget/10);
+  if(sarjat.length<sarjaMax){
+    h+='<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">';
+    h+='<div style="font-size:12px;color:var(--t2);flex-shrink:0">Sarja '+(sarjat.length+1)+' sisään:</div>';
+    h+='<input id="putti-sarja-input" type="number" min="0" max="10" placeholder="0–10" inputmode="numeric" style="width:80px;padding:8px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:18px;font-weight:700;text-align:center;background:var(--bg);color:var(--text)">';
+    h+='<div style="font-size:16px;color:var(--t3)">/10</div>';
+    h+='<button id="putti-sarja-save" class="btn" style="flex:1">+ Lisää sarja</button>';
+    h+='</div>';
+  }else{
+    h+='<div style="font-size:12px;color:var(--gd);font-weight:600;margin-bottom:8px">✓ Kaikki '+sarjaMax+' sarjaa tehty!</div>';
+  }
+
+  // Nollaa + tallenna
+  h+='<div style="display:flex;gap:6px">';
+  if(sarjat.length>0){
+    h+='<button id="putti-sarja-undo" class="btn btn-out btn-sm" style="flex:1">↩ Poista viimeisin</button>';
+    h+='<button id="putti-sarja-save-sess" class="btn btn-sm" style="flex:1">💾 Tallenna sessio</button>';
+  }
+  h+='</div>';
+  h+='</div>';
 
   // Prosentit
   h+='<div class=\"sect\">Puttausprosentit</div>';
@@ -1903,13 +1940,56 @@ function renderPuttiTrain(){
     btn.addEventListener('click',()=>{set('putti_phase',parseInt(btn.dataset.phase));renderTrain();});
   });
 
-  // Plus/minus/log
-  const plusBtn=cont.querySelector('#putti-plus');
-  const minusBtn=cont.querySelector('#putti-minus');
-  const logBtn=cont.querySelector('#putti-log');
-  if(plusBtn)plusBtn.addEventListener('click',()=>{const k='putti_today_'+new Date().toISOString().slice(0,10);set(k,Math.min(todayTarget,(get(k)||0)+10));renderTrain();});
-  if(minusBtn)minusBtn.addEventListener('click',()=>{const k='putti_today_'+new Date().toISOString().slice(0,10);set(k,Math.max(0,(get(k)||0)-10));renderTrain();});
-  if(logBtn)logBtn.addEventListener('click',()=>openM('m-putti-sess'));
+  // Sarjakirjaus event listeners
+  const sarjaInput=cont.querySelector('#putti-sarja-input');
+  const sarjaSaveBtn=cont.querySelector('#putti-sarja-save');
+  const sarjaUndoBtn=cont.querySelector('#putti-sarja-undo');
+  const sarjaSaveSessBtn=cont.querySelector('#putti-sarja-save-sess');
+  const today3=new Date().toISOString().slice(0,10);
+
+  function addSarja(e){
+    if(e)e.preventDefault();
+    const val=parseInt(sarjaInput?.value);
+    if(isNaN(val)||val<0||val>10){alert('Syötä luku 0–10');return;}
+    const s=get('putti_sarjat_'+today3)||[];
+    s.push(val);
+    set('putti_sarjat_'+today3,s);
+    renderTrain();
+  }
+  if(sarjaSaveBtn){
+    sarjaSaveBtn.addEventListener('click',addSarja);
+    sarjaSaveBtn.addEventListener('touchend',addSarja);
+  }
+  if(sarjaUndoBtn){
+    function undoSarja(e){
+      if(e)e.preventDefault();
+      const s=get('putti_sarjat_'+today3)||[];
+      if(s.length){s.pop();set('putti_sarjat_'+today3,s);renderTrain();}
+    }
+    sarjaUndoBtn.addEventListener('click',undoSarja);
+    sarjaUndoBtn.addEventListener('touchend',undoSarja);
+  }
+  if(sarjaSaveSessBtn){
+    function saveSessFromSarjat(e){
+      if(e)e.preventDefault();
+      const s=get('putti_sarjat_'+today3)||[];
+      if(!s.length)return;
+      const made=s.reduce((a,v)=>a+v,0);
+      const total=s.length*10;
+      const sess={id:Date.now(),date:today3};
+      // Map to closest distance key based on phase
+      const distKey=puttiPhase===1?'d5':puttiPhase===2?'d5':'d5';
+      sess[distKey]={m:made,a:total};
+      const sessions2=get('putti_sessions')||[];
+      sessions2.push(sess);
+      set('putti_sessions',sessions2);
+      set('putti_sarjat_'+today3,[]);
+      setDone(today3,1);
+      renderTrain();
+    }
+    sarjaSaveSessBtn.addEventListener('click',saveSessFromSarjat);
+    sarjaSaveSessBtn.addEventListener('touchend',saveSessFromSarjat);
+  }
 
   // Delete buttons
   cont.querySelectorAll('[data-del-putti]').forEach(btn=>{
