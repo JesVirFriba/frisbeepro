@@ -599,6 +599,20 @@ window.addEventListener('beforeunload',()=>{
   }
 });
 
+// ===== DONE & KIERROS HELPERS (synced via Gist) =====
+function getDone(date){return !!(get('done_map')||{})[date];}
+function setDone(date,val){
+  const m=get('done_map')||{};
+  if(val)m[date]=1; else delete m[date];
+  set('done_map',m);
+}
+function getKierros(date){return (get('kierros_map')||{})[date]||{};}
+function setKierros(date,data){
+  const m=get('kierros_map')||{};
+  m[date]=data;
+  set('kierros_map',m);
+}
+
 // ===== DEFAULT PROFILE =====
 const DEF={name:'Jesse Virtanen',pdga:'252010',rating:919,metrix:939,target:940,metrix_target:960,div:'MPO',home:'',coach:'Claude (AI-valmentaja)',bh_target:110,fh_target:88}
 
@@ -1349,7 +1363,7 @@ function renderWeekView() {
   const compCount = plan.filter(d => d.intensity === 'comp').length;
   const trainCount = plan.filter(d => d.intensity !== 'rest' && d.intensity !== 'comp').length;
   const restCount = plan.filter(d => d.intensity === 'rest').length;
-  const doneCount = plan.filter(d => d.intensity !== 'rest' && d.intensity !== 'comp' && get('done_'+d.date)).length;
+  const doneCount = plan.filter(d => d.intensity !== 'rest' && d.intensity !== 'comp' && getDone(d.date)).length;
   const weekComps = plan.filter(d=>d.intensity==='comp').map(d=>{
     const comps=(get('comps')||[]).filter(c=>c.date===d.date);
     return comps.length?comps[comps.length-1].mrating:null;
@@ -1387,7 +1401,7 @@ function renderWeekView() {
         ? ' onclick="trainTabPick(\''+pickData+'\')"'
         : ' onclick="kierrosPvm=\''+day.date+'\';trainTab(\''+clickTarget+'\',null);renderTrain()"')
       : '';
-    const isDone = !!(get('done_'+day.date));
+    const isDone = !!(getDone(day.date));
     const tagStyle = 'display:flex;align-items:center;gap:8px;padding:10px 12px;background:'+(isDone?'var(--gl)':cardBg)+';border-radius:var(--r);margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:'+(isDone?'1.5px solid var(--g)':cardBorder)+';opacity:'+opacity+';width:100%;text-align:left;font-family:inherit;cursor:'+(clickable?'pointer':'default');
 
     h += '<div'+onclickAttr+' style="'+tagStyle+'">';
@@ -1401,9 +1415,9 @@ function renderWeekView() {
     h += '<div style="display:flex;gap:3px;flex-wrap:wrap">'+badges+'</div>';
     h += '</div>';
     if(isDone){
-      h += '<div onclick="event.stopPropagation();set(\'done_'+day.date+'\',null);renderTrain()" style="font-size:10px;color:var(--gd);cursor:pointer;flex-shrink:0;padding:3px 7px;border:1px solid var(--g);border-radius:20px">✓ Tehty</div>';
+      h += '<div onclick="event.stopPropagation();setDone(\''+day.date+'\',null);renderTrain()" style="font-size:10px;color:var(--gd);cursor:pointer;flex-shrink:0;padding:3px 7px;border:1px solid var(--g);border-radius:20px">✓ Tehty</div>';
     } else if(isPast && day.intensity !== 'rest'){
-      h += '<div onclick="event.stopPropagation();set(\'done_'+day.date+'\',1);renderTrain()" style="font-size:10px;color:var(--t3);cursor:pointer;flex-shrink:0;padding:3px 7px;border:1px solid var(--border);border-radius:20px">Merkitse</div>';
+      h += '<div onclick="event.stopPropagation();setDone(\''+day.date+'\',1);renderTrain()" style="font-size:10px;color:var(--t3);cursor:pointer;flex-shrink:0;padding:3px 7px;border:1px solid var(--border);border-radius:20px">Merkitse</div>';
     } else if(clickable){
       h += '<div style="font-size:16px;color:'+sc.col+';flex-shrink:0">'+(routableSessions.length>1?'⋮':'›')+'</div>';
     }
@@ -1416,7 +1430,7 @@ function renderWeekView() {
       const ds=dateStr(weekDates[0]),de=dateStr(weekDates[6]);
       return c.date>=ds&&c.date<=de&&c.mrating;
     });
-    const doneTrains=plan.filter(d=>d.intensity!=='rest'&&d.intensity!=='comp'&&get('done_'+d.date)).length;
+    const doneTrains=plan.filter(d=>d.intensity!=='rest'&&d.intensity!=='comp'&&getDone(d.date)).length;
     const totalTrains=plan.filter(d=>d.intensity!=='rest'&&d.intensity!=='comp').length;
     const avgMetrix=weekCompsAll.length?Math.round(weekCompsAll.reduce((a,c)=>a+c.mrating,0)/weekCompsAll.length):null;
     const bestMetrix=weekCompsAll.length?Math.max(...weekCompsAll.map(c=>c.mrating)):null;
@@ -2068,7 +2082,7 @@ function renderAktivointi(){
 function renderKierros(){
   const cont=document.getElementById('train-content');
   const today=kierrosPvm||new Date().toISOString().slice(0,10);
-  const saved=get('kierros_'+today)||{};
+  const saved=getKierros(today)||{};
 
   const CHECKLIST=[
     {id:'k1',text:'Kiekot mukana – putter, midrange, driver'},
@@ -2152,11 +2166,11 @@ function renderKierros(){
     function toggle(e){
       e.preventDefault();
       var id=row.dataset.id;
-      var d=get('kierros_'+today)||{};
+      var d=getKierros(today)||{};
       var c=d.checks||{};
       if(c[id])delete c[id]; else c[id]=1;
       d.checks=c;
-      set('kierros_'+today,d);
+      setKierros(today,d);
       renderKierros();
     }
     row.addEventListener('click',toggle);
@@ -2167,9 +2181,9 @@ function renderKierros(){
   cont.querySelectorAll('.kierros-focus-btn').forEach(function(btn){
     function selectFocus(e){
       e.preventDefault();
-      var d=get('kierros_'+today)||{};
+      var d=getKierros(today)||{};
       d.focus=btn.dataset.focus;
-      set('kierros_'+today,d);
+      setKierros(today,d);
       renderKierros();
     }
     btn.addEventListener('click',selectFocus);
@@ -2181,10 +2195,10 @@ function renderKierros(){
   if(saveBtn){
     function saveKierros(e){
       e.preventDefault();
-      var d=get('kierros_'+today)||{};
+      var d=getKierros(today)||{};
       d.result=cont.querySelector('#kierros-result').value;
       d.positive=cont.querySelector('#kierros-positive').value;
-      set('kierros_'+today,d);
+      setKierros(today,d);
       var msg=cont.querySelector('#kierros-msg');
       if(msg){msg.style.display='block';setTimeout(function(){msg.style.display='none';},2000);}
     }
