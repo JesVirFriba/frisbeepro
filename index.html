@@ -1231,17 +1231,26 @@ function wireCompEvents(cont, protocol){
       var result=cont.querySelector('#qr-result').value;
       var metrix=cont.querySelector('#qr-metrix').value;
       var note=cont.querySelector('#qr-note').value;
+      var par=cont.querySelector('#qr-par')?.value;
+      var rrating=cont.querySelector('#qr-rrating')?.value;
+      // Calculate if not manually set
+      if(!metrix&&result&&par&&rrating){
+        metrix=calcKierrosRating('qr')||'';
+      }
       if(!result&&!metrix){alert('Syötä vähintään tulos tai Metrix');return;}
       var comps=get('comps')||[];
       var today=new Date().toISOString().slice(0,10);
       comps.push({id:Date.now(),date:today,name:'Kisapäivä '+today,type:'kisa',
-        result:parseInt(result)||null,mrating:parseInt(metrix)||null,note:note});
+        result:parseInt(result)||null,mrating:parseInt(metrix)||null,
+        trackrating:parseInt(rrating)||null,note:note});
       set('comps',comps);
       var msg=cont.querySelector('#qr-msg');
       if(msg){msg.style.display='block';setTimeout(function(){msg.style.display='none';},2000);}
       cont.querySelector('#qr-result').value='';
       cont.querySelector('#qr-metrix').value='';
       cont.querySelector('#qr-note').value='';
+      if(cont.querySelector('#qr-par'))cont.querySelector('#qr-par').value='';
+      if(cont.querySelector('#qr-rrating'))cont.querySelector('#qr-rrating').value='';
     }
     qrSave.addEventListener('click',saveQuickResult);
     qrSave.addEventListener('touchend',saveQuickResult);
@@ -1290,14 +1299,24 @@ function renderCompDay(){
   h+='Kamppailutausta aktivoi hermostosi paineessa. Hengitysharjoitus (-30 min) on siksi kriittinen – se on ainoa tapa ohjata hermosto rauhoittumistilaan ennen kilpailua. Älä ohita sitä.';
   h+='</div>';
 
-  // Quick result logging
+  // Quick result logging with rating calculator
   h+='<div style="background:var(--card);border-radius:var(--r);padding:12px 14px;margin-top:10px;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
   h+='<div style="font-size:13px;font-weight:700;color:var(--bd);margin-bottom:10px">📊 Kirjaa kisatulos</div>';
   h+='<div style="display:flex;gap:8px;margin-bottom:8px">';
   h+='<div style="flex:1"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Tulos (heitot)</div>';
-  h+='<input id="qr-result" type="number" placeholder="60" style="width:100%;padding:7px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--bg);color:var(--text)"></div>';
+  h+='<input id="qr-result" type="number" placeholder="60" oninput="calcKierrosRating(\'qr\')" style="width:100%;padding:7px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--bg);color:var(--text)"></div>';
+  h+='<div style="flex:1"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Rata-par</div>';
+  h+='<input id="qr-par" type="number" placeholder="60" oninput="calcKierrosRating(\'qr\')" style="width:100%;padding:7px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--bg);color:var(--text)"></div>';
+  h+='</div>';
+  h+='<div style="display:flex;gap:8px;margin-bottom:8px">';
+  h+='<div style="flex:1"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Rata-rating</div>';
+  h+='<input id="qr-rrating" type="number" placeholder="975" oninput="calcKierrosRating(\'qr\')" style="width:100%;padding:7px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--bg);color:var(--text)"></div>';
   h+='<div style="flex:1"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Metrix-rating</div>';
-  h+='<input id="qr-metrix" type="number" placeholder="975" style="width:100%;padding:7px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--bg);color:var(--text)"></div>';
+  h+='<input id="qr-metrix" type="number" placeholder="–" style="width:100%;padding:7px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--bg);color:var(--text)"></div>';
+  h+='</div>';
+  h+='<div id="qr-rating-result" style="display:none;background:var(--gl);border-radius:var(--rs);padding:8px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">';
+  h+='<div style="font-size:11px;color:var(--gd)">Arvioitu kierros-rating</div>';
+  h+='<div id="qr-rating-val" style="font-size:20px;font-weight:700;color:var(--gd)">–</div>';
   h+='</div>';
   h+='<div style="margin-bottom:8px"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Muistiinpano</div>';
   h+='<input id="qr-note" type="text" placeholder="esim. puttirutiini toimi" style="width:100%;padding:7px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:13px;background:var(--bg);color:var(--text)"></div>';
@@ -1307,6 +1326,32 @@ function renderCompDay(){
 
   cont.innerHTML=h;
   wireCompEvents(cont,protocol);
+}
+
+// ===== METRIX RATING CALCULATOR =====
+function calcKierrosRating(prefix){
+  const result=parseInt(document.getElementById(prefix+'-result')?.value);
+  const par=parseInt(document.getElementById(prefix+'-par')?.value);
+  const rrating=parseInt(document.getElementById(prefix+'-rrating')?.value);
+  const valEl=document.getElementById(prefix+'-rating-val');
+  const boxEl=document.getElementById(prefix+'-rating-result');
+  if(isNaN(result)||isNaN(par)||isNaN(rrating)){
+    if(valEl)valEl.textContent='–';
+    return null;
+  }
+  // Metrix kaava: kerroin riippuu rata-ratingista
+  // Tyypillisesti ~9 pistettä per heitto rata-ratingista 900-1000
+  const kerroin = rrating >= 1000 ? 10 : rrating >= 900 ? 9 : 8;
+  const kierrosRating = Math.round(rrating + (par - result) * kerroin);
+  if(valEl){
+    valEl.textContent = kierrosRating;
+    valEl.style.color = kierrosRating >= 950 ? 'var(--gd)' : kierrosRating >= 900 ? 'var(--ad)' : '#E24B4A';
+  }
+  if(boxEl)boxEl.style.display='flex';
+  // Auto-fill metrix field
+  const metrixEl=document.getElementById(prefix+'-metrix');
+  if(metrixEl&&!metrixEl.value)metrixEl.value=kierrosRating;
+  return kierrosRating;
 }
 
 // ===== WEEK & MONTH PROGRAM =====
@@ -2291,9 +2336,19 @@ function renderKierros(){
   h+='<div style="font-size:13px;font-weight:700;color:var(--pd);margin-bottom:8px">📊 Kierroksen jälkeen</div>';
   h+='<div style="display:flex;gap:8px;margin-bottom:8px">';
   h+='<div style="flex:1"><div style="font-size:11px;color:var(--t3);margin-bottom:4px">Tulos (heitot)</div>';
-  h+='<input id="kierros-result" type="number" placeholder="60" value="'+(result||'')+'" style="width:100%;padding:8px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--bg);color:var(--text)"></div>';
+  h+='<input id="kierros-result" type="number" placeholder="60" oninput="calcKierrosRating(\'kierros\')" value="'+(result||'')+'" style="width:100%;padding:8px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--bg);color:var(--text)"></div>';
   h+='<div style="flex:1"><div style="font-size:11px;color:var(--t3);margin-bottom:4px">Kenttä</div>';
   h+='<input id="kierros-kentta" type="text" placeholder="esim. Tali" value="'+(saved.kentta||'')+'" style="width:100%;padding:8px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--bg);color:var(--text)"></div>';
+  h+='</div>';
+  h+='<div style="display:flex;gap:8px;margin-bottom:8px">';
+  h+='<div style="flex:1"><div style="font-size:11px;color:var(--t3);margin-bottom:4px">Rata-par</div>';
+  h+='<input id="kierros-par" type="number" placeholder="60" oninput="calcKierrosRating(\'kierros\')" value="'+(saved.par||'')+'" style="width:100%;padding:8px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--bg);color:var(--text)"></div>';
+  h+='<div style="flex:1"><div style="font-size:11px;color:var(--t3);margin-bottom:4px">Rata-rating</div>';
+  h+='<input id="kierros-rrating" type="number" placeholder="975" oninput="calcKierrosRating(\'kierros\')" value="'+(saved.rrating||'')+'" style="width:100%;padding:8px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--bg);color:var(--text)"></div>';
+  h+='</div>';
+  h+='<div id="kierros-rating-result" style="'+(result&&saved.par&&saved.rrating?'':'display:none;')+'background:var(--gl);border-radius:var(--rs);padding:8px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">';
+  h+='<div style="font-size:11px;color:var(--gd)">Arvioitu kierros-rating</div>';
+  h+='<div id="kierros-rating-val" style="font-size:20px;font-weight:700;color:var(--gd)">–</div>';
   h+='</div>';
   h+='<div style="font-size:11px;color:var(--t3);margin-bottom:4px">Yksi positiivinen havainto</div>';
   h+='<textarea id="kierros-positive" placeholder="Mikä meni hyvin tänään?" style="width:100%;padding:8px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:13px;background:var(--bg);color:var(--text);min-height:60px;resize:none">'+(positive||'')+'</textarea>';
@@ -2379,6 +2434,11 @@ function renderKierros(){
       d.result=cont.querySelector('#kierros-result').value;
       d.positive=cont.querySelector('#kierros-positive').value;
       d.kentta=cont.querySelector('#kierros-kentta').value;
+      d.par=cont.querySelector('#kierros-par')?.value||'';
+      d.rrating=cont.querySelector('#kierros-rrating')?.value||'';
+      if(d.result&&d.par&&d.rrating){
+        d.calcRating=calcKierrosRating('kierros');
+      }
       setKierros(today,d);
       setDone(today,1);
       var msg=cont.querySelector('#kierros-msg');
