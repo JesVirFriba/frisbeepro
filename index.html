@@ -1377,9 +1377,15 @@ function renderWeekView() {
     const dayCol = isToday ? sc.col : 'var(--t3)';
     const opacity = isPast && !isToday ? '.55' : '1';
     const sessionRoute = {heitto_tek:'throw',heitto_nop:'throw',voima_a:'str',voima_b:'str',putti:'putti',mob:'mob',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros'};
-    const clickTarget = sessionRoute[mainSession];
-    const clickable = clickTarget && !isPast;
-    const onclickAttr = clickable ? ' onclick="trainTab(\''+clickTarget+'\',null);renderTrain()"' : '';
+    const routableSessions = sessions.filter(s=>sessionRoute[s]);
+    const clickable = routableSessions.length > 0 && !isPast;
+    const clickTarget = routableSessions.length === 1 ? sessionRoute[routableSessions[0]] : routableSessions.length > 1 ? 'session_pick' : null;
+    const pickData = routableSessions.length > 1 ? JSON.stringify(routableSessions).replace(/"/g,'&quot;') : '';
+    const onclickAttr = clickable
+      ? (routableSessions.length > 1
+        ? ' onclick="trainTabPick(\''+pickData+'\')"'
+        : ' onclick="trainTab(\''+clickTarget+'\',null);renderTrain()"')
+      : '';
     const isDone = !!(get('done_'+day.date));
     const tagStyle = 'display:flex;align-items:center;gap:8px;padding:10px 12px;background:'+(isDone?'var(--gl)':cardBg)+';border-radius:var(--r);margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:'+(isDone?'1.5px solid var(--g)':cardBorder)+';opacity:'+opacity+';width:100%;text-align:left;font-family:inherit;cursor:'+(clickable?'pointer':'default');
 
@@ -1398,7 +1404,7 @@ function renderWeekView() {
     } else if(isPast && day.intensity !== 'rest'){
       h += '<div onclick="event.stopPropagation();set(\'done_'+day.date+'\',1);renderTrain()" style="font-size:10px;color:var(--t3);cursor:pointer;flex-shrink:0;padding:3px 7px;border:1px solid var(--border);border-radius:20px">Merkitse</div>';
     } else if(clickable){
-      h += '<div style="font-size:16px;color:'+sc.col+';flex-shrink:0">›</div>';
+      h += '<div style="font-size:16px;color:'+sc.col+';flex-shrink:0">'+(routableSessions.length>1?'⋮':'›')+'</div>';
     }
     h += '</div>';
   });
@@ -1581,6 +1587,40 @@ function trainTab(tab,el){
   if(el)el.classList.add('on');
   renderTrain();
 }
+let sessionPickList = [];
+function trainTabPick(pickDataStr){
+  try{ sessionPickList = JSON.parse(pickDataStr.replace(/&quot;/g,'"')); }catch(e){ sessionPickList=[]; }
+  trainTabCur = 'session_pick';
+  renderTrain();
+}
+
+function renderSessionPick(){
+  const cont = document.getElementById('train-content');
+  const SESSION_ROUTE = {heitto_tek:'throw',heitto_nop:'throw',voima_a:'str',voima_b:'str',putti:'putti',mob:'mob',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros'};
+  const SESSION_NAMES = {
+    heitto_tek:'🥏 Tekniikkaheitto', heitto_nop:'⚡ Nopeusheitto',
+    voima_a:'💪 Voima A', voima_b:'💪 Voima B',
+    putti:'🎯 Puttausrutiini', mob:'🧘 Liikkuvuus',
+    aktivointi:'⚡ Aktivointi', comp_day:'🏆 Kisapäivä',
+    kierros:'🏃 Kenttäkierros'
+  };
+  let h = '<div style="background:var(--card);border-radius:var(--r);padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.07)">';
+  h += '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">Valitse sessio</div>';
+  h += '<div style="font-size:12px;color:var(--t2);margin-bottom:14px">Tänään on useampi sessio – kumman haluat avata?</div>';
+  sessionPickList.forEach(function(s){
+    const target = SESSION_ROUTE[s];
+    if(!target) return;
+    h += '<button onclick="trainTab(\''+target+'\',null);renderTrain()" style="display:flex;align-items:center;gap:12px;width:100%;padding:14px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r);margin-bottom:8px;cursor:pointer;font-family:inherit;text-align:left">';
+    h += '<span style="font-size:24px">'+SESSION_NAMES[s].slice(0,2)+'</span>';
+    h += '<div><div style="font-size:14px;font-weight:600;color:var(--text)">'+SESSION_NAMES[s].slice(3)+'</div></div>';
+    h += '<div style="margin-left:auto;font-size:18px;color:var(--t3)">›</div>';
+    h += '</button>';
+  });
+  h += '</div>';
+  h += '<button onclick="trainTab(\'week\',null);renderTrain()" class="btn btn-out" style="width:100%">← Takaisin viikko-ohjelmaan</button>';
+  cont.innerHTML = h;
+}
+
 function renderTrain(){
   if(trainTabCur==='week')renderWeekView();
   else if(trainTabCur==='throw')renderThrow();
@@ -1590,6 +1630,7 @@ function renderTrain(){
   else if(trainTabCur==='aktivointi')renderAktivointi();
   else if(trainTabCur==='kierros')renderKierros();
   else if(trainTabCur==='comp_day')renderCompDay();
+  else if(trainTabCur==='session_pick')renderSessionPick();
 }
 
 function renderThrow(){
