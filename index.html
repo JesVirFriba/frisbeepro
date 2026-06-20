@@ -600,17 +600,65 @@ window.addEventListener('beforeunload',()=>{
 });
 
 // ===== DONE & KIERROS HELPERS (synced via Gist) =====
-function getDone(date){return !!(get('done_map')||{})[date];}
+function getDone(date){
+  // Check new format first, fall back to old
+  const newMap=(get('done_map')||{})[date];
+  if(newMap)return true;
+  return !!(localStorage.getItem('done_'+date));
+}
 function setDone(date,val){
   const m=get('done_map')||{};
   if(val)m[date]=1; else delete m[date];
   set('done_map',m);
+  // Remove old format if exists
+  localStorage.removeItem('done_'+date);
 }
-function getKierros(date){return (get('kierros_map')||{})[date]||{};}
+function getKierros(date){
+  // Check new format first, fall back to old
+  const newMap=(get('kierros_map')||{})[date];
+  if(newMap)return newMap;
+  const old=get('kierros_'+date);
+  if(old)return old;
+  return {};
+}
 function setKierros(date,data){
   const m=get('kierros_map')||{};
   m[date]=data;
   set('kierros_map',m);
+}
+
+// Migrate old done_ and kierros_ keys to new format
+function migrateOldKeys(){
+  let migrated=false;
+  const doneMap=get('done_map')||{};
+  const kierrosMap=get('kierros_map')||{};
+  // Scan localStorage for old format keys
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(!key)continue;
+    if(key.match(/^done_\d{4}-\d{2}-\d{2}$/)){
+      const date=key.replace('done_','');
+      doneMap[date]=1;
+      localStorage.removeItem(key);
+      i--;migrated=true;
+    }
+  }
+  // Migrate old kierros_ from fp_complete_v1
+  const d=ld();
+  Object.keys(d).forEach(function(key){
+    if(key.match(/^kierros_\d{4}-\d{2}-\d{2}$/)){
+      const date=key.replace('kierros_','');
+      kierrosMap[date]=d[key];
+      delete d[key];
+      migrated=true;
+    }
+  });
+  if(migrated){
+    d.done_map=doneMap;
+    d.kierros_map=kierrosMap;
+    sv(d);
+    console.log('FrisbeePro: migrated old keys to new format');
+  }
 }
 
 // ===== DEFAULT PROFILE =====
@@ -2886,10 +2934,11 @@ function syncAllCompsToCalendar(){
 })();
 
 renderProfile();
+migrateOldKeys();
 // Auto-load from Gist on startup
 if(getGistToken()){
   gistLoad().then(loaded=>{
-    if(loaded)renderProfile();
+    if(loaded){migrateOldKeys();renderProfile();}
     else gistUpdateStatus('saved','Ajan tasalla');
   });
 }else{
