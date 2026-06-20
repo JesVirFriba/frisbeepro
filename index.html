@@ -1147,7 +1147,29 @@ function wireCompEvents(cont, protocol){
     resetBtn.addEventListener('click',function(){set('comp_day_checks',{});renderCompDay();});
     resetBtn.addEventListener('touchend',function(e){e.preventDefault();set('comp_day_checks',{});renderCompDay();});
   }
-  var doneBtn=cont.querySelector('#comp-done');
+  // Quick result save
+  var qrSave=cont.querySelector('#qr-save');
+  if(qrSave){
+    function saveQuickResult(e){
+      e.preventDefault();
+      var result=cont.querySelector('#qr-result').value;
+      var metrix=cont.querySelector('#qr-metrix').value;
+      var note=cont.querySelector('#qr-note').value;
+      if(!result&&!metrix){alert('Syötä vähintään tulos tai Metrix');return;}
+      var comps=get('comps')||[];
+      var today=new Date().toISOString().slice(0,10);
+      comps.push({id:Date.now(),date:today,name:'Kisapäivä '+today,type:'kisa',
+        result:parseInt(result)||null,mrating:parseInt(metrix)||null,note:note});
+      set('comps',comps);
+      var msg=cont.querySelector('#qr-msg');
+      if(msg){msg.style.display='block';setTimeout(function(){msg.style.display='none';},2000);}
+      cont.querySelector('#qr-result').value='';
+      cont.querySelector('#qr-metrix').value='';
+      cont.querySelector('#qr-note').value='';
+    }
+    qrSave.addEventListener('click',saveQuickResult);
+    qrSave.addEventListener('touchend',saveQuickResult);
+  }
   if(doneBtn){
     doneBtn.addEventListener('click',function(){
       var checks={};
@@ -1190,6 +1212,21 @@ function renderCompDay(){
   h+='<div class="coach-msg" style="margin-top:8px">';
   h+='💬 <strong>Valmentaja</strong><br>';
   h+='Kamppailutausta aktivoi hermostosi paineessa. Hengitysharjoitus (-30 min) on siksi kriittinen – se on ainoa tapa ohjata hermosto rauhoittumistilaan ennen kilpailua. Älä ohita sitä.';
+  h+='</div>';
+
+  // Quick result logging
+  h+='<div style="background:var(--card);border-radius:var(--r);padding:12px 14px;margin-top:10px;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
+  h+='<div style="font-size:13px;font-weight:700;color:var(--bd);margin-bottom:10px">📊 Kirjaa kisatulos</div>';
+  h+='<div style="display:flex;gap:8px;margin-bottom:8px">';
+  h+='<div style="flex:1"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Tulos (heitot)</div>';
+  h+='<input id="qr-result" type="number" placeholder="60" style="width:100%;padding:7px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--bg);color:var(--text)"></div>';
+  h+='<div style="flex:1"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Metrix-rating</div>';
+  h+='<input id="qr-metrix" type="number" placeholder="975" style="width:100%;padding:7px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--bg);color:var(--text)"></div>';
+  h+='</div>';
+  h+='<div style="margin-bottom:8px"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Muistiinpano</div>';
+  h+='<input id="qr-note" type="text" placeholder="esim. puttirutiini toimi" style="width:100%;padding:7px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:13px;background:var(--bg);color:var(--text)"></div>';
+  h+='<button id="qr-save" class="btn" style="width:100%">💾 Tallenna tulos</button>';
+  h+='<div id="qr-msg" style="text-align:center;color:var(--gd);font-size:12px;margin-top:6px;display:none">✓ Tulos tallennettu!</div>';
   h+='</div>';
 
   cont.innerHTML=h;
@@ -1311,9 +1348,15 @@ function renderWeekView() {
   const compCount = plan.filter(d => d.intensity === 'comp').length;
   const trainCount = plan.filter(d => d.intensity !== 'rest' && d.intensity !== 'comp').length;
   const restCount = plan.filter(d => d.intensity === 'rest').length;
+  const doneCount = plan.filter(d => d.intensity !== 'rest' && d.intensity !== 'comp' && get('done_'+d.date)).length;
+  const weekComps = plan.filter(d=>d.intensity==='comp').map(d=>{
+    const comps=(get('comps')||[]).filter(c=>c.date===d.date);
+    return comps.length?comps[comps.length-1].mrating:null;
+  }).filter(Boolean);
+  const weekAvg=weekComps.length?Math.round(weekComps.reduce((a,b)=>a+b,0)/weekComps.length):null;
   h += `<div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
-    <div style="flex:1;background:var(--gl);border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--gd)">${trainCount}</div><div style="font-size:10px;color:var(--gd);font-weight:500">Treeniä</div></div>
-    <div style="flex:1;background:var(--rl);border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--rd)">${compCount}</div><div style="font-size:10px;color:var(--rd);font-weight:500">Kisaa</div></div>
+    <div style="flex:1;background:var(--gl);border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--gd)">${doneCount}/${trainCount}</div><div style="font-size:10px;color:var(--gd);font-weight:500">Treeniä</div></div>
+    <div style="flex:1;background:var(--rl);border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--rd)">${compCount}</div><div style="font-size:10px;color:var(--rd);font-weight:500">Kisaa${weekAvg?' · '+weekAvg:''}</div></div>
     <div style="flex:1;background:var(--bg);border:0.5px solid var(--border);border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--t3)">${restCount}</div><div style="font-size:10px;color:var(--t3);font-weight:500">Lepoa</div></div>
   </div>`;
 
@@ -1337,21 +1380,61 @@ function renderWeekView() {
     const clickTarget = sessionRoute[mainSession];
     const clickable = clickTarget && !isPast;
     const onclickAttr = clickable ? ' onclick="trainTab(\''+clickTarget+'\',null);renderTrain()"' : '';
-    const tagStyle = 'display:flex;align-items:center;gap:8px;padding:10px 12px;background:'+cardBg+';border-radius:var(--r);margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:'+cardBorder+';opacity:'+opacity+';width:100%;text-align:left;font-family:inherit;cursor:'+(clickable?'pointer':'default');
+    const isDone = !!(get('done_'+day.date));
+    const tagStyle = 'display:flex;align-items:center;gap:8px;padding:10px 12px;background:'+(isDone?'var(--gl)':cardBg)+';border-radius:var(--r);margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:'+(isDone?'1.5px solid var(--g)':cardBorder)+';opacity:'+opacity+';width:100%;text-align:left;font-family:inherit;cursor:'+(clickable?'pointer':'default');
 
     h += '<div'+onclickAttr+' style="'+tagStyle+'">';
     h += '<div style="width:36px;flex-shrink:0;text-align:center">';
-    h += '<div style="font-size:10px;font-weight:700;color:'+dayCol+';text-transform:uppercase">'+day.day+'</div>';
-    h += '<div style="font-size:22px;line-height:1.2">'+day.icon+'</div>';
+    h += '<div style="font-size:10px;font-weight:700;color:'+(isDone?'var(--gd)':dayCol)+';text-transform:uppercase">'+day.day+'</div>';
+    h += '<div style="font-size:22px;line-height:1.2">'+(isDone?'✅':day.icon)+'</div>';
     h += '<div style="font-size:10px;color:var(--t3)">'+day.date.slice(8)+'.</div>';
     h += '</div>';
     h += '<div style="flex:1;min-width:0">';
-    h += '<div style="font-size:12px;font-weight:600;color:'+textCol+';margin-bottom:4px;line-height:1.3">'+day.note+'</div>';
+    h += '<div style="font-size:12px;font-weight:600;color:'+(isDone?'var(--gd)':textCol)+';margin-bottom:4px;line-height:1.3">'+day.note+(isDone?' – tehty':'')+'</div>';
     h += '<div style="display:flex;gap:3px;flex-wrap:wrap">'+badges+'</div>';
     h += '</div>';
-    if(clickable) h += '<div style="font-size:16px;color:'+sc.col+';flex-shrink:0">›</div>';
+    if(isDone){
+      h += '<div onclick="event.stopPropagation();set(\'done_'+day.date+'\',null);renderTrain()" style="font-size:10px;color:var(--gd);cursor:pointer;flex-shrink:0;padding:3px 7px;border:1px solid var(--g);border-radius:20px">✓ Tehty</div>';
+    } else if(isPast && day.intensity !== 'rest'){
+      h += '<div onclick="event.stopPropagation();set(\'done_'+day.date+'\',1);renderTrain()" style="font-size:10px;color:var(--t3);cursor:pointer;flex-shrink:0;padding:3px 7px;border:1px solid var(--border);border-radius:20px">Merkitse</div>';
+    } else if(clickable){
+      h += '<div style="font-size:16px;color:'+sc.col+';flex-shrink:0">›</div>';
+    }
     h += '</div>';
   });
+
+  // Week summary card for past weeks
+  if(weekViewOffset < 0){
+    const weekCompsAll=(get('comps')||[]).filter(c=>{
+      const ds=dateStr(weekDates[0]),de=dateStr(weekDates[6]);
+      return c.date>=ds&&c.date<=de&&c.mrating;
+    });
+    const doneTrains=plan.filter(d=>d.intensity!=='rest'&&d.intensity!=='comp'&&get('done_'+d.date)).length;
+    const totalTrains=plan.filter(d=>d.intensity!=='rest'&&d.intensity!=='comp').length;
+    const avgMetrix=weekCompsAll.length?Math.round(weekCompsAll.reduce((a,c)=>a+c.mrating,0)/weekCompsAll.length):null;
+    const bestMetrix=weekCompsAll.length?Math.max(...weekCompsAll.map(c=>c.mrating)):null;
+    h+=`<div style="background:var(--card);border-radius:var(--r);padding:12px 14px;margin-top:8px;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">📋 Viikkoyhteenveto</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:70px;text-align:center;background:var(--gl);border-radius:var(--rs);padding:7px">
+          <div style="font-size:18px;font-weight:700;color:var(--gd)">${doneTrains}/${totalTrains}</div>
+          <div style="font-size:9px;color:var(--gd);font-weight:500">Treenattu</div>
+        </div>
+        ${weekCompsAll.length?`<div style="flex:1;min-width:70px;text-align:center;background:var(--bl);border-radius:var(--rs);padding:7px">
+          <div style="font-size:18px;font-weight:700;color:var(--bd)">${weekCompsAll.length}</div>
+          <div style="font-size:9px;color:var(--bd);font-weight:500">Kierrosta</div>
+        </div>`:''}
+        ${avgMetrix?`<div style="flex:1;min-width:70px;text-align:center;background:var(--pl);border-radius:var(--rs);padding:7px">
+          <div style="font-size:18px;font-weight:700;color:var(--pd)">${avgMetrix}</div>
+          <div style="font-size:9px;color:var(--pd);font-weight:500">Avg Metrix</div>
+        </div>`:''}
+        ${bestMetrix?`<div style="flex:1;min-width:70px;text-align:center;background:var(--gl);border-radius:var(--rs);padding:7px">
+          <div style="font-size:18px;font-weight:700;color:var(--gd)">${bestMetrix}</div>
+          <div style="font-size:9px;color:var(--gd);font-weight:500">Paras</div>
+        </div>`:''}
+      </div>
+    </div>`;
+  }
 
   // Month view button
   h += `<div class="sect" style="margin-top:14px">Kuukausinäkymä</div>`;
@@ -2312,29 +2395,42 @@ function delRating(id){set('ratings',(get('ratings')||[]).filter(r=>r.id!==id));
 function renderSpeedDev(){
   const speeds=(get('speeds')||[]).sort((a,b)=>a.date.localeCompare(b.date));
   const bhSp=speeds.filter(s=>s.bh5>0);
-  let h='<button class=\"btn btn-out btn-sm\" onclick=\"showPg(\'speed\')\" style=\"margin-bottom:12px\">→ Kirjaa nopeustesti (Nopeus-välilehti)</button>';
+  const fhSp=speeds.filter(s=>s.fh5>0);
+  let h='<button class="btn btn-out btn-sm" onclick="showPg(\'speed\')" style="margin-bottom:12px">→ Kirjaa nopeustesti (Nopeus-välilehti)</button>';
   if(bhSp.length>=2){
     var bhByMo3={};bhSp.forEach(function(s){var mo=s.date.slice(0,7);if(!bhByMo3[mo]||s.bh5>bhByMo3[mo].bh5)bhByMo3[mo]=s;});
     var bhMo3=Object.keys(bhByMo3).sort().map(function(k){return bhByMo3[k]});
     var mxS=Math.max(...bhMo3.map(s=>s.bh5)),mnS=Math.min(...bhMo3.map(s=>s.bh5)),rngS=mxS-mnS||5;
-    h+='<div class=\"chart-wrap\"><div style=\"font-size:13px;font-weight:600;margin-bottom:9px\">BH kehitys</div><div class=\"bar-chart\">';
+    h+='<div class="chart-wrap"><div style="font-size:13px;font-weight:600;margin-bottom:9px">BH kehitys</div><div class="bar-chart">';
     bhMo3.slice(-12).forEach(function(s){
       var pct=Math.round(((s.bh5-mnS)/rngS)*75)+15;
       var lbl=s.date.slice(5,7)+'/'+s.date.slice(2,4);
-      h+='<div class=\"bc\"><div class=\"bv\">'+s.bh5.toFixed(0)+'</div><div class=\"bb\" style=\"height:'+pct+'%;background:'+(s.bh5===mxS?'#1D9E75':'#85B7EB')+'\"></div><div class=\"bl\">'+lbl+'</div></div>';
+      h+='<div class="bc"><div class="bv">'+s.bh5.toFixed(0)+'</div><div class="bb" style="height:'+pct+'%;background:'+(s.bh5===mxS?'#1D9E75':'#85B7EB')+'"></div><div class="bl">'+lbl+'</div></div>';
     });
     h+='</div></div>';
   }
+  if(fhSp.length>=2){
+    var fhByMo={};fhSp.forEach(function(s){var mo=s.date.slice(0,7);if(!fhByMo[mo]||s.fh5>fhByMo[mo].fh5)fhByMo[mo]=s;});
+    var fhMo=Object.keys(fhByMo).sort().map(function(k){return fhByMo[k]});
+    var mxF=Math.max(...fhMo.map(s=>s.fh5)),mnF=Math.min(...fhMo.map(s=>s.fh5)),rngF=mxF-mnF||5;
+    h+='<div class="chart-wrap"><div style="font-size:13px;font-weight:600;margin-bottom:9px">FH kehitys <span style="font-size:10px;color:var(--pd);font-weight:400">· Tavoite: wobble alle 5°</span></div><div class="bar-chart">';
+    fhMo.slice(-12).forEach(function(s){
+      var pct=Math.round(((s.fh5-mnF)/rngF)*75)+15;
+      var lbl=s.date.slice(5,7)+'/'+s.date.slice(2,4);
+      h+='<div class="bc"><div class="bv">'+s.fh5.toFixed(0)+'</div><div class="bb" style="height:'+pct+'%;background:'+(s.fh5===mxF?'#8B5CF6':'#C4B5FD')+'"></div><div class="bl">'+lbl+'</div></div>';
+    });
+    h+='</div><div style="font-size:11px;color:var(--t2);margin-top:4px">Max: <b style="color:var(--pd)">${mxF.toFixed(1)} km/h</b> · Kehitys: <b style="color:'+(mxF-fhMo[0].fh5>=0?'var(--gd)':'#E24B4A')+'">'+(mxF-fhMo[0].fh5>0?'+':'')+(mxF-fhMo[0].fh5).toFixed(1)+' km/h</b></div></div>';
+  }
   if(speeds.length){
-    h+='<div class=\"sect\">Testihistoria</div>';
+    h+='<div class="sect">Testihistoria</div>';
     speeds.slice().reverse().forEach(function(s){
-      h+='<div class=\"row\"><div style=\"flex:1\"><div style=\"font-size:11px;color:var(--t3)\">'+s.date+'</div>';
-      h+='<div style=\"font-size:12px;display:flex;gap:8px;margin-top:2px\">';
-      if(s.bh5)h+='<span style=\"color:var(--bd);font-weight:600\">BH '+s.bh5.toFixed(1)+'</span>';
-      if(s.fh5)h+='<span style=\"color:var(--pd);font-weight:600\">FH '+s.fh5.toFixed(1)+'</span>';
+      h+='<div class="row"><div style="flex:1"><div style="font-size:11px;color:var(--t3)">'+s.date+'</div>';
+      h+='<div style="font-size:12px;display:flex;gap:8px;margin-top:2px">';
+      if(s.bh5)h+='<span style="color:var(--bd);font-weight:600">BH '+s.bh5.toFixed(1)+'</span>';
+      if(s.fh5)h+='<span style="color:var(--pd);font-weight:600">FH '+s.fh5.toFixed(1)+'</span>';
       h+='</div></div></div>';
     });
-  }else{h+='<div class=\"empty\"><div class=\"ei\">⚡</div><div class=\"et\">Ei nopeustestejä</div></div>';}
+  }else{h+='<div class="empty"><div class="ei">⚡</div><div class="et">Ei nopeustestejä</div></div>';}
   document.getElementById('dev-content').innerHTML=h;
 }
 
