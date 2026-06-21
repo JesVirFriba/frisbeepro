@@ -1255,6 +1255,7 @@ function wireCompEvents(cont, protocol){
     qrSave.addEventListener('click',saveQuickResult);
     qrSave.addEventListener('touchend',saveQuickResult);
   }
+  var doneBtn=cont.querySelector('#comp-done');
   if(doneBtn){
     doneBtn.addEventListener('click',function(){
       var checks={};
