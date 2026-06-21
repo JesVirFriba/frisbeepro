@@ -2807,34 +2807,57 @@ function renderRatingDev(){
       const avgViikko=Math.round(viikkoComps.reduce((a,c)=>a+c.mrating,0)/viikkoComps.length);
       const avgKisa=Math.round(kisaComps.reduce((a,c)=>a+c.mrating,0)/kisaComps.length);
       const diff=avgViikko-avgKisa;
+      // Trend: compare first half vs second half of kisa results
+      const kisaHalf=Math.floor(kisaComps.length/2);
+      const kisaEarly=kisaComps.slice(0,Math.max(1,kisaHalf));
+      const kisaLate=kisaComps.slice(kisaHalf);
+      const avgEarly=Math.round(kisaEarly.reduce((a,c)=>a+c.mrating,0)/kisaEarly.length);
+      const avgLate=Math.round(kisaLate.reduce((a,c)=>a+c.mrating,0)/kisaLate.length);
+      const trend=avgLate-avgEarly;
+      const viikkoHalf=Math.floor(viikkoComps.length/2);
+      const viikkoEarly=viikkoComps.slice(0,Math.max(1,viikkoHalf));
+      const viikkoLate=viikkoComps.slice(viikkoHalf);
+      const avgViikkoEarly=Math.round(viikkoEarly.reduce((a,c)=>a+c.mrating,0)/viikkoEarly.length);
+      const avgViikkoLate=Math.round(viikkoLate.reduce((a,c)=>a+c.mrating,0)/viikkoLate.length);
+      const diffEarly=avgViikkoEarly-avgEarly;
+      const diffLate=avgViikkoLate-avgLate;
+      const trendDir=diffLate<diffEarly; // ero pienenee = positiivinen kehitys
       const mxAll=Math.max(...comps.map(c=>c.mrating));
       const mnAll=Math.min(...comps.map(c=>c.mrating));
       const rngAll=mxAll-mnAll||20;
       h+=`<div class="chart-wrap">`;
       h+=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">`;
-      h+=`<div style="font-size:13px;font-weight:600">Viikkokisat vs Kisat</div>`;
-      h+=`<div style="font-size:11px;padding:3px 9px;border-radius:20px;background:${diff>30?'var(--rl)':diff>10?'var(--al)':'var(--gl)'};color:${diff>30?'var(--rd)':diff>10?'var(--ad)':'var(--gd)'};font-weight:600">Ero: ${diff} pistettä</div>`;
+      h+=`<div style="font-size:13px;font-weight:600">Potentiaali vs Kisasuoritus</div>`;
+      h+=`<div style="font-size:11px;padding:3px 9px;border-radius:20px;background:${diff>40?'var(--rl)':diff>20?'var(--al)':'var(--gl)'};color:${diff>40?'var(--rd)':diff>20?'var(--ad)':'var(--gd)'};font-weight:600">Ero: ${diff}p</div>`;
       h+=`<\/div>`;
       h+=`<div class="bar-chart">`;
       comps.slice(-16).forEach(c=>{
         const pct=Math.round(((c.mrating-mnAll)/rngAll)*75)+15;
         const vk=isViikko(c);
         const col=vk?'#378ADD':'#E24B4A';
-        const lbl=c.date.slice(5);
-        h+=`<div class="bc"><div class="bv" style="font-size:9px;color:${col}">${c.mrating}<\/div><div class="bb" style="height:${pct}%;background:${col};opacity:.85"><\/div><div class="bl">${lbl}<\/div><\/div>`;
+        h+=`<div class="bc"><div class="bv" style="font-size:9px;color:${col}">${c.mrating}<\/div><div class="bb" style="height:${pct}%;background:${col};opacity:.85"><\/div><div class="bl">${c.date.slice(5)}<\/div><\/div>`;
       });
       h+=`<\/div>`;
-      h+=`<div style="display:flex;gap:16px;margin-top:8px;font-size:12px">`;
-      h+=`<div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:2px;background:#378ADD"><\/div><span>Viikkokisat avg: <b style="color:#378ADD">${avgViikko}<\/b><\/span><\/div>`;
-      h+=`<div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:2px;background:#E24B4A"><\/div><span>Kisat avg: <b style="color:#E24B4A">${avgKisa}<\/b><\/span><\/div>`;
+      h+=`<div style="display:flex;gap:12px;margin-top:8px;font-size:12px;flex-wrap:wrap">`;
+      h+=`<div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:2px;background:#378ADD"><\/div><span>Potentiaali (vk): <b style="color:#378ADD">${avgViikko}<\/b><\/span><\/div>`;
+      h+=`<div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:2px;background:#E24B4A"><\/div><span>PDGA-kisat: <b style="color:#E24B4A">${avgKisa}<\/b><\/span><\/div>`;
+      if(kisaComps.length>=2){h+=`<div style="display:flex;align-items:center;gap:5px">${trendDir?'📈':'📉'}<span>Trendi: <b style="color:${trendDir?'var(--gd)':'#E24B4A'}">${trendDir?'Ero pienenee':'Ero kasvaa'}</b><\/span><\/div>`;}
       h+=`<\/div>`;
-      if(diff>30){
-        h+=`<div style="font-size:11px;color:var(--rd);background:var(--rl);border-radius:var(--rs);padding:7px 10px;margin-top:8px;line-height:1.5">⚠ ${diff} pisteen ero viikkokisojen ja kisojen välillä – kisajännitys syö selvästi suoritustasoa. Fokus henkiseen valmennukseen.<\/div>`;
-      }else if(diff>10){
-        h+=`<div style="font-size:11px;color:var(--ad);background:var(--al);border-radius:var(--rs);padding:7px 10px;margin-top:8px;line-height:1.5">📈 ${diff} pisteen ero – kehitystä tapahtuu mutta kisapaineessa on vielä parannettavaa.<\/div>`;
+      // Analysis text
+      let analysisText='', analysisBg='var(--gl)', analysisCol='var(--gd)';
+      if(diff>40){
+        analysisBg='var(--rl)';analysisCol='var(--rd)';
+        analysisText=`⚠ ${diff} pisteen ero kertoo merkittävästä kisapaineen vaikutuksesta. Todellinen potentiaalisi on ${avgViikko} – PDGA-kisoissa se ei vielä näy. Henkinen valmennus on prioriteetti #1.`;
+      }else if(diff>20){
+        analysisBg='var(--al)';analysisCol='var(--ad)';
+        analysisText=`📊 ${diff} pisteen ero on kohtuullinen. Potentiaali ${avgViikko} on selvästi parempi kuin kisasuoritus ${avgKisa}. Paineensietokyky kehittyy – jatka pre-shot rutiinia ja bogey-recovery protokollaa.`;
       }else{
-        h+=`<div style="font-size:11px;color:var(--gd);background:var(--gl);border-radius:var(--rs);padding:7px 10px;margin-top:8px;line-height:1.5">✓ Ero on alle 10 pistettä – suoritus on tasaista kisapaineessa.<\/div>`;
+        analysisText=`✓ Alle 20 pisteen ero – suoritustaso on tasainen myös kisapaineessa. Potentiaali ${avgViikko} alkaa näkyä kisoissa.`;
       }
+      if(kisaComps.length>=2){
+        analysisText+=trendDir?` Positiivinen kehitys: kisasuoritus paranee (${avgEarly}→${avgLate}).`:` Huomio: ero on kasvamassa (${avgEarly}→${avgLate}) – vahvista henkistä harjoittelua.`;
+      }
+      h+=`<div style="font-size:11px;color:${analysisCol};background:${analysisBg};border-radius:var(--rs);padding:8px 10px;margin-top:8px;line-height:1.5">${analysisText}<\/div>`;
       h+=`<\/div>`;
     }
   }
