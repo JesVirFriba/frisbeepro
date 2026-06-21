@@ -1166,6 +1166,90 @@ function delSpeed(id){set('speeds',(get('speeds')||[]).filter(s=>s.id!==id));ren
 // ===== TRAINING =====
 
 
+// ===== STRESSIVÄYLÄT =====
+function getStressHoles(compDate){
+  return get('stress_holes_'+(compDate||new Date().toISOString().slice(0,10)))||[];
+}
+function setStressHoles(compDate,holes){
+  set('stress_holes_'+(compDate||new Date().toISOString().slice(0,10)),holes);
+}
+
+function openStressHoleModal(){
+  const today=new Date().toISOString().slice(0,10);
+  const holes=getStressHoles(today);
+  const box=document.createElement('div');
+  box.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
+  const inner=document.createElement('div');
+  inner.style.cssText='background:var(--card);border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))';
+
+  let h='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">';
+  h+='<div style="font-size:16px;font-weight:700">⚠️ Stressiväylät</div>';
+  h+='<button id="sh-close" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--t2)">✕</button></div>';
+  h+='<div style="font-size:12px;color:var(--t2);margin-bottom:14px">Merkitse väylät jotka jännittävät. Sovellus muistuttaa strategiasta kisapäivänä.</div>';
+
+  // Existing holes
+  holes.forEach(function(sh,i){
+    h+='<div style="background:var(--rl);border-radius:var(--r);padding:12px;margin-bottom:8px">';
+    h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
+    h+='<div style="font-size:13px;font-weight:700;color:var(--rd)">⚠️ Väylä '+sh.hole+'</div>';
+    h+='<button class="sh-del" data-idx="'+i+'" style="background:none;border:none;font-size:14px;cursor:pointer;color:var(--rd)">Poista</button></div>';
+    h+='<div style="font-size:11px;color:var(--rd);margin-bottom:3px"><b>Syy:</b> '+sh.reason+'</div>';
+    h+='<div style="font-size:11px;color:var(--rd);margin-bottom:2px"><b>A-linja:</b> '+sh.lineA+'</div>';
+    h+='<div style="font-size:11px;color:var(--rd)"><b>B-linja:</b> '+sh.lineB+'</div>';
+    h+='</div>';
+  });
+
+  // Add new hole form
+  h+='<div style="background:var(--bg);border-radius:var(--r);padding:12px;margin-bottom:14px">';
+  h+='<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:10px">+ Lisää stressiväylä</div>';
+  h+='<div style="display:flex;gap:8px;margin-bottom:8px">';
+  h+='<div style="flex:1"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Väylä nro</div>';
+  h+='<input id="sh-hole" type="number" min="1" max="18" placeholder="esim. 8" style="width:100%;padding:8px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--card);color:var(--text)"></div>';
+  h+='<div style="flex:2"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Miksi jännittää</div>';
+  h+='<input id="sh-reason" type="text" placeholder="esim. OB oikealla, kapea tunneli" style="width:100%;padding:8px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:13px;background:var(--card);color:var(--text)"></div>';
+  h+='</div>';
+  h+='<div style="margin-bottom:8px"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">A-linja (paras reitti)</div>';
+  h+='<input id="sh-lineA" type="text" placeholder="esim. BH 85%, tunneli ensin" style="width:100%;padding:8px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:13px;background:var(--card);color:var(--text)"></div>';
+  h+='<div style="margin-bottom:10px"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">B-linja (varasuunnitelma)</div>';
+  h+='<input id="sh-lineB" type="text" placeholder="esim. Lyhyt heitto, bogey ok" style="width:100%;padding:8px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:13px;background:var(--card);color:var(--text)"></div>';
+  h+='<button id="sh-add" class="btn" style="width:100%">+ Lisää väylä</button>';
+  h+='</div>';
+  h+='<button id="sh-done" class="btn" style="width:100%;background:var(--g)">✓ Valmis</button>';
+
+  inner.innerHTML=h;
+  box.appendChild(inner);
+  document.body.appendChild(box);
+
+  // Wire events
+  inner.querySelector('#sh-close').addEventListener('click',function(){box.remove();});
+  inner.querySelector('#sh-done').addEventListener('click',function(){box.remove();renderCompDay();});
+
+  inner.querySelectorAll('.sh-del').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      const idx=parseInt(btn.dataset.idx);
+      const h2=getStressHoles(today);
+      h2.splice(idx,1);
+      setStressHoles(today,h2);
+      box.remove();
+      openStressHoleModal();
+    });
+  });
+
+  inner.querySelector('#sh-add').addEventListener('click',function(){
+    const hole=parseInt(inner.querySelector('#sh-hole').value);
+    const reason=inner.querySelector('#sh-reason').value.trim();
+    const lineA=inner.querySelector('#sh-lineA').value.trim();
+    const lineB=inner.querySelector('#sh-lineB').value.trim();
+    if(!hole||!reason){alert('Syötä väylä ja syy');return;}
+    const h2=getStressHoles(today);
+    h2.push({hole,reason,lineA:lineA||'–',lineB:lineB||'–'});
+    h2.sort(function(a,b){return a.hole-b.hole;});
+    setStressHoles(today,h2);
+    box.remove();
+    openStressHoleModal();
+  });
+}
+
 // ===== COMPETITION DAY PROTOCOL =====
 
 function buildCompProtocol(){
@@ -1374,6 +1458,24 @@ function renderCompDay(){
   var doneSteps=Object.keys(todayChecks).length;
 
   var h=buildCompHeader(doneSteps,totalSteps);
+
+  // Stressiväylät
+  var today2=new Date().toISOString().slice(0,10);
+  var stressHoles=getStressHoles(today2);
+  h+='<div style="margin-bottom:10px">';
+  if(stressHoles.length){
+    h+='<div style="font-size:12px;font-weight:700;color:var(--rd);margin-bottom:6px">⚠️ Stressiväylät – muista strategia</div>';
+    stressHoles.forEach(function(sh){
+      h+='<div style="background:var(--rl);border-radius:var(--rs);padding:10px 12px;margin-bottom:6px">';
+      h+='<div style="font-size:13px;font-weight:700;color:var(--rd);margin-bottom:4px">Väylä '+sh.hole+'</div>';
+      if(sh.reason)h+='<div style="font-size:11px;color:var(--rd);margin-bottom:3px;opacity:.8">'+sh.reason+'</div>';
+      h+='<div style="font-size:11px;color:var(--rd);margin-bottom:2px">✅ <b>A:</b> '+sh.lineA+'</div>';
+      h+='<div style="font-size:11px;color:var(--rd)">🔄 <b>B:</b> '+sh.lineB+'</div>';
+      h+='</div>';
+    });
+  }
+  h+='<button onclick="openStressHoleModal()" style="width:100%;padding:9px;border-radius:var(--rs);border:1.5px dashed var(--rd);background:transparent;color:var(--rd);font-size:12px;font-weight:600;cursor:pointer">⚠️ '+(stressHoles.length?'Muokkaa stressiväyliä':'+ Lisää stressiväylät')+'</button>';
+  h+='</div>';
 
   h+='<div style="display:flex;gap:6px;margin-bottom:12px">';
   h+='<button id="comp-reset" class="btn btn-out btn-sm" style="flex:1">↺ Nollaa kisapäivä</button>';
