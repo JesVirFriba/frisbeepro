@@ -1302,6 +1302,12 @@ function renderCompDay(){
   // Quick result logging with rating calculator
   h+='<div style="background:var(--card);border-radius:var(--r);padding:12px 14px;margin-top:10px;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
   h+='<div style="font-size:13px;font-weight:700;color:var(--bd);margin-bottom:10px">📊 Kirjaa kisatulos</div>';
+  h+='<div style="display:flex;gap:8px;margin-bottom:8px;align-items:flex-end">';
+  h+='<div style="flex:1"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Metrix kilpailu-ID</div>';
+  h+='<input id="qr-compid" type="number" placeholder="esim. 3671000" style="width:100%;padding:7px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:13px;background:var(--bg);color:var(--text)"></div>';
+  h+='<button onclick="fetchMetrixCourse(\'qr\')" style="padding:7px 12px;background:var(--bd);color:#fff;border:none;border-radius:var(--rs);font-size:12px;cursor:pointer;white-space:nowrap">🔍 Hae rata</button>';
+  h+='</div>';
+  h+='<div id="qr-course-info" style="display:none;background:var(--bl);border-radius:var(--rs);padding:7px 10px;margin-bottom:8px;font-size:11px;color:var(--bd)"></div>';
   h+='<div style="display:flex;gap:8px;margin-bottom:8px">';
   h+='<div style="flex:1"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Tulos (heitot)</div>';
   h+='<input id="qr-result" type="number" placeholder="60" oninput="calcKierrosRating(\'qr\')" style="width:100%;padding:7px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--bg);color:var(--text)"></div>';
@@ -1326,6 +1332,56 @@ function renderCompDay(){
 
   cont.innerHTML=h;
   wireCompEvents(cont,protocol);
+}
+
+// ===== METRIX COURSE FETCH =====
+async function fetchMetrixCourse(prefix){
+  const compId=document.getElementById(prefix+'-compid')?.value?.trim();
+  if(!compId){alert('Syötä kilpailu-ID ensin');return;}
+  const infoEl=document.getElementById(prefix+'-course-info');
+  if(infoEl){infoEl.style.display='block';infoEl.textContent='⏳ Haetaan...';}
+  try{
+    const r=await fetch(`https://discgolfmetrix.com/api.php?content=result&id=${compId}`);
+    const d=await r.json();
+    if(!d.Competition){
+      if(infoEl)infoEl.textContent='⚠ Kilpailua ei löydy – tarkista ID';
+      return;
+    }
+    const comp=d.Competition;
+    const courseId=comp.CourseID;
+    const courseName=comp.CourseName?.replace(/&rarr;/g,'→')||comp.Name;
+    // Fetch course details for rating and par
+    let rating='',par='',holes=0;
+    if(courseId){
+      const r2=await fetch(`https://discgolfmetrix.com/api.php?content=course&id=${courseId}&code=1`);
+      const d2=await r2.json();
+      if(d2.course){
+        rating=Math.round(parseFloat(d2.course.RatingValue1||0))||'';
+        holes=d2.baskets?.length||0;
+        par=d2.baskets?.reduce((a,b)=>a+(parseInt(b.Par)||3),0)||'';
+      }
+    }
+    // Also try from tracks
+    const track=comp.Tracks?.[0];
+    if(track){
+      if(!rating&&track.Rating)rating=track.Rating;
+      if(!par&&track.Par)par=track.Par;
+    }
+    // Fill fields
+    const parEl=document.getElementById(prefix+'-par');
+    const rratingEl=document.getElementById(prefix+'-rrating');
+    if(parEl&&par)parEl.value=par;
+    if(rratingEl&&rating)rratingEl.value=rating;
+    calcKierrosRating(prefix);
+    if(infoEl){
+      infoEl.style.display='block';
+      infoEl.innerHTML='✓ <b>'+comp.Name?.replace(/&rarr;/g,'→')+'</b>'+(rating?' · Rating: '+rating:'')+(par?' · Par: '+par:'')+(holes?' · '+holes+' väylää':'');
+    }
+    // Store for hole-by-hole
+    if(window._metrixComp)window._metrixComp={compId,comp,courseId,rating,par,holes};
+  }catch(e){
+    if(infoEl)infoEl.textContent='⚠ Verkkovirhe: '+e.message;
+  }
 }
 
 // ===== METRIX RATING CALCULATOR =====
@@ -1900,8 +1956,10 @@ function renderPuttiTrain(){
 
   // Sarjakirjaus
   const today2=new Date().toISOString().slice(0,10);
-  const sarjat=get('putti_sarjat_'+today2)||[];
-  const sarjaTehty=sarjat.reduce((a,s)=>a+s,0);
+  const sarjatRaw=get('putti_sarjat_'+today2)||[];
+  // Support both old format (numbers) and new format (objects)
+  const sarjat=sarjatRaw.map(function(s){return typeof s==='object'?s:{made:s,dist:3};});
+  const sarjaTehty=sarjat.reduce((a,s)=>a+(s.made||0),0);
   const sarjaYht=sarjat.length*10;
   const sarjaPct=sarjaYht>0?Math.round(sarjaTehty/sarjaYht*100):null;
 
@@ -1915,11 +1973,12 @@ function renderPuttiTrain(){
   if(sarjat.length){
     h+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">';
     sarjat.forEach(function(s,i){
-      const pct=Math.round(s/10*100);
+      const made=s.made||0;
+      const pct=Math.round(made/10*100);
       const col=pct>=80?'var(--gd)':pct>=60?'var(--ad)':'#E24B4A';
       h+='<div style="background:var(--bg);border-radius:var(--rs);padding:6px 10px;text-align:center;min-width:52px">';
-      h+='<div style="font-size:11px;color:var(--t3)">Sarja '+(i+1)+'</div>';
-      h+='<div style="font-size:16px;font-weight:700;color:'+col+'">'+s+'/10</div>';
+      h+='<div style="font-size:9px;color:var(--t3)">'+(s.dist||3)+'m</div>';
+      h+='<div style="font-size:16px;font-weight:700;color:'+col+'">'+made+'/10</div>';
       h+='</div>';
     });
     h+='</div>';
@@ -1927,9 +1986,16 @@ function renderPuttiTrain(){
 
   // Uusi sarja input
   const sarjaMax=Math.ceil(todayTarget/10);
+  const sarjaEtaisyys=get('putti_etaisyys')||3;
   if(sarjat.length<sarjaMax){
+    h+='<div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">';
+    [3,4,5,6,7,8,10].forEach(function(m){
+      const sel=sarjaEtaisyys===m;
+      h+='<button class="putti-etaisyys-btn" data-m="'+m+'" style="padding:5px 10px;border-radius:20px;border:1.5px solid '+(sel?'var(--gd)':'var(--border)')+';background:'+(sel?'var(--gl)':'transparent')+';color:'+(sel?'var(--gd)':'var(--t2)')+';font-size:12px;font-weight:'+(sel?'700':'400')+';cursor:pointer">'+m+'m</button>';
+    });
+    h+='</div>';
     h+='<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">';
-    h+='<div style="font-size:12px;color:var(--t2);flex-shrink:0">Sarja '+(sarjat.length+1)+' sisään:</div>';
+    h+='<div style="font-size:12px;color:var(--t2);flex-shrink:0">Sarja '+(sarjat.length+1)+' · '+sarjaEtaisyys+'m sisään:</div>';
     h+='<input id="putti-sarja-input" type="number" min="0" max="10" placeholder="0–10" inputmode="numeric" style="width:80px;padding:8px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:18px;font-weight:700;text-align:center;background:var(--bg);color:var(--text)">';
     h+='<div style="font-size:16px;color:var(--t3)">/10</div>';
     h+='<button id="putti-sarja-save" class="btn" style="flex:1">+ Lisää sarja</button>';
@@ -1985,6 +2051,17 @@ function renderPuttiTrain(){
     btn.addEventListener('click',()=>{set('putti_phase',parseInt(btn.dataset.phase));renderTrain();});
   });
 
+  // Etäisyys-napit
+  cont.querySelectorAll('.putti-etaisyys-btn').forEach(function(btn){
+    function selectEtaisyys(e){
+      e.preventDefault();
+      set('putti_etaisyys', parseInt(btn.dataset.m));
+      renderTrain();
+    }
+    btn.addEventListener('click', selectEtaisyys);
+    btn.addEventListener('touchend', selectEtaisyys);
+  });
+
   // Sarjakirjaus event listeners
   const sarjaInput=cont.querySelector('#putti-sarja-input');
   const sarjaSaveBtn=cont.querySelector('#putti-sarja-save');
@@ -1997,7 +2074,8 @@ function renderPuttiTrain(){
     const val=parseInt(sarjaInput?.value);
     if(isNaN(val)||val<0||val>10){alert('Syötä luku 0–10');return;}
     const s=get('putti_sarjat_'+today3)||[];
-    s.push(val);
+    const etaisyys=get('putti_etaisyys')||3;
+    s.push({made:val, dist:etaisyys});
     set('putti_sarjat_'+today3,s);
     renderTrain();
   }
@@ -2019,12 +2097,13 @@ function renderPuttiTrain(){
       if(e)e.preventDefault();
       const s=get('putti_sarjat_'+today3)||[];
       if(!s.length)return;
-      const made=s.reduce((a,v)=>a+v,0);
-      const total=s.length*10;
+      const sarjatObj=s.map(function(v){return typeof v==='object'?v:{made:v,dist:3};});
+      const made=sarjatObj.reduce((a,v)=>a+(v.made||0),0);
+      const total=sarjatObj.length*10;
       const sess={id:Date.now(),date:today3};
-      // Map to closest distance key based on phase
       const distKey=puttiPhase===1?'d5':puttiPhase===2?'d5':'d5';
       sess[distKey]={m:made,a:total};
+      sess.sarjat=sarjatObj;
       const sessions2=get('putti_sessions')||[];
       sessions2.push(sess);
       set('putti_sessions',sessions2);
@@ -2334,6 +2413,13 @@ function renderKierros(){
   const hasAfterData = result || positive || saved.kentta;
   h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:8px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
   h+='<div style="font-size:13px;font-weight:700;color:var(--pd);margin-bottom:8px">📊 Kierroksen jälkeen</div>';
+  // Metrix fetch
+  h+='<div style="display:flex;gap:8px;margin-bottom:8px;align-items:flex-end">';
+  h+='<div style="flex:1"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Metrix kilpailu-ID (valinnainen)</div>';
+  h+='<input id="kierros-compid" type="number" placeholder="esim. 3671000" value="'+(saved.compId||'')+'" style="width:100%;padding:7px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:13px;background:var(--bg);color:var(--text)"></div>';
+  h+='<button onclick="fetchMetrixCourse(\'kierros\')" style="padding:7px 12px;background:var(--pd);color:#fff;border:none;border-radius:var(--rs);font-size:12px;cursor:pointer;white-space:nowrap">🔍 Hae</button>';
+  h+='</div>';
+  h+='<div id="kierros-course-info" style="'+(saved.compId?'':'display:none;')+'background:var(--pl);border-radius:var(--rs);padding:7px 10px;margin-bottom:8px;font-size:11px;color:var(--pd)">'+(saved.courseName||'')+'</div>';
   h+='<div style="display:flex;gap:8px;margin-bottom:8px">';
   h+='<div style="flex:1"><div style="font-size:11px;color:var(--t3);margin-bottom:4px">Tulos (heitot)</div>';
   h+='<input id="kierros-result" type="number" placeholder="60" oninput="calcKierrosRating(\'kierros\')" value="'+(result||'')+'" style="width:100%;padding:8px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--bg);color:var(--text)"></div>';
@@ -2350,6 +2436,43 @@ function renderKierros(){
   h+='<div style="font-size:11px;color:var(--gd)">Arvioitu kierros-rating</div>';
   h+='<div id="kierros-rating-val" style="font-size:20px;font-weight:700;color:var(--gd)">–</div>';
   h+='</div>';
+
+  // Hole-by-hole entry
+  const holes=saved.holes||[];
+  const holePars=saved.holePars||[];
+  const holeCount=holePars.length||parseInt(saved.par)||0;
+  if(holeCount>0||holes.length>0){
+    h+='<div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:6px">Väyläkohtainen tulos</div>';
+    h+='<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-bottom:8px">';
+    const count=Math.max(holeCount,holes.length,18);
+    for(let i=0;i<count;i++){
+      const par=holePars[i]||3;
+      const res=holes[i]||'';
+      const diff=res?res-par:null;
+      const col=diff===null?'var(--border)':diff<0?'var(--gd)':diff===0?'var(--bd)':'#E24B4A';
+      h+='<div style="text-align:center">';
+      h+='<div style="font-size:9px;color:var(--t3)">'+( i+1)+'</div>';
+      h+='<input class="hole-input" data-hole="'+i+'" type="number" min="1" max="10" value="'+res+'" style="width:100%;padding:3px;border-radius:4px;border:1.5px solid '+col+';font-size:13px;font-weight:700;text-align:center;background:var(--bg);color:'+col+'">';
+      h+='<div style="font-size:9px;color:var(--t3)">p'+par+'</div>';
+      h+='</div>';
+    }
+    h+='</div>';
+    if(holes.length){
+      const total=holes.reduce((a,b)=>a+(parseInt(b)||0),0);
+      const totalPar=holePars.reduce((a,b)=>a+(parseInt(b)||3),0)||holes.length*3;
+      const diff=total-totalPar;
+      const birdies=holes.filter((v,i)=>parseInt(v)<(holePars[i]||3)).length;
+      const bogeys=holes.filter((v,i)=>parseInt(v)>(holePars[i]||3)).length;
+      h+='<div style="display:flex;gap:8px;font-size:11px;background:var(--bg);border-radius:var(--rs);padding:7px;margin-bottom:8px">';
+      h+='<span>Yht: <b>'+total+'</b></span>';
+      h+='<span>Ero: <b style="color:'+(diff<0?'var(--gd)':diff>0?'#E24B4A':'var(--bd)')+'">'+(diff>0?'+':'')+diff+'</b></span>';
+      h+='<span>🐦 <b style="color:var(--gd)">'+birdies+'</b></span>';
+      h+='<span>📍 <b style="color:#E24B4A">'+bogeys+'</b></span>';
+      h+='</div>';
+    }
+  }else{
+    h+='<button id="kierros-add-holes" class="btn btn-out btn-sm" style="width:100%;margin-bottom:8px">+ Lisää väyläkohtainen tulos</button>';
+  }
   h+='<div style="font-size:11px;color:var(--t3);margin-bottom:4px">Yksi positiivinen havainto</div>';
   h+='<textarea id="kierros-positive" placeholder="Mikä meni hyvin tänään?" style="width:100%;padding:8px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:13px;background:var(--bg);color:var(--text);min-height:60px;resize:none">'+(positive||'')+'</textarea>';
   h+='<div style="display:flex;gap:6px;margin-top:8px">';
@@ -2436,6 +2559,15 @@ function renderKierros(){
       d.kentta=cont.querySelector('#kierros-kentta').value;
       d.par=cont.querySelector('#kierros-par')?.value||'';
       d.rrating=cont.querySelector('#kierros-rrating')?.value||'';
+      d.compId=cont.querySelector('#kierros-compid')?.value||'';
+      // Save hole results
+      var holeInputs=cont.querySelectorAll('.hole-input');
+      if(holeInputs.length){
+        d.holes=Array.from(holeInputs).map(function(inp){return inp.value?parseInt(inp.value):null;});
+        if(d.holes.some(Boolean)&&d.result===''){
+          d.result=d.holes.reduce(function(a,v){return a+(parseInt(v)||0);},0)||'';
+        }
+      }
       if(d.result&&d.par&&d.rrating){
         d.calcRating=calcKierrosRating('kierros');
       }
@@ -2444,6 +2576,38 @@ function renderKierros(){
       var msg=cont.querySelector('#kierros-msg');
       if(msg){msg.style.display='block';setTimeout(function(){msg.style.display='none';},2000);}
     }
+
+  // Add holes button
+  var addHolesBtn=cont.querySelector('#kierros-add-holes');
+  if(addHolesBtn){
+    function addHoles(e){
+      e.preventDefault();
+      var d=getKierros(today)||{};
+      var par=parseInt(cont.querySelector('#kierros-par')?.value)||0;
+      var holesCount=par>0?Math.round(par/3):18;
+      d.holePars=Array(holesCount).fill(3);
+      d.holes=Array(holesCount).fill(null);
+      setKierros(today,d);
+      renderKierros();
+    }
+    addHolesBtn.addEventListener('click',addHoles);
+    addHolesBtn.addEventListener('touchend',addHoles);
+  }
+
+  // Hole input auto-update
+  cont.querySelectorAll('.hole-input').forEach(function(inp){
+    inp.addEventListener('input',function(){
+      var d=getKierros(today)||{};
+      var inputs=cont.querySelectorAll('.hole-input');
+      d.holes=Array.from(inputs).map(function(i){return i.value?parseInt(i.value):null;});
+      // Update total
+      var total=d.holes.reduce(function(a,v){return a+(v||0);},0);
+      var resEl=cont.querySelector('#kierros-result');
+      if(resEl&&total>0)resEl.value=total;
+      setKierros(today,d);
+      calcKierrosRating('kierros');
+    });
+  });
     saveBtn.addEventListener('click',saveKierros);
     saveBtn.addEventListener('touchend',saveKierros);
   }
