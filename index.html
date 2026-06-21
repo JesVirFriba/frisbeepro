@@ -2797,6 +2797,46 @@ function renderRatingDev(){
     });
     const avg=Math.round(comps.slice(-10).reduce((s,c)=>s+c.mrating,0)/Math.min(10,comps.length));
     h+=`<\/div><div style="font-size:12px;color:var(--t2);display:flex;gap:12px;margin-top:4px"><span>Paras: <b style="color:var(--g)">${mxC}<\/b><\/span><span>Avg (10 vk): <b>${avg}<\/b><\/span><span>Heikoin: <b style="color:#E24B4A">${mnC}<\/b><\/span><\/div><\/div>`;
+
+    // Viikkokisat vs Kisat vertailu
+    const isViikko=c=>c.name&&(c.name.toLowerCase().includes('viikko'));
+    const isKisa=c=>!isViikko(c);
+    const viikkoComps=comps.filter(isViikko);
+    const kisaComps=comps.filter(isKisa);
+    if(viikkoComps.length>=1&&kisaComps.length>=1){
+      const avgViikko=Math.round(viikkoComps.reduce((a,c)=>a+c.mrating,0)/viikkoComps.length);
+      const avgKisa=Math.round(kisaComps.reduce((a,c)=>a+c.mrating,0)/kisaComps.length);
+      const diff=avgViikko-avgKisa;
+      const mxAll=Math.max(...comps.map(c=>c.mrating));
+      const mnAll=Math.min(...comps.map(c=>c.mrating));
+      const rngAll=mxAll-mnAll||20;
+      h+=`<div class="chart-wrap">`;
+      h+=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">`;
+      h+=`<div style="font-size:13px;font-weight:600">Viikkokisat vs Kisat</div>`;
+      h+=`<div style="font-size:11px;padding:3px 9px;border-radius:20px;background:${diff>30?'var(--rl)':diff>10?'var(--al)':'var(--gl)'};color:${diff>30?'var(--rd)':diff>10?'var(--ad)':'var(--gd)'};font-weight:600">Ero: ${diff} pistettä</div>`;
+      h+=`<\/div>`;
+      h+=`<div class="bar-chart">`;
+      comps.slice(-16).forEach(c=>{
+        const pct=Math.round(((c.mrating-mnAll)/rngAll)*75)+15;
+        const vk=isViikko(c);
+        const col=vk?'#378ADD':'#E24B4A';
+        const lbl=c.date.slice(5);
+        h+=`<div class="bc"><div class="bv" style="font-size:9px;color:${col}">${c.mrating}<\/div><div class="bb" style="height:${pct}%;background:${col};opacity:.85"><\/div><div class="bl">${lbl}<\/div><\/div>`;
+      });
+      h+=`<\/div>`;
+      h+=`<div style="display:flex;gap:16px;margin-top:8px;font-size:12px">`;
+      h+=`<div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:2px;background:#378ADD"><\/div><span>Viikkokisat avg: <b style="color:#378ADD">${avgViikko}<\/b><\/span><\/div>`;
+      h+=`<div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:2px;background:#E24B4A"><\/div><span>Kisat avg: <b style="color:#E24B4A">${avgKisa}<\/b><\/span><\/div>`;
+      h+=`<\/div>`;
+      if(diff>30){
+        h+=`<div style="font-size:11px;color:var(--rd);background:var(--rl);border-radius:var(--rs);padding:7px 10px;margin-top:8px;line-height:1.5">⚠ ${diff} pisteen ero viikkokisojen ja kisojen välillä – kisajännitys syö selvästi suoritustasoa. Fokus henkiseen valmennukseen.<\/div>`;
+      }else if(diff>10){
+        h+=`<div style="font-size:11px;color:var(--ad);background:var(--al);border-radius:var(--rs);padding:7px 10px;margin-top:8px;line-height:1.5">📈 ${diff} pisteen ero – kehitystä tapahtuu mutta kisapaineessa on vielä parannettavaa.<\/div>`;
+      }else{
+        h+=`<div style="font-size:11px;color:var(--gd);background:var(--gl);border-radius:var(--rs);padding:7px 10px;margin-top:8px;line-height:1.5">✓ Ero on alle 10 pistettä – suoritus on tasaista kisapaineessa.<\/div>`;
+      }
+      h+=`<\/div>`;
+    }
   }
   if(ratings.length){
     h+=`<div class="sect">Historia<\/div>`;
