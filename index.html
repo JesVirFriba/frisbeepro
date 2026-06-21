@@ -883,6 +883,67 @@ function renderProfile(){
     ${nextComp&&!isCompToday?`<div style="margin-top:8px;font-size:11px;color:var(--t3);text-align:right">Seuraava: <strong>${nextComp.name||'Kisa'}</strong> ${nextComp.date}</div>`:''}
   </div>`;
 
+  // Puttitilastokortti
+  const puttiSessions=(get('putti_sessions')||[]).sort((a,b)=>a.date.localeCompare(b.date));
+  if(puttiSessions.length>=1){
+    // Laske prosentit etäisyyksittäin viimeisistä sessioista
+    const DIST_GROUPS=[
+      {key:'d3',label:'3–4m',keys:['d3','d4']},
+      {key:'d5',label:'5–6m',keys:['d5','d6']},
+      {key:'d7',label:'7–8m',keys:['d7','d8']},
+      {key:'d9',label:'9–10m',keys:['d9','d10']},
+    ];
+    const stats=DIST_GROUPS.map(g=>{
+      let made=0,total=0;
+      puttiSessions.slice(-10).forEach(s=>{
+        g.keys.forEach(k=>{if(s[k]){made+=s[k].m||0;total+=s[k].a||0;}});
+        // Handle new sarjat format
+        if(s.sarjat){
+          s.sarjat.forEach(sj=>{
+            const dist=sj.dist||3;
+            const inGroup=g.keys.some(k=>k==='d'+dist||(k==='d5'&&dist>=5&&dist<=6)||(k==='d7'&&dist>=7&&dist<=8)||(k==='d9'&&dist>=9&&dist<=10)||(k==='d3'&&dist<=4));
+            if(inGroup){made+=sj.made||0;total+=10;}
+          });
+        }
+      });
+      return {label:g.label,made,total,pct:total>0?Math.round(made/total*100):null};
+    }).filter(g=>g.total>0);
+
+    if(stats.length){
+      // Trendi: viimeiset 3 vs edelliset 3
+      const recent=puttiSessions.slice(-3);
+      const older=puttiSessions.slice(-6,-3);
+      const avgRecent=recent.length?Math.round(recent.map(s=>{
+        let m=0,a=0;
+        Object.keys(s).forEach(k=>{if(k.startsWith('d')&&s[k]){m+=s[k].m||0;a+=s[k].a||0;}});
+        if(s.sarjat)s.sarjat.forEach(sj=>{m+=sj.made||0;a+=10;});
+        return a>0?m/a*100:null;
+      }).filter(Boolean).reduce((a,b)=>a+b,0)/recent.length):null;
+      const avgOlder=older.length?Math.round(older.map(s=>{
+        let m=0,a=0;
+        Object.keys(s).forEach(k=>{if(k.startsWith('d')&&s[k]){m+=s[k].m||0;a+=s[k].a||0;}});
+        if(s.sarjat)s.sarjat.forEach(sj=>{m+=sj.made||0;a+=10;});
+        return a>0?m/a*100:null;
+      }).filter(Boolean).reduce((a,b)=>a+b,0)/older.length):null;
+      const trendText=avgRecent&&avgOlder?(avgRecent>avgOlder?`↑ +${Math.round(avgRecent-avgOlder)}%`:avgRecent<avgOlder?`↓ ${Math.round(avgRecent-avgOlder)}%`:'→ Tasainen'):null;
+      const trendCol=trendText?.startsWith('↑')?'var(--gd)':trendText?.startsWith('↓')?'#E24B4A':'var(--t2)';
+
+      h+=`<div style="background:var(--card);border-radius:var(--r);padding:12px 14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.07)">`;
+      h+=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">`;
+      h+=`<div style="font-size:13px;font-weight:700;color:var(--text)">🎯 Puttitilasto</div>`;
+      if(trendText)h+=`<div style="font-size:11px;font-weight:600;color:${trendCol}">${trendText}</div>`;
+      h+=`</div>`;
+      h+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">`;
+      stats.forEach(s=>{
+        const col=s.pct>=80?'var(--gd)':s.pct>=60?'var(--ad)':'#E24B4A';
+        h+=`<div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:11px;color:var(--t2)">${s.label}</span><span style="font-size:12px;font-weight:700;color:${col}">${s.pct}%</span></div>`;
+        h+=`<div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden"><div style="height:100%;width:${s.pct}%;background:${col};border-radius:3px"></div></div>`;
+        h+=`<div style="font-size:9px;color:var(--t3);margin-top:2px">${s.made}/${s.total}</div></div>`;
+      });
+      h+=`</div></div>`;
+    }
+  }
+
   // Active goals
   const activeGoals=(goals).slice(0,3);
   if(activeGoals.length){
