@@ -1335,6 +1335,61 @@ function renderCompDay(){
   wireCompEvents(cont,protocol);
 }
 
+// ===== KENTTÄTIETOKANTA =====
+const COURSES = [
+  {
+    id:'tali-kesa-2025',
+    name:'Tali',
+    layout:'Kesä 2025',
+    par:58,
+    rating:994,
+    holes:[5,3,3,3,3,3,3,3,3,4,3,3,3,3,3,3,4,3],
+    ratingTable:{48:1089,49:1079,50:1070,51:1060,52:1051,53:1041,54:1032,55:1022,56:1013,57:1003,58:994,59:984,60:975,61:965,62:956,63:946,64:937,65:928,66:918,67:909,68:899,69:890,70:880,71:871,72:861,73:852,74:842,75:833,76:823,77:814,78:804,79:795,80:785,81:776,82:766,83:757,84:747,85:738,86:729,87:719,88:710,89:700,90:691,91:681,92:672,93:662,94:653,95:643,96:634,97:624,98:615,99:605,100:596,101:586,102:577,103:567,104:558,105:549,106:539,107:530}
+  },
+  {
+    id:'kivikko-blue-2023',
+    name:'Kivikko',
+    layout:'Blue 18 – Par 56',
+    par:56,
+    rating:928,
+    holes:[3,3,3,3,4,4,3,3,3,3,3,3,3,3,3,3,3,3],
+    ratingTable:{41:1108,42:1096,43:1084,44:1072,45:1060,46:1048,47:1036,48:1024,49:1012,50:1000,51:988,52:976,53:964,54:952,55:940,56:928,57:916,58:904,59:892,60:880,61:868,62:856,63:844,64:832,65:820,66:808,67:796,68:784,69:772,70:760,71:748,72:736,73:724,74:712,75:700,76:688,77:676,78:664,79:652,80:640,81:628,82:616,83:604,84:592,85:580,86:568,87:556,88:544,89:532,90:520,91:508,92:496,93:484,94:472,95:460,96:448,97:436,98:424,99:412,100:400}
+  },
+  {
+    id:'kivikko-red-2024',
+    name:'Kivikko',
+    layout:'Red 18 – Par 57',
+    par:57,
+    rating:947,
+    holes:[4,3,3,3,4,4,3,3,3,3,3,3,3,3,3,3,3,3],
+    ratingTable:{44:1101,45:1089,46:1077,47:1065,48:1053,49:1041,50:1030,51:1018,52:1006,53:994,54:982,55:970,56:959,57:947,58:935,59:923,60:911,61:899,62:888,63:876,64:864,65:852,66:840,67:828,68:816,69:805,70:793,71:781,72:769,73:757,74:745,75:734,76:722,77:710,78:698,79:686,80:674,81:663,82:651,83:639,84:627,85:615,86:603,87:591,88:580,89:568,90:556,91:544,92:532,93:520,94:509,95:497,96:485,97:473,98:461,99:449,100:438,101:426,102:414,103:402}
+  },
+  {
+    id:'keinukallio-2024',
+    name:'Keinukallio',
+    layout:'Normaali 2024',
+    par:62,
+    rating:1007,
+    holes:[4,3,3,3,4,3,3,3,3,3,4,3,4,5,3,4,3,4],
+    ratingTable:{54:1077,55:1068,56:1060,57:1051,58:1042,59:1033,60:1025,61:1016,62:1007,63:999,64:990,65:981,66:973,67:964,68:955,69:947,70:938,71:929,72:920,73:912,74:903,75:894,76:886,77:877,78:868,79:860,80:851,81:842,82:834,83:825,84:816,85:808,86:799,87:790,88:781,89:773,90:764,91:755,92:747,93:738,94:729,95:721,96:712,97:703,98:695,99:686,100:677,101:669,102:660,103:651,104:642,105:634,106:625,107:616,108:608,109:599,110:590,111:582,112:573,113:564}
+  },
+  {
+    id:'ford-punaiset-2023',
+    name:'Ford',
+    layout:'Punaiset 2023',
+    par:60,
+    rating:994,
+    holes:[4,3,4,3,3,3,3,3,3,3,4,3,3,3,3,3,3,3],
+    ratingTable:{50:1087,51:1078,52:1069,53:1059,54:1050,55:1041,56:1032,57:1022,58:1013,59:1004,60:994,61:985,62:976,63:966,64:957,65:948,66:938,67:929,68:920,69:911,70:901,71:892,72:883,73:873,74:864,75:855,76:845,77:836,78:827,79:817,80:808,81:799,82:790,83:780,84:771,85:762,86:752,87:743,88:734,89:724,90:715,91:706,92:697,93:687,94:678,95:669,96:659,97:650,98:641,99:631,100:622,101:613,102:603,103:594,104:585,105:576,106:566,107:557,108:548,109:538}
+  }
+];
+
+function getCourseById(id){return COURSES.find(c=>c.id===id)||null;}
+function getRatingFromTable(course,tulos){
+  if(!course||!course.ratingTable)return null;
+  return course.ratingTable[tulos]||null;
+}
+
 // ===== METRIX COURSE FETCH =====
 async function fetchMetrixCourse(prefix){
   const compId=document.getElementById(prefix+'-compid')?.value?.trim();
@@ -2348,297 +2403,21 @@ function renderAktivointi(){
   cont.innerHTML=h;
 }
 
-function renderKierros(){
+function calcKierrosRatingTable(){
   const cont=document.getElementById('train-content');
   const today=kierrosPvm||new Date().toISOString().slice(0,10);
   const saved=getKierros(today)||{};
-
-  const CHECKLIST=[
-    {id:'k1',text:'Kiekot mukana – putter, midrange, driver'},
-    {id:'k2',text:'Vesi ja välipala pakattuna'},
-    {id:'k3',text:'Saavut ajoissa – ei kiire teepaikalle'},
-    {id:'k4',text:'Puhelin äänettömälle kierroksen ajaksi'},
-    {id:'k5',text:'Puttausrutiini mielessä: asetu → katso → hengitä → rytmi → seuraa läpi'},
-  ];
-
-  const FOCUS_OPTIONS=[
-    'Puttausrutiini joka putilla – ei poikkeuksia',
-    'Pre-shot rutiini joka heittoon',
-    'BH-tekniikka – hyzer ja irrotus',
-    'FH-tekniikka – wobble alle 5°',
-    'Henkinen peli – bogey-recovery',
-    'Reitti-IQ – A ja B-linja joka väylällä',
-    'Vapaa kierros – ei paineita',
-  ];
-
-  const checks=saved.checks||{};
-  const focus=saved.focus||'';
-  const result=saved.result||'';
-  const positive=saved.positive||'';
-  const donePre=CHECKLIST.filter(c=>checks[c.id]).length;
-
-  let h='<div style="background:linear-gradient(135deg,#085041,#1D9E75);border-radius:var(--r);padding:16px;margin-bottom:12px;color:#fff">';
-  h+='<div style="font-size:11px;font-weight:600;opacity:.8;text-transform:uppercase;letter-spacing:.05em">Kenttäkierros</div>';
-  h+='<div style="font-size:20px;font-weight:700;margin-top:2px">'+today+'</div>';
-  h+='<div style="font-size:12px;opacity:.85;margin-top:4px">Harjoituskierros – ei paineita, vain kehitystä</div>';
-  h+='</div>';
-
-  // Ennen kierrosta
-  h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
-  h+='<div style="background:var(--gl);padding:10px 14px;display:flex;align-items:center;justify-content:space-between">';
-  h+='<div style="font-size:13px;font-weight:700;color:var(--gd)">✅ Ennen kierrosta</div>';
-  h+='<span style="font-size:11px;padding:2px 9px;border-radius:20px;background:var(--gd);color:#fff;font-weight:600">'+donePre+'/'+CHECKLIST.length+'</span>';
-  h+='</div><div style="padding:4px 14px 10px" id="kierros-checks">';
-  CHECKLIST.forEach(function(item){
-    const ck=checks[item.id];
-    h+='<div class="kierros-check" data-id="'+item.id+'" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:.5px solid var(--border);cursor:pointer">';
-    h+='<div style="width:22px;height:22px;border-radius:50%;border:2px solid '+(ck?'var(--g)':'var(--border)')+';background:'+(ck?'var(--g)':'transparent')+';display:flex;align-items:center;justify-content:center;flex-shrink:0">';
-    h+=ck?'<span style="color:#fff;font-size:12px">✓</span>':'';
-    h+='</div>';
-    h+='<div style="font-size:13px;color:'+(ck?'var(--t3)':'var(--text)')+';'+(ck?'text-decoration:line-through':'')+'">'+item.text+'</div>';
-    h+='</div>';
-  });
-  h+='</div></div>';
-
-  // Kierroksen tavoite
-  h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:8px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
-  h+='<div style="font-size:13px;font-weight:700;color:var(--bd);margin-bottom:8px">🎯 Kierroksen fokus</div>';
-  h+='<div style="display:flex;flex-wrap:wrap;gap:6px" id="kierros-focus">';
-  FOCUS_OPTIONS.forEach(function(opt){
-    const sel=focus===opt;
-    h+='<button class="kierros-focus-btn" data-focus="'+opt+'" style="padding:6px 10px;border-radius:20px;border:1.5px solid '+(sel?'var(--bd)':'var(--border)')+';background:'+(sel?'var(--bl)':'transparent')+';color:'+(sel?'var(--bd)':'var(--t2)')+';font-size:11px;cursor:pointer">'+opt+'</button>';
-  });
-  h+='</div></div>';
-
-  // Kierroksen jälkeen
-  const hasAfterData = result || positive || saved.kentta;
-  h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:8px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
-  h+='<div style="font-size:13px;font-weight:700;color:var(--pd);margin-bottom:8px">📊 Kierroksen jälkeen</div>';
-  // Metrix fetch
-  h+='<div style="display:flex;gap:8px;margin-bottom:8px;align-items:flex-end">';
-  h+='<div style="flex:1"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Metrix kilpailu-ID (valinnainen)</div>';
-  h+='<input id="kierros-compid" type="number" placeholder="esim. 3671000" value="'+(saved.compId||'')+'" style="width:100%;padding:7px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:13px;background:var(--bg);color:var(--text)"></div>';
-  h+='<button onclick="fetchMetrixCourse(\'kierros\')" style="padding:7px 12px;background:var(--pd);color:#fff;border:none;border-radius:var(--rs);font-size:12px;cursor:pointer;white-space:nowrap">🔍 Hae</button>';
-  h+='</div>';
-  h+='<div id="kierros-course-info" style="'+(saved.compId?'':'display:none;')+'background:var(--pl);border-radius:var(--rs);padding:7px 10px;margin-bottom:8px;font-size:11px;color:var(--pd)">'+(saved.courseName||'')+'</div>';
-  h+='<div style="display:flex;gap:8px;margin-bottom:8px">';
-  h+='<div style="flex:1"><div style="font-size:11px;color:var(--t3);margin-bottom:4px">Tulos (heitot)</div>';
-  h+='<input id="kierros-result" type="number" placeholder="60" oninput="calcKierrosRating(\'kierros\')" value="'+(result||'')+'" style="width:100%;padding:8px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--bg);color:var(--text)"></div>';
-  h+='<div style="flex:1"><div style="font-size:11px;color:var(--t3);margin-bottom:4px">Kenttä</div>';
-  h+='<input id="kierros-kentta" type="text" placeholder="esim. Tali" value="'+(saved.kentta||'')+'" style="width:100%;padding:8px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--bg);color:var(--text)"></div>';
-  h+='</div>';
-  h+='<div style="display:flex;gap:8px;margin-bottom:8px">';
-  h+='<div style="flex:1"><div style="font-size:11px;color:var(--t3);margin-bottom:4px">Rata-par</div>';
-  h+='<input id="kierros-par" type="number" placeholder="60" oninput="calcKierrosRating(\'kierros\')" value="'+(saved.par||'')+'" style="width:100%;padding:8px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--bg);color:var(--text)"></div>';
-  h+='<div style="flex:1"><div style="font-size:11px;color:var(--t3);margin-bottom:4px">Rata-rating</div>';
-  h+='<input id="kierros-rrating" type="number" placeholder="975" oninput="calcKierrosRating(\'kierros\')" value="'+(saved.rrating||'')+'" style="width:100%;padding:8px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--bg);color:var(--text)"></div>';
-  h+='</div>';
-  h+='<div id="kierros-rating-result" style="'+(result&&saved.par&&saved.rrating?'':'display:none;')+'background:var(--gl);border-radius:var(--rs);padding:8px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">';
-  h+='<div style="font-size:11px;color:var(--gd)">Arvioitu kierros-rating</div>';
-  h+='<div id="kierros-rating-val" style="font-size:20px;font-weight:700;color:var(--gd)">–</div>';
-  h+='</div>';
-
-  // Hole-by-hole entry
-  const holes=saved.holes||[];
-  const holePars=saved.holePars||[];
-  const holeCount=holePars.length||parseInt(saved.par)||0;
-  if(holeCount>0||holes.length>0){
-    h+='<div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:6px">Väyläkohtainen tulos</div>';
-    h+='<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-bottom:8px">';
-    const count=Math.max(holeCount,holes.length,18);
-    for(let i=0;i<count;i++){
-      const par=holePars[i]||3;
-      const res=holes[i]||'';
-      const diff=res?res-par:null;
-      const col=diff===null?'var(--border)':diff<0?'var(--gd)':diff===0?'var(--bd)':'#E24B4A';
-      h+='<div style="text-align:center">';
-      h+='<div style="font-size:9px;color:var(--t3)">'+( i+1)+'</div>';
-      h+='<input class="hole-input" data-hole="'+i+'" type="number" min="1" max="10" value="'+res+'" style="width:100%;padding:3px;border-radius:4px;border:1.5px solid '+col+';font-size:13px;font-weight:700;text-align:center;background:var(--bg);color:'+col+'">';
-      h+='<div style="font-size:9px;color:var(--t3)">p'+par+'</div>';
-      h+='</div>';
-    }
-    h+='</div>';
-    if(holes.length){
-      const total=holes.reduce((a,b)=>a+(parseInt(b)||0),0);
-      const totalPar=holePars.reduce((a,b)=>a+(parseInt(b)||3),0)||holes.length*3;
-      const diff=total-totalPar;
-      const birdies=holes.filter((v,i)=>parseInt(v)<(holePars[i]||3)).length;
-      const bogeys=holes.filter((v,i)=>parseInt(v)>(holePars[i]||3)).length;
-      h+='<div style="display:flex;gap:8px;font-size:11px;background:var(--bg);border-radius:var(--rs);padding:7px;margin-bottom:8px">';
-      h+='<span>Yht: <b>'+total+'</b></span>';
-      h+='<span>Ero: <b style="color:'+(diff<0?'var(--gd)':diff>0?'#E24B4A':'var(--bd)')+'">'+(diff>0?'+':'')+diff+'</b></span>';
-      h+='<span>🐦 <b style="color:var(--gd)">'+birdies+'</b></span>';
-      h+='<span>📍 <b style="color:#E24B4A">'+bogeys+'</b></span>';
-      h+='</div>';
-    }
-  }else{
-    h+='<button id="kierros-add-holes" class="btn btn-out btn-sm" style="width:100%;margin-bottom:8px">+ Lisää väyläkohtainen tulos</button>';
+  const c=getCourseById(saved.courseId||'');
+  const resEl=cont?.querySelector('#kierros-result');
+  const valEl=cont?.querySelector('#kierros-rating-val');
+  if(!c||!resEl||!valEl)return;
+  const tulos=parseInt(resEl.value);
+  if(isNaN(tulos))return;
+  const rating=getRatingFromTable(c,tulos);
+  if(rating){
+    valEl.textContent=rating;
+    valEl.style.color=rating>=950?'var(--gd)':rating>=900?'var(--ad)':'#E24B4A';
   }
-  h+='<div style="font-size:11px;color:var(--t3);margin-bottom:4px">Yksi positiivinen havainto</div>';
-  h+='<textarea id="kierros-positive" placeholder="Mikä meni hyvin tänään?" style="width:100%;padding:8px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:13px;background:var(--bg);color:var(--text);min-height:60px;resize:none">'+(positive||'')+'</textarea>';
-  h+='<div style="display:flex;gap:6px;margin-top:8px">';
-  if(hasAfterData){
-    h+='<button id="kierros-reset" class="btn btn-out btn-sm" style="flex:1">↺ Nollaa</button>';
-  }
-  h+='<button id="kierros-save" class="btn btn-sm" style="flex:'+(hasAfterData?'2':'1')+'">💾 Tallenna kierros</button>';
-  h+='</div>';
-  h+='<div id="kierros-msg" style="text-align:center;color:var(--gd);font-size:12px;margin-top:6px;display:none">✓ Tallennettu!</div>';
-  h+='</div>';
-
-  h+='<div style="background:var(--al);border-radius:var(--r);padding:12px 14px;margin-bottom:8px">';
-  h+='<div style="font-size:12px;font-weight:600;color:var(--ad);margin-bottom:4px">💬 Valmentajan muistutus</div>';
-  h+='<div style="font-size:12px;color:var(--ad);line-height:1.5">Harjoituskierros on laboratorio – ei kisapaine. Valitse yksi fokus ja tee se täydellisesti joka väylällä. Analyysi vasta kierroksen jälkeen.</div>';
-  h+='</div>';
-
-  // Edellinen kierros
-  const allKierros=get('kierros_map')||{};
-  const prevDates=Object.keys(allKierros).filter(function(d){return d!==today;}).sort().reverse().slice(0,3);
-  if(prevDates.length){
-    h+='<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">📋 Edelliset kierrokset</div>';
-    prevDates.forEach(function(d){
-      const kd=allKierros[d];
-      const isOpen=saved._histOpen===d;
-      h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden">';
-      h+='<div class="kierros-hist-toggle" data-date="'+d+'" style="display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer">';
-      h+='<div style="flex:1">';
-      h+='<div style="font-size:12px;font-weight:600;color:var(--text)">'+d+(kd.kentta?' · '+kd.kentta:'')+'</div>';
-      h+='<div style="font-size:11px;color:var(--t2)">'+(kd.focus||'Ei fokusta')+(kd.result?' · '+kd.result+' ht':'')+'</div>';
-      h+='</div>';
-      h+='<div style="font-size:14px;color:var(--t3)">'+(isOpen?'▲':'▼')+'</div>';
-      h+='</div>';
-      if(isOpen){
-        h+='<div style="padding:0 14px 12px;border-top:.5px solid var(--border)">';
-        if(kd.positive)h+='<div style="font-size:12px;color:var(--gd);margin-top:8px">✓ '+kd.positive+'</div>';
-        if(kd.focus)h+='<div style="font-size:11px;color:var(--t2);margin-top:4px">Fokus: '+kd.focus+'</div>';
-        h+='</div>';
-      }
-      h+='</div>';
-    });
-  }
-
-  h+='<button onclick="trainTab(\'week\',null);renderTrain()" class="btn btn-out" style="margin-top:4px;width:100%">← Takaisin viikko-ohjelmaan</button>';
-
-  cont.innerHTML=h;
-
-  // Wire checkboxes
-  cont.querySelectorAll('.kierros-check').forEach(function(row){
-    function toggle(e){
-      e.preventDefault();
-      var id=row.dataset.id;
-      var d=getKierros(today)||{};
-      var c=d.checks||{};
-      if(c[id])delete c[id]; else c[id]=1;
-      d.checks=c;
-      setKierros(today,d);
-      renderKierros();
-    }
-    row.addEventListener('click',toggle);
-    row.addEventListener('touchend',toggle);
-  });
-
-  // Wire focus buttons
-  cont.querySelectorAll('.kierros-focus-btn').forEach(function(btn){
-    function selectFocus(e){
-      e.preventDefault();
-      var d=getKierros(today)||{};
-      d.focus=btn.dataset.focus;
-      setKierros(today,d);
-      renderKierros();
-    }
-    btn.addEventListener('click',selectFocus);
-    btn.addEventListener('touchend',selectFocus);
-  });
-
-  // Wire save button
-  var saveBtn=cont.querySelector('#kierros-save');
-  if(saveBtn){
-    function saveKierros(e){
-      e.preventDefault();
-      var d=getKierros(today)||{};
-      d.result=cont.querySelector('#kierros-result').value;
-      d.positive=cont.querySelector('#kierros-positive').value;
-      d.kentta=cont.querySelector('#kierros-kentta').value;
-      d.par=cont.querySelector('#kierros-par')?.value||'';
-      d.rrating=cont.querySelector('#kierros-rrating')?.value||'';
-      d.compId=cont.querySelector('#kierros-compid')?.value||'';
-      // Save hole results
-      var holeInputs=cont.querySelectorAll('.hole-input');
-      if(holeInputs.length){
-        d.holes=Array.from(holeInputs).map(function(inp){return inp.value?parseInt(inp.value):null;});
-        if(d.holes.some(Boolean)&&d.result===''){
-          d.result=d.holes.reduce(function(a,v){return a+(parseInt(v)||0);},0)||'';
-        }
-      }
-      if(d.result&&d.par&&d.rrating){
-        d.calcRating=calcKierrosRating('kierros');
-      }
-      setKierros(today,d);
-      setDone(today,1);
-      var msg=cont.querySelector('#kierros-msg');
-      if(msg){msg.style.display='block';setTimeout(function(){msg.style.display='none';},2000);}
-    }
-
-  // Add holes button
-  var addHolesBtn=cont.querySelector('#kierros-add-holes');
-  if(addHolesBtn){
-    function addHoles(e){
-      e.preventDefault();
-      var d=getKierros(today)||{};
-      var par=parseInt(cont.querySelector('#kierros-par')?.value)||0;
-      var holesCount=par>0?Math.round(par/3):18;
-      d.holePars=Array(holesCount).fill(3);
-      d.holes=Array(holesCount).fill(null);
-      setKierros(today,d);
-      renderKierros();
-    }
-    addHolesBtn.addEventListener('click',addHoles);
-    addHolesBtn.addEventListener('touchend',addHoles);
-  }
-
-  // Hole input auto-update
-  cont.querySelectorAll('.hole-input').forEach(function(inp){
-    inp.addEventListener('input',function(){
-      var d=getKierros(today)||{};
-      var inputs=cont.querySelectorAll('.hole-input');
-      d.holes=Array.from(inputs).map(function(i){return i.value?parseInt(i.value):null;});
-      // Update total
-      var total=d.holes.reduce(function(a,v){return a+(v||0);},0);
-      var resEl=cont.querySelector('#kierros-result');
-      if(resEl&&total>0)resEl.value=total;
-      setKierros(today,d);
-      calcKierrosRating('kierros');
-    });
-  });
-    saveBtn.addEventListener('click',saveKierros);
-    saveBtn.addEventListener('touchend',saveKierros);
-  }
-
-  // Wire reset button
-  var resetBtn=cont.querySelector('#kierros-reset');
-  if(resetBtn){
-    function resetKierros(e){
-      e.preventDefault();
-      var d=getKierros(today)||{};
-      delete d.result; delete d.positive; delete d.kentta;
-      setKierros(today,d);
-      renderKierros();
-    }
-    resetBtn.addEventListener('click',resetKierros);
-    resetBtn.addEventListener('touchend',resetKierros);
-  }
-
-  // Wire history toggles
-  cont.querySelectorAll('.kierros-hist-toggle').forEach(function(el){
-    function toggleHist(e){
-      e.preventDefault();
-      var d=getKierros(today)||{};
-      d._histOpen=(d._histOpen===el.dataset.date)?null:el.dataset.date;
-      setKierros(today,d);
-      renderKierros();
-    }
-    el.addEventListener('click',toggleHist);
-    el.addEventListener('touchend',toggleHist);
-  });
 }
 
 function renderCal(){
