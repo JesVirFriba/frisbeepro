@@ -685,14 +685,35 @@ let throwWk=1,strWk=1,putWk=1,mobWk=1;
 
 // ===== CONSTANTS =====
 const PTDISTS=[
-  {key:'d3',label:'3–4 m',goal:95,col:'#1D9E75'},
-  {key:'d5',label:'5–6 m',goal:85,col:'#1D9E75'},
-  {key:'d7',label:'7–8 m',goal:75,col:'#5DCAA5'},
-  {key:'d9',label:'9–10 m',goal:60,col:'#EF9F27'},
-  {key:'d11',label:'11–12 m',goal:45,col:'#EF9F27'},
-  {key:'d13',label:'13–17 m',goal:20,col:'#D85A30'},
-  {key:'d18',label:'18–20 m',goal:10,col:'#D85A30'}
+  {key:'d4', label:'C1 · 4m',  goal:90, col:'#1D9E75', circle:'C1', dist:4},
+  {key:'d6', label:'C1 · 6m',  goal:80, col:'#1D9E75', circle:'C1', dist:6},
+  {key:'d8', label:'C1 · 8m',  goal:70, col:'#5DCAA5', circle:'C1', dist:8},
+  {key:'d10',label:'C1 · 10m', goal:60, col:'#EF9F27', circle:'C1', dist:10},
+  {key:'d12',label:'C2 · 12m', goal:50, col:'#EF9F27', circle:'C2', dist:12},
+  {key:'d16',label:'C2 · 16m', goal:35, col:'#D85A30', circle:'C2', dist:16},
+  {key:'d20',label:'C2 · 20m', goal:20, col:'#D85A30', circle:'C2', dist:20},
 ];
+
+// Migraatio vanhoista avaimista → uudet C1/C2 avaimet
+(function migratePuttiDists(){
+  const sessions=JSON.parse(localStorage.getItem('fp_complete_v1')||'{}').putti_sessions||[];
+  const OLD_MAP={d3:'d4',d5:'d6',d7:'d8',d9:'d10',d11:'d12',d13:'d16',d18:'d20'};
+  let changed=false;
+  sessions.forEach(function(s){
+    Object.keys(OLD_MAP).forEach(function(old){
+      if(s[old]&&!s[OLD_MAP[old]]){
+        s[OLD_MAP[old]]=s[old];
+        delete s[old];
+        changed=true;
+      }
+    });
+  });
+  if(changed){
+    const d=JSON.parse(localStorage.getItem('fp_complete_v1')||'{}');
+    d.putti_sessions=sessions;
+    localStorage.setItem('fp_complete_v1',JSON.stringify(d));
+  }
+})();
 
 // ===== MIGRATION from old keys =====
 (function migrate(){
@@ -1002,11 +1023,11 @@ function buildCtx(){
   const fhSp=speeds.filter(s=>s.fh5>0);
   const bestBH=bhSp.length?Math.max(...bhSp.map(s=>s.bh5)):null;
   const bestFH=fhSp.length?Math.max(...fhSp.map(s=>s.fh5)):null;
-  const PTDISTS=['d3','d5','d7','d9','d11','d13','d18'];
-  const PLBLS={d3:'3-4m',d5:'5-6m',d7:'7-8m',d9:'9-10m',d11:'11-12m',d13:'13-17m',d18:'18-20m'};
-  const pt={};PTDISTS.forEach(k=>{pt[k]={m:0,a:0}});
-  (get('putti_sessions')||[]).forEach(s=>PTDISTS.forEach(k=>{if(s[k]){pt[k].m+=s[k].m;pt[k].a+=s[k].a}}));
-  const puttiRows=PTDISTS.map(k=>pt[k].a>0?`  ${PLBLS[k]}: ${Math.round(pt[k].m/pt[k].a*100)}% (${pt[k].m}/${pt[k].a})`:'').filter(Boolean).join('\n');
+  const PTDISTS2=['d4','d6','d8','d10','d12','d16','d20'];
+  const PLBLS2={d4:'C1·4m',d6:'C1·6m',d8:'C1·8m',d10:'C1·10m',d12:'C2·12m',d16:'C2·16m',d20:'C2·20m'};
+  const pt={};PTDISTS2.forEach(k=>{pt[k]={m:0,a:0}});
+  (get('putti_sessions')||[]).forEach(s=>PTDISTS2.forEach(k=>{if(s[k]){pt[k].m+=s[k].m;pt[k].a+=s[k].a}}));
+  const puttiRows=PTDISTS2.map(k=>pt[k].a>0?`  ${PLBLS2[k]}: ${Math.round(pt[k].m/pt[k].a*100)}% (${pt[k].m}/${pt[k].a})`:'').filter(Boolean).join('\n');
   const today=new Date().toLocaleDateString('fi',{day:'numeric',month:'numeric',year:'numeric'});
   let txt=`═══ CLAUDE: LUE TÄMÄ ENSIN ═══
 Olet Jessen ammattivalmentaja – et assistentti.
@@ -2146,31 +2167,53 @@ function renderPuttiTrain(){
   h+='</div>';
   h+='</div>';
 
-  // Prosentit
-  h+='<div class=\"sect\">Puttausprosentit</div>';
-  h+='<div class=\"putti-grid\">';
-  PTDISTS.forEach(d=>{
+  // Prosentit C1/C2 jaoteltuna
+  h+='<div class="sect">Puttausprosentit</div>';
+  const c1dists=PTDISTS.filter(d=>d.circle==='C1');
+  const c2dists=PTDISTS.filter(d=>d.circle==='C2');
+  h+='<div style="font-size:10px;font-weight:600;color:var(--gd);margin-bottom:6px">C1 – Circle 1</div>';
+  h+='<div class="putti-grid">';
+  c1dists.forEach(d=>{
     const t=totals[d.key];const p=t.a>0?Math.round(t.m/t.a*100):null;
     const col=p===null?'#ccc':p>=d.goal?'#1D9E75':p>=(d.goal*.75)?'#EF9F27':'#E24B4A';
-    h+='<div class=\"pd\"><div class=\"pd-lbl\">'+d.label+'</div>';
-    h+='<div class=\"pd-pct\" style=\"color:'+col+'\">'+(p===null?'–':p+'%')+'</div>';
-    h+='<div class=\"pd-bar\"><div class=\"pd-fill\" style=\"width:'+(p===null?0:Math.min(100,p))+'%;background:'+col+'\"></div></div>';
-    h+='<div class=\"pd-sub\">'+(t.a>0?t.m+'/'+t.a:'Ei dataa')+' · '+d.goal+'%</div></div>';
+    h+='<div class="pd"><div class="pd-lbl">'+d.dist+'m</div>';
+    h+='<div class="pd-pct" style="color:'+col+'">'+(p===null?'–':p+'%')+'</div>';
+    h+='<div class="pd-bar"><div class="pd-fill" style="width:'+(p===null?0:Math.min(100,p))+'%;background:'+col+'"></div></div>';
+    h+='<div class="pd-sub">'+(t.a>0?t.m+'/'+t.a:'Ei dataa')+' · '+d.goal+'%</div></div>';
+  });
+  h+='</div>';
+  h+='<div style="font-size:10px;font-weight:600;color:var(--pd);margin-top:8px;margin-bottom:6px">C2 – Circle 2</div>';
+  h+='<div class="putti-grid">';
+  c2dists.forEach(d=>{
+    const t=totals[d.key];const p=t.a>0?Math.round(t.m/t.a*100):null;
+    const col=p===null?'#ccc':p>=d.goal?'#1D9E75':p>=(d.goal*.75)?'#EF9F27':'#E24B4A';
+    h+='<div class="pd"><div class="pd-lbl">'+d.dist+'m</div>';
+    h+='<div class="pd-pct" style="color:'+col+'">'+(p===null?'–':p+'%')+'</div>';
+    h+='<div class="pd-bar"><div class="pd-fill" style="width:'+(p===null?0:Math.min(100,p))+'%;background:'+col+'"></div></div>';
+    h+='<div class="pd-sub">'+(t.a>0?t.m+'/'+t.a:'Ei dataa')+' · '+d.goal+'%</div></div>';
   });
   h+='</div>';
 
   if(sessions.length){
-    h+='<div class=\"sect\">Sessiohistoria</div>';
+    h+='<div class="sect">Sessiohistoria</div>';
     sessions.slice().reverse().slice(0,8).forEach(s=>{
       const tot=PTDISTS.reduce((a,d)=>s[d.key]?a+s[d.key].a:a,0);
       const made=PTDISTS.reduce((a,d)=>s[d.key]?a+s[d.key].m:a,0);
       const pct=tot>0?Math.round(made/tot*100):0;
-      h+='<div class=\"row\"><span class=\"rl\">'+s.date+' · '+tot+' putausta</span>';
-      h+='<span class=\"rv\" style=\"color:'+(pct>=70?'var(--g)':'var(--t2)')+'\">'+pct+'%</span>';
-      h+='<button data-del-putti=\"'+s.id+'\" style=\"background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px;padding:0 3px\">✕</button></div>';
+      // Show which distances were trained
+      const distLabels=PTDISTS.filter(d=>s[d.key]&&s[d.key].a>0).map(d=>d.dist+'m').join(', ');
+      // Also check sarjat format
+      const sarjaDistLabels=s.sarjat?[...new Set(s.sarjat.map(sj=>sj.dist+'m'))].join(', '):'';
+      const distInfo=distLabels||sarjaDistLabels;
+      h+='<div class="row" style="flex-direction:column;align-items:flex-start;padding:8px 0">';
+      h+='<div style="display:flex;width:100%;align-items:center"><span class="rl">'+s.date+' · '+tot+' putausta</span>';
+      h+='<span class="rv" style="color:'+(pct>=70?'var(--g)':'var(--t2)')+'">'+pct+'%</span>';
+      h+='<button data-del-putti="'+s.id+'" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px;padding:0 3px">✕</button></div>';
+      if(distInfo)h+='<div style="font-size:10px;color:var(--t3);margin-top:2px">📍 '+distInfo+'</div>';
+      h+='</div>';
     });
   }else{
-    h+='<div class=\"empty\"><div class=\"ei\">🎯</div><div class=\"et\">Ei sessioita vielä.<br>Aloita tänään: 3–5 m, 50 puttia, rutiini joka putilla.</div></div>';
+    h+='<div class="empty"><div class="ei">🎯</div><div class="et">Ei sessioita vielä.<br>Aloita tänään: C1, 50 puttia, rutiini joka putilla.</div></div>';
   }
 
   div.innerHTML=h;
