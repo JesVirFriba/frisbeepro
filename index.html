@@ -2555,13 +2555,14 @@ function renderMob(){
 
   cont.innerHTML=h;
   mkWkTabs('mob-wk',mobWk,8,'setMobWk');
-  // Wire up exercise toggles via event delegation
   var exList=cont.querySelector('#mob-ex-list');
   if(exList){
-    exList.addEventListener('click',function(e){
+    function handleMobToggle(e){
       var row=e.target.closest('[data-mobkey]');
-      if(row){toggleMob(row.dataset.mobkey);}
-    });
+      if(row){e.preventDefault();toggleMob(row.dataset.mobkey);}
+    }
+    exList.addEventListener('click',handleMobToggle);
+    exList.addEventListener('touchend',handleMobToggle);
   }
 }
 
@@ -2613,7 +2614,7 @@ function renderAktivointi(){
     step.exercises.forEach(function(ex,i){
       const key='ak_'+step.id+'_'+i;
       const ck=getSets(key)>0;
-      h+='<div onclick="setSets(\''+key+'\','+(ck?'0':'1')+');renderTrain()" style="display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:.5px solid var(--border);cursor:pointer'+(i===step.exercises.length-1?';border:none':'')+'">';
+      h+='<div class="ak-row" data-key="'+key+'" data-val="'+(ck?'0':'1')+'" style="display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:.5px solid var(--border);cursor:pointer'+(i===step.exercises.length-1?';border:none':'')+'">';
       h+='<div style="width:22px;height:22px;border-radius:50%;border:2px solid '+(ck?'var(--g)':'var(--border)')+';background:'+(ck?'var(--g)':'transparent')+';display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">';
       h+=ck?'<span style="color:#fff;font-size:12px">✓</span>':'';
       h+='</div>';
@@ -2632,6 +2633,17 @@ function renderAktivointi(){
   h+='<button onclick="trainTab(\'week\',null);renderTrain()" class="btn btn-out" style="margin-top:10px">← Takaisin viikko-ohjelmaan</button>';
 
   cont.innerHTML=h;
+
+  // Wire aktivointi rows with touch support
+  cont.querySelectorAll('.ak-row').forEach(function(row){
+    function toggleAk(e){
+      e.preventDefault();
+      setSets(row.dataset.key, parseInt(row.dataset.val));
+      renderTrain();
+    }
+    row.addEventListener('click', toggleAk);
+    row.addEventListener('touchend', toggleAk);
+  });
 }
 
 function renderKierros(){
