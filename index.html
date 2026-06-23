@@ -805,7 +805,13 @@ function renderProfile(){
   const comps=get('comps')||[];
   const goals=get('goals')||[];
   const lastPDGA=ratings.length?ratings[ratings.length-1].val:p.rating;
-  const lastMx=ratings.length&&ratings[ratings.length-1].mval?ratings[ratings.length-1].mval:p.metrix;
+  const lastMxFromRatings=ratings.length&&ratings[ratings.length-1].mval?ratings[ratings.length-1].mval:null;
+  const compsWithRating=(get('comps')||[]).filter(c=>c.mrating).sort((a,b)=>a.date.localeCompare(b.date));
+  const lastMxFromComps=compsWithRating.length?compsWithRating[compsWithRating.length-1].mrating:null;
+  let lastMx=p.metrix||939;
+  if(lastMxFromRatings&&lastMxFromComps){const rDate=ratings[ratings.length-1].date||'';const cDate=compsWithRating[compsWithRating.length-1].date||'';lastMx=cDate>=rDate?lastMxFromComps:lastMxFromRatings;}
+  else if(lastMxFromComps){lastMx=lastMxFromComps;}
+  else if(lastMxFromRatings){lastMx=lastMxFromRatings;}
   const bhSp=speeds.filter(s=>s.bh5>0);
   const fhSp=speeds.filter(s=>s.fh5>0);
   const bestBH=bhSp.length?Math.max(...bhSp.map(s=>s.bh5)):null;
