@@ -1920,33 +1920,95 @@ function renderWeekView() {
 
 function buildMonthView() {
   const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const startDow = (firstDay.getDay() + 6) % 7; // Monday = 0
+  const MNAMES = ['Tammikuu','Helmikuu','Maaliskuu','Huhtikuu','Toukokuu','Kesäkuu','Heinäkuu','Elokuu','Syyskuu','Lokakuu','Marraskuu','Joulukuu'];
+  const DAYS = ['Ma','Ti','Ke','To','Pe','La','Su'];
+
+  // Gather done/comp data
+  const doneMap = get('done_map') || {};
+  const comps = get('comps') || [];
+  const events = get('events') || [];
+
   let h = `<div style="background:var(--card);border-radius:var(--r);padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)">`;
+  h += `<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">${MNAMES[month]} ${year}</div>`;
 
-  // Show 4 weeks starting from current week
-  for (let w = 0; w < 4; w++) {
-    const weekDates = getWeekDates(w);
-    const plan = buildWeekPlan(weekDates);
-    const weekStart = dateStr(weekDates[0]).slice(5).replace('-', '.');
-    const weekEnd = dateStr(weekDates[6]).slice(5).replace('-', '.');
-    const compCount = plan.filter(d => d.intensity === 'comp').length;
-    const isCurrentWeek = w === 0;
+  // Day headers
+  h += `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px">`;
+  DAYS.forEach(d => {
+    h += `<div style="font-size:9px;color:var(--t3);text-align:center;font-weight:600">${d}</div>`;
+  });
+  h += `</div>`;
 
-    h += `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:.5px solid var(--border);cursor:pointer" onclick="weekViewOffset=${w};renderTrain()">
-      <div style="min-width:80px;font-size:11px;color:var(--t3)">${weekStart}–${weekEnd}</div>
-      <div style="flex:1;display:flex;gap:3px">`;
+  // Calendar grid
+  h += `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px">`;
 
-    plan.forEach(day => {
-      const sc = SESSION_COLORS[day.sessions?.[0]] || SESSION_COLORS.lepo;
-      h += `<div style="flex:1;height:8px;border-radius:2px;background:${sc.bg};border:1px solid ${sc.col}22" title="${day.day}: ${day.note}"></div>`;
-    });
-
-    h += `</div>
-      ${compCount > 0 ? `<span style="font-size:10px;padding:1px 7px;border-radius:20px;background:var(--rl);color:var(--rd);font-weight:600">${compCount} kisa</span>` : ''}
-      ${isCurrentWeek ? `<span style="font-size:10px;padding:1px 7px;border-radius:20px;background:var(--gl);color:var(--gd);font-weight:600">nyt</span>` : ''}
-    </div>`;
+  // Empty cells before first day
+  for (let i = 0; i < startDow; i++) {
+    h += `<div></div>`;
   }
 
-  h += `<div style="font-size:11px;color:var(--t3);text-align:center;margin-top:8px">Napauta viikkoa nähdäksesi päiväohjelma</div></div>`;
+  for (let day = 1; day <= lastDay.getDate(); day++) {
+    const dateObj = new Date(year, month, day);
+    const ds = dateStr(dateObj);
+    const isToday = ds === dateStr(today);
+    const isFuture = dateObj > today;
+
+    // Determine day type from week plan
+    const weekOffset = Math.floor((dateObj - getWeekDates(0)[0]) / (7 * 86400000));
+    const weekDates = getWeekDates(weekOffset);
+    const plan = buildWeekPlan(weekDates);
+    const dayPlan = plan.find(d => d.date === ds);
+    const intensity = dayPlan?.intensity || 'rest';
+
+    // Check what happened
+    const hasComp = comps.some(c => c.date === ds && c.mrating);
+    const isDone = doneMap[ds];
+    const isCompDay = intensity === 'comp';
+    const isRest = intensity === 'rest';
+    const hasEvent = events.some(e => e.date === ds && e.type === 'kisa');
+
+    // Determine color
+    let bg, border, emoji;
+    if (isFuture) {
+      if (isCompDay || hasEvent) { bg = 'var(--rl)'; border = 'var(--rd)'; emoji = '🏆'; }
+      else if (isRest) { bg = 'var(--bg)'; border = 'var(--border)'; emoji = ''; }
+      else { bg = 'var(--bg)'; border = 'var(--border)'; emoji = ''; }
+    } else {
+      if (hasComp) { bg = '#E24B4A22'; border = '#E24B4A'; emoji = '🏆'; }
+      else if (isCompDay) { bg = 'var(--rl)'; border = 'var(--rd)'; emoji = ''; }
+      else if (isDone) { bg = 'var(--gl)'; border = 'var(--g)'; emoji = '✓'; }
+      else if (isRest) { bg = '#8B9BB422'; border = '#8B9BB4'; emoji = '😴'; }
+      else { bg = 'var(--border)'; border = 'var(--border)'; emoji = ''; }
+    }
+
+    h += `<div onclick="weekViewOffset=${weekOffset};renderTrain()" style="aspect-ratio:1;border-radius:6px;background:${bg};border:1.5px solid ${border};display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative">`;
+    h += `<div style="font-size:${isToday?'11':'10'}px;font-weight:${isToday?'700':'400'};color:${isToday?'var(--bd)':'var(--t2)'}">${day}</div>`;
+    if (emoji) h += `<div style="font-size:8px;line-height:1">${emoji}</div>`;
+    h += `</div>`;
+  }
+
+  h += `</div>`;
+
+  // Legend
+  h += `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">`;
+  const legend = [
+    {bg:'var(--gl)',border:'var(--g)',label:'Treeni tehty'},
+    {bg:'#E24B4A22',border:'#E24B4A',label:'Kisa kisattu'},
+    {bg:'var(--rl)',border:'var(--rd)',label:'Tuleva kisa'},
+    {bg:'#8B9BB422',border:'#8B9BB4',label:'Lepo'},
+  ];
+  legend.forEach(l => {
+    h += `<div style="display:flex;align-items:center;gap:4px">`;
+    h += `<div style="width:10px;height:10px;border-radius:3px;background:${l.bg};border:1.5px solid ${l.border}"></div>`;
+    h += `<span style="font-size:10px;color:var(--t2)">${l.label}</span></div>`;
+  });
+  h += `</div>`;
+  h += `<div style="font-size:10px;color:var(--t3);margin-top:6px">Napauta päivää → viikko-ohjelma</div>`;
+  h += `</div>`;
   return h;
 }
 
