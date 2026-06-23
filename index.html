@@ -1789,6 +1789,7 @@ function renderWeekView() {
   const trainCount = plan.filter(d => d.intensity !== 'rest' && d.intensity !== 'comp').length;
   const restCount = plan.filter(d => d.intensity === 'rest').length;
   const doneCount = plan.filter(d => d.intensity !== 'rest' && d.intensity !== 'comp' && getDone(d.date)).length;
+  const doneCompCount = plan.filter(d => d.intensity === 'comp' && (get('comps')||[]).some(c=>c.date===d.date&&c.mrating)).length;
   const weekComps = plan.filter(d=>d.intensity==='comp').map(d=>{
     const comps=(get('comps')||[]).filter(c=>c.date===d.date);
     return comps.length?comps[comps.length-1].mrating:null;
@@ -1796,7 +1797,7 @@ function renderWeekView() {
   const weekAvg=weekComps.length?Math.round(weekComps.reduce((a,b)=>a+b,0)/weekComps.length):null;
   h += `<div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
     <div style="flex:1;background:var(--gl);border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--gd)">${doneCount}/${trainCount}</div><div style="font-size:10px;color:var(--gd);font-weight:500">Treeniä</div></div>
-    <div style="flex:1;background:var(--rl);border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--rd)">${compCount}</div><div style="font-size:10px;color:var(--rd);font-weight:500">Kisaa${weekAvg?' · '+weekAvg:''}</div></div>
+    <div style="flex:1;background:var(--rl);border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--rd)">${doneCompCount}/${compCount}</div><div style="font-size:10px;color:var(--rd);font-weight:500">Kisaa${weekAvg?' · '+weekAvg:''}</div></div>
     <div style="flex:1;background:var(--bg);border:0.5px solid var(--border);border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--t3)">${restCount}</div><div style="font-size:10px;color:var(--t3);font-weight:500">Lepoa</div></div>
   </div>`;
 
