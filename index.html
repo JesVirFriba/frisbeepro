@@ -22,7 +22,8 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:var(--bg);color:var(--text);font-size:16px;overscroll-behavior:none}
-.page{display:none;padding:12px 14px calc(var(--nav)+200px+var(--safe));min-height:100vh;max-width:480px;margin:0 auto;scroll-padding-bottom:calc(var(--nav)+200px+var(--safe))}
+.page-spacer{height:120px;flex-shrink:0}
+.page{display:none;padding:12px 14px calc(var(--nav)+80px+var(--safe));min-height:100vh;max-width:480px;margin:0 auto}
 .page.on{display:block}
 /* NAV */
 .nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;padding-bottom:var(--safe);z-index:100;max-width:480px;left:50%;transform:translateX(-50%)}
@@ -1529,7 +1530,7 @@ function renderCompDay(){
   h+='<div id="qr-msg" style="text-align:center;color:var(--gd);font-size:12px;margin-top:6px;display:none">✓ Tulos tallennettu!</div>';
   h+='</div>';
 
-  cont.innerHTML=h;
+  h+='<div class="page-spacer"></div>';cont.innerHTML=h;
   wireCompEvents(cont,protocol);
 }
 
@@ -2117,7 +2118,7 @@ function renderThrow(){
     h+=`<textarea style="width:100%;min-height:50px;font-size:12px;padding:7px;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg);color:var(--text);resize:none;margin-top:6px;font-family:inherit" placeholder="Muistiinpanot..." id="thn_${sess.id}" onchange="set('${nk}',this.value)">${get(nk)||''}<\/textarea>
     <\/div><\/div>`;
   });
-  cont.innerHTML=h;
+  h+='<div class="page-spacer"></div>';cont.innerHTML=h;
   mkWkTabs('throw-wk',throwWk,8,'setThrowWk');
 }
 function clickThSet(k,s,t){const c=getSets(k);setSets(k,c>=s?s-1:s);renderThrow()}
@@ -2167,7 +2168,7 @@ function renderStr(){
     h+=`<textarea style="width:100%;min-height:50px;font-size:12px;padding:7px;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg);color:var(--text);resize:none;margin-top:6px;font-family:inherit" placeholder="Painot, tuntemukset..." id="strn_${sess.id}" onchange="set('${nk}',this.value)">${get(nk)||''}<\/textarea>
     <\/div><\/div>`;
   });
-  cont.innerHTML=h;
+  h+='<div class="page-spacer"></div>';cont.innerHTML=h;
   mkWkTabs('str-wk',strWk,8,'setStrWk');
 }
 function clickStrSet(k,s,t){const c=getSets(k);setSets(k,c>=s?s-1:s);renderStr()}
@@ -2569,7 +2570,7 @@ function renderMob(){
     h+='</div>';
   }
 
-  cont.innerHTML=h;
+  h+='<div class="page-spacer"></div>';cont.innerHTML=h;
   mkWkTabs('mob-wk',mobWk,8,'setMobWk');
   var exList=cont.querySelector('#mob-ex-list');
   if(exList){
@@ -2648,7 +2649,7 @@ function renderAktivointi(){
 
   h+='<button onclick="trainTab(\'week\',null);renderTrain()" class="btn btn-out" style="margin-top:10px">← Takaisin viikko-ohjelmaan</button>';
 
-  cont.innerHTML=h;
+  h+='<div class="page-spacer"></div>';cont.innerHTML=h;
 
   // Wire aktivointi rows with touch support
   cont.querySelectorAll('.ak-row').forEach(function(row){
@@ -2766,7 +2767,7 @@ function renderKierros(){
     });
   }
   h+='<button onclick="trainTab(\'week\',null);renderTrain()" class="btn btn-out" style="margin-top:4px;width:100%">← Takaisin viikko-ohjelmaan</button>';
-  cont.innerHTML=h;
+  h+='<div class="page-spacer"></div>';cont.innerHTML=h;
   // Wire course selection
   cont.querySelectorAll('.course-select-btn').forEach(function(btn){
     function selectCourse(e){e.preventDefault();var d=getKierros(today)||{};d.courseId=btn.dataset.id;const c=getCourseById(btn.dataset.id);if(c){d.holePars=c.holes;d.holes=Array(c.holes.length).fill(null);}setKierros(today,d);renderKierros();}
@@ -2874,7 +2875,7 @@ function renderRestDay(){
   h+='</div>';
 
   h+='<button onclick="trainTab(\'week\',null);renderTrain()" class="btn btn-out" style="margin-top:4px;width:100%">← Takaisin viikko-ohjelmaan</button>';
-  cont.innerHTML=h;
+  h+='<div class="page-spacer"></div>';cont.innerHTML=h;
 }
 
 function renderCal(){
