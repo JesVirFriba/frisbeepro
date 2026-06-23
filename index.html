@@ -217,12 +217,11 @@ textarea{resize:none;min-height:65px}
 <div class="page" id="pg-cal">
   <div class="ph">Kalenteri</div>
   <div id="cal-month-summary"></div>
-  <div class="cal-nav">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
     <button class="cal-nav-btn" onclick="calPrev()">‹</button>
     <span id="cal-lbl" style="font-size:14px;font-weight:600"></span>
     <button class="cal-nav-btn" onclick="calNext()">›</button>
   </div>
-  <div class="cal-grid" id="cal-grid"></div>
   <div class="sect">Tapahtumat</div>
   <div id="cal-ev"></div>
   <button class="btn" onclick="openM('m-event')">+ Lisää tapahtuma</button>
@@ -3000,21 +2999,6 @@ function renderCal(){
   }
 
   const events=get('events')||[];
-  const fd=new Date(calY,calM,1).getDay();
-  const offset=(fd+6)%7;
-  const dim=new Date(calY,calM+1,0).getDate();
-  const today=new Date();
-  let h='';
-  ['Ma','Ti','Ke','To','Pe','La','Su'].forEach(d=>{h+='<div class="cal-dh">'+d+'<\/div>'});
-  for(let i=0;i<offset;i++)h+='<div></div>';
-  for(let d=1;d<=dim;d++){
-    const ds=calY+'-'+String(calM+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-    const de=events.filter(e=>e.date===ds);
-    const isT=today.getFullYear()===calY&&today.getMonth()===calM&&today.getDate()===d;
-    const hc=de.some(e=>e.type==='kisa'),he=de.length>0;
-    h+='<div class="cal-day'+(isT?' today':'')+(hc?' has-comp':he?' has-event':'')+'" onclick="openDayModal(\''+ds+'\')">'+d+'<\/div>';
-  }
-  document.getElementById('cal-grid').innerHTML=h;
   const me=events.filter(e=>{const[y,m]=e.date.split('-').map(Number);return y===calY&&m===calM+1}).sort((a,b)=>a.date.localeCompare(b.date));
   document.getElementById('cal-ev').innerHTML=me.length?me.map(e=>{
     const dotCol={kisa:'#E24B4A',treeni:'#1D9E75',lepo:'#888',muu:'#378ADD'}[e.type]||'#888';
