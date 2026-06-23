@@ -1018,7 +1018,7 @@ function renderProfile(){
   <div style="font-size:11px;color:var(--t3);text-align:center;margin-bottom:12px;line-height:1.5">Kopioi kaikki datasi yhdellä napin painalluksella → liitä uuteen Claude-chattiin<\/div>
   <button class="btn btn-out btn-sm" onclick="openM('m-chat')" style="width:100%;margin-bottom:4px">+ Tallenna chat-keskustelu historiaan<\/button>`;
 
-  document.getElementById('pv').innerHTML=h;
+  h+='<div class="page-spacer"></div>';document.getElementById('pv').innerHTML=h;
 }
 
 // ===== COPY TO CLAUDE =====
@@ -3018,7 +3018,7 @@ function renderComp(){
     html+='</div></div>';
   });
 
-  document.getElementById('comp-content').innerHTML=html;
+  html+='<div class="page-spacer"></div>';document.getElementById('comp-content').innerHTML=html;
 
   // Wire up comp-head toggles via event delegation
   document.getElementById('comp-content').addEventListener('click',function(e){
@@ -3195,7 +3195,7 @@ function renderRatingDev(){
       h+=`<div class="row"><div style="flex:1"><div style="font-size:12px;color:var(--t2)">${r.date}${r.note?' · '+r.note:''}<\/div><\/div><div style="text-align:right"><div style="font-size:13px;font-weight:600;color:var(--gd)">PDGA ${r.val||'–'}<\/div>${r.mval?`<div style="font-size:12px;color:var(--bd)">Metrix ${r.mval}<\/div>`:''}<\/div><button onclick="delRating(${r.id})" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:15px;padding:0 3px">✕<\/button><\/div>`;
     });
   }else h+=`<div class="empty"><div class="ei">📊<\/div><div class="et">Lisää ensimmäinen rating-kirjaus yllä<br>Lähtötaso: PDGA 919 / Metrix 939<\/div><\/div>`;
-  document.getElementById('dev-content').innerHTML=h;
+  h+='<div class="page-spacer"></div>';document.getElementById('dev-content').innerHTML=h;
 }
 function saveRating(){
   const r=get('ratings')||[];r.push({id:Date.now(),date:v('rat-date'),val:parseInt(v('rat-val'))||null,mval:parseInt(v('rat-mval'))||null,note:v('rat-note')});
@@ -3261,7 +3261,7 @@ function renderSpeedDev(){
       h+='</div>';
     });
   }else{h+='<div class="empty"><div class="ei">⚡</div><div class="et">Ei nopeustestejä</div></div>';}
-  document.getElementById('dev-content').innerHTML=h;
+  h+='<div class="page-spacer"></div>';document.getElementById('dev-content').innerHTML=h;
 }
 
 function renderPuttiDev(){
@@ -3279,7 +3279,7 @@ function renderPuttiDev(){
     h+='<div class=\"pd-sub\">'+(t.a>0?t.m+'/'+t.a:'Ei dataa')+' · '+d.goal+'%</div></div>';
   });
   h+='</div>';
-  document.getElementById('dev-content').innerHTML=h;
+  h+='<div class="page-spacer"></div>';document.getElementById('dev-content').innerHTML=h;
 }
 
 function renderMetrixDev(){
@@ -3304,7 +3304,7 @@ function renderMetrixDev(){
       h+='<button data-del-mx=\"'+c.id+'\" style=\"background:none;border:none;color:var(--t3);cursor:pointer;font-size:15px;padding:0 0 0 5px\">✕</button></div>';
     });
   }
-  document.getElementById('dev-content').innerHTML=h;
+  h+='<div class="page-spacer"></div>';document.getElementById('dev-content').innerHTML=h;
   document.getElementById('dev-content').querySelectorAll('[data-del-mx]').forEach(function(btn){
     btn.addEventListener('click',function(){delMetrix(parseInt(btn.dataset.delMx))});
   });
@@ -3339,7 +3339,7 @@ function renderGoalsDev(){
       h+='<button data-upd-goal=\"'+g.id+'\" class=\"btn btn-out btn-sm\" style=\"width:100%;margin-top:8px\">Päivitä arvo</button></div>';
     });
   }
-  document.getElementById('dev-content').innerHTML=h;
+  h+='<div class="page-spacer"></div>';document.getElementById('dev-content').innerHTML=h;
   document.getElementById('dev-content').querySelectorAll('[data-del-goal]').forEach(function(btn){
     btn.addEventListener('click',function(){delGoal(parseInt(btn.dataset.delGoal))});
   });
@@ -3374,7 +3374,7 @@ function renderChatDev(){
       h+='<div class=\"ci-body\">'+c.body+'</div></div>';
     });
   }
-  document.getElementById('dev-content').innerHTML=h;
+  h+='<div class="page-spacer"></div>';document.getElementById('dev-content').innerHTML=h;
   document.getElementById('dev-content').querySelectorAll('[data-del-chat]').forEach(function(btn){
     btn.addEventListener('click',function(){delChatEntry(Number(btn.dataset.delChat))});
   });
