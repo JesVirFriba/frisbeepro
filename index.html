@@ -1739,7 +1739,10 @@ function getWeekDates(offsetWeeks) {
 }
 
 function dateStr(d) {
-  return d.toISOString().slice(0, 10);
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
 }
 
 function getCompDatesInRange(startDate, endDate) {
@@ -1971,21 +1974,23 @@ function buildMonthView() {
     const hasEvent = events.some(e => e.date === ds && e.type === 'kisa');
 
     // Determine color
-    let bg, border, emoji;
+    let bg, border, emoji, textCol;
     if (isFuture) {
-      if (isCompDay || hasEvent) { bg = 'var(--rl)'; border = 'var(--rd)'; emoji = '🏆'; }
-      else if (isRest) { bg = 'var(--bg)'; border = 'var(--border)'; emoji = ''; }
-      else { bg = 'var(--bg)'; border = 'var(--border)'; emoji = ''; }
+      if (isCompDay || hasEvent) { bg='#FFE5E5'; border='#E24B4A'; emoji='🏆'; textCol='#E24B4A'; }
+      else if (isRest) { bg='#F0F2F5'; border='#C8CDD6'; emoji=''; textCol='var(--t3)'; }
+      else { bg='var(--bg)'; border='var(--border)'; emoji=''; textCol='var(--t2)'; }
     } else {
-      if (hasComp) { bg = '#E24B4A22'; border = '#E24B4A'; emoji = '🏆'; }
-      else if (isCompDay) { bg = 'var(--rl)'; border = 'var(--rd)'; emoji = ''; }
-      else if (isDone) { bg = 'var(--gl)'; border = 'var(--g)'; emoji = '✓'; }
-      else if (isRest) { bg = '#8B9BB422'; border = '#8B9BB4'; emoji = '😴'; }
-      else { bg = 'var(--border)'; border = 'var(--border)'; emoji = ''; }
+      if (hasComp) { bg='#E24B4A'; border='#C23535'; emoji='🏆'; textCol='#fff'; }
+      else if (isCompDay) { bg='#FFE5E5'; border='#E24B4A'; emoji=''; textCol='#E24B4A'; }
+      else if (isDone) { bg='#1D9E75'; border='#158060'; emoji='✓'; textCol='#fff'; }
+      else if (isRest) { bg='#E8EBF0'; border='#B0B8C4'; emoji='😴'; textCol='#8B9BB4'; }
+      else { bg='#F5F5F5'; border='#DDD'; emoji=''; textCol='var(--t3)'; }
     }
+    const todayStyle = isToday ? 'box-shadow:0 0 0 3px var(--bd);' : '';
+    const todayTextWeight = isToday ? '800' : '500';
 
-    h += `<div onclick="weekViewOffset=${weekOffset};renderTrain()" style="aspect-ratio:1;border-radius:6px;background:${bg};border:1.5px solid ${border};display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative">`;
-    h += `<div style="font-size:${isToday?'11':'10'}px;font-weight:${isToday?'700':'400'};color:${isToday?'var(--bd)':'var(--t2)'}">${day}</div>`;
+    h += `<div onclick="weekViewOffset=${weekOffset};showPg('train');renderTrain()" style="aspect-ratio:1;border-radius:6px;background:${bg};border:1.5px solid ${border};${todayStyle}display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer">`;
+    h += `<div style="font-size:${isToday?'11':'10'}px;font-weight:${todayTextWeight};color:${textCol}">${day}</div>`;
     if (emoji) h += `<div style="font-size:8px;line-height:1">${emoji}</div>`;
     h += `</div>`;
   }
@@ -1995,10 +2000,10 @@ function buildMonthView() {
   // Legend
   h += `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">`;
   const legend = [
-    {bg:'var(--gl)',border:'var(--g)',label:'Treeni tehty'},
-    {bg:'#E24B4A22',border:'#E24B4A',label:'Kisa kisattu'},
-    {bg:'var(--rl)',border:'var(--rd)',label:'Tuleva kisa'},
-    {bg:'#8B9BB422',border:'#8B9BB4',label:'Lepo'},
+    {bg:'#1D9E75',border:'#158060',label:'Treeni tehty'},
+    {bg:'#E24B4A',border:'#C23535',label:'Kisa kisattu'},
+    {bg:'#FFE5E5',border:'#E24B4A',label:'Kisaamatta/tuleva'},
+    {bg:'#E8EBF0',border:'#B0B8C4',label:'Lepo'},
   ];
   legend.forEach(l => {
     h += `<div style="display:flex;align-items:center;gap:4px">`;
