@@ -216,6 +216,7 @@ textarea{resize:none;min-height:65px}
 </div>
 <div class="page" id="pg-cal">
   <div class="ph">Kalenteri</div>
+  <div id="cal-month-summary"></div>
   <div class="cal-nav">
     <button class="cal-nav-btn" onclick="calPrev()">‹</button>
     <span id="cal-lbl" style="font-size:14px;font-weight:600"></span>
@@ -1907,8 +1908,7 @@ function renderWeekView() {
   }
 
   // Month view button
-  h += `<div class="sect" style="margin-top:14px">Kuukausinäkymä</div>`;
-  h += buildMonthView();
+  h += `<div class="page-spacer"></div>`;
 
   // Jump to today button if not on current week
   if (weekViewOffset !== 0) {
@@ -2958,6 +2958,47 @@ function renderRestDay(){
 function renderCal(){
   const MNAMES=['Tammikuu','Helmikuu','Maaliskuu','Huhtikuu','Toukokuu','Kesäkuu','Heinäkuu','Elokuu','Syyskuu','Lokakuu','Marraskuu','Joulukuu'];
   document.getElementById('cal-lbl').textContent=MNAMES[calM]+' '+calY;
+
+  // Kuukausinäkymä heatmap
+  const summaryEl=document.getElementById('cal-month-summary');
+  if(summaryEl){
+    const doneMap=get('done_map')||{};
+    const comps=get('comps')||[];
+    const dim2=new Date(calY,calM+1,0).getDate();
+    // Laske kuukauden tilastot
+    let treeniTehty=0,treeniYhteensa=0,kisaTehty=0,kisaYhteensa=0,lepoPaivat=0;
+    let bestMetrix=0;
+    for(let d=1;d<=dim2;d++){
+      const ds=calY+'-'+String(calM+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+      const dateObj=new Date(calY,calM,d);
+      const weekOffset=Math.floor((dateObj-getWeekDates(0)[0])/(7*86400000));
+      const weekDates=getWeekDates(weekOffset);
+      const plan=buildWeekPlan(weekDates);
+      const dayPlan=plan.find(dp=>dp.date===ds);
+      const intensity=dayPlan?.intensity||'rest';
+      if(intensity==='comp'){
+        kisaYhteensa++;
+        if(comps.some(c=>c.date===ds&&c.mrating))kisaTehty++;
+        comps.filter(c=>c.date===ds&&c.mrating).forEach(c=>{if(c.mrating>bestMetrix)bestMetrix=c.mrating;});
+      }else if(intensity==='rest'){
+        lepoPaivat++;
+      }else{
+        treeniYhteensa++;
+        if(doneMap[ds])treeniTehty++;
+      }
+    }
+    // Heatmap
+    let sh=buildMonthView();
+    // Yhteenveto
+    sh+=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px;margin-bottom:4px">`;
+    sh+=`<div style="background:var(--gl);border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:16px;font-weight:700;color:var(--gd)">${treeniTehty}/${treeniYhteensa}</div><div style="font-size:9px;color:var(--gd);font-weight:500">Treeniä</div></div>`;
+    sh+=`<div style="background:var(--rl);border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:16px;font-weight:700;color:var(--rd)">${kisaTehty}/${kisaYhteensa}</div><div style="font-size:9px;color:var(--rd);font-weight:500">Kisoja</div></div>`;
+    sh+=`<div style="background:#8B9BB422;border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:16px;font-weight:700;color:#8B9BB4">${lepoPaivat}</div><div style="font-size:9px;color:#8B9BB4;font-weight:500">Lepoa</div></div>`;
+    sh+=`<div style="background:var(--bl);border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:16px;font-weight:700;color:var(--bd)">${bestMetrix||'–'}</div><div style="font-size:9px;color:var(--bd);font-weight:500">Paras</div></div>`;
+    sh+=`</div>`;
+    summaryEl.innerHTML=sh;
+  }
+
   const events=get('events')||[];
   const fd=new Date(calY,calM,1).getDay();
   const offset=(fd+6)%7;
@@ -2984,7 +3025,6 @@ function renderCal(){
       '<button data-del-ev="'+e.id+'" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px;padding:0 3px">✕<\/button>'+
       '<\/div>';
   }).join(''):'<div class="empty" style="padding:14px 0"><div class="ei" style="font-size:24px">📅<\/div><div class="et">Ei tapahtumia<\/div><\/div>';
-  // Wire delete buttons
   document.getElementById('cal-ev').querySelectorAll('[data-del-ev]').forEach(btn=>{
     btn.addEventListener('click',()=>delEvent(parseInt(btn.dataset.delEv)));
   });
