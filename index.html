@@ -1702,6 +1702,16 @@ const WEEK_STRUCTURE = {
     {day:'La', label:'Lauantai',  sessions:['putti','kierros'],    icon:'🎯', intensity:'medium', note:'Putti + kenttäkierros'},
     {day:'Su', label:'Sunnuntai', sessions:['lepo'],               icon:'😴', intensity:'rest',   note:'Täysi lepo – palautuminen'},
   ],
+  // Competition week (before big comp): reduced load
+  comp_week: [
+    {day:'Ma', label:'Maanantai', sessions:['heitto_tek','putti'], icon:'🥏', intensity:'low',    note:'Kevyt tekniikka + putti – lyhyt'},
+    {day:'Ti', label:'Tiistai',   sessions:['mob'],                icon:'🧘', intensity:'low',    note:'Liikkuvuus + palautuminen'},
+    {day:'Ke', label:'Keskiviikko',sessions:['putti'],             icon:'🎯', intensity:'low',    note:'Putti – C1 rutiini, ei volyymia'},
+    {day:'To', label:'Torstai',  sessions:['lepo'],                icon:'😴', intensity:'rest',   note:'Lepo – ei harjoittelua'},
+    {day:'Pe', label:'Perjantai', sessions:['aktivointi','putti'], icon:'⚡', intensity:'low',    note:'Aktivointi + lyhyt putti'},
+    {day:'La', label:'Lauantai',  sessions:['kisa'],               icon:'🏆', intensity:'comp',   note:'KISA – Kuortane K1'},
+    {day:'Su', label:'Sunnuntai', sessions:['kisa'],               icon:'🏆', intensity:'comp',   note:'KISA – Kuortane K2'},
+  ],
   // Competition day replaces training
   comp: {sessions:['kisa'], icon:'🏆', intensity:'comp', note:'KISA – lepo'},
   // Day before comp: activation only
@@ -1762,18 +1772,25 @@ function getCompDatesInRange(startDate, endDate) {
 function buildWeekPlan(weekDates) {
   const compDates = getCompDatesInRange(weekDates[0], weekDates[6]);
   const plan = [];
-  const base = WEEK_STRUCTURE.base;
+
+  // Check if this is a competition week (has comp on weekend La/Su)
+  const satDs = dateStr(weekDates[5]);
+  const sunDs = dateStr(weekDates[6]);
+  const isCompWeek = compDates.has(satDs) || compDates.has(sunDs);
+  const base = isCompWeek ? WEEK_STRUCTURE.comp_week : WEEK_STRUCTURE.base;
 
   for (let i = 0; i < 7; i++) {
     const ds = dateStr(weekDates[i]);
     const isComp = compDates.has(ds);
-    // Check if tomorrow is a comp (pre-comp day)
     const tomorrowDs = i < 6 ? dateStr(weekDates[i+1]) : null;
-    const isPreComp = tomorrowDs && compDates.has(tomorrowDs);
+    const isPreComp = !isCompWeek && tomorrowDs && compDates.has(tomorrowDs);
 
     let dayPlan;
     if (isComp) {
-      dayPlan = { ...WEEK_STRUCTURE.comp, day: base[i].day, label: base[i].label, date: ds };
+      const compNote = isCompWeek
+        ? (i===5?'KISA – Kuortane K1':'KISA – Kuortane K2')
+        : 'KISA – lepo';
+      dayPlan = { ...WEEK_STRUCTURE.comp, note: compNote, day: base[i].day, label: base[i].label, date: ds };
     } else if (isPreComp) {
       dayPlan = { ...WEEK_STRUCTURE.pre_comp, day: base[i].day, label: base[i].label, date: ds };
     } else {
