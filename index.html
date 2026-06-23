@@ -1816,7 +1816,7 @@ function renderWeekView() {
     const textCol = isToday ? sc.col : 'var(--text)';
     const dayCol = isToday ? sc.col : 'var(--t3)';
     const opacity = isPast && !isToday ? '.55' : '1';
-    const sessionRoute = {heitto_tek:'throw',heitto_nop:'throw',voima_a:'str',voima_b:'str',putti:'putti',mob:'mob',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros'};
+    const sessionRoute = {heitto_tek:'throw',heitto_nop:'throw',voima_a:'str',voima_b:'str',putti:'putti',mob:'mob',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros',kisa:'comp_day'};
     const routableSessions = sessions.filter(s=>sessionRoute[s]);
     const clickable = routableSessions.length > 0 && !isPast;
     const clickTarget = routableSessions.length === 1 ? sessionRoute[routableSessions[0]] : routableSessions.length > 1 ? 'session_pick' : null;
