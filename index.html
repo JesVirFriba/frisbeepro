@@ -1984,7 +1984,7 @@ function buildMonthView() {
       else if (isCompDay) { bg='#FFE5E5'; border='#E24B4A'; emoji=''; textCol='#E24B4A'; }
       else if (isDone) { bg='#1D9E75'; border='#158060'; emoji='✓'; textCol='#fff'; }
       else if (isRest) { bg='#E8EBF0'; border='#B0B8C4'; emoji='😴'; textCol='#8B9BB4'; }
-      else { bg='#F5F5F5'; border='#DDD'; emoji=''; textCol='var(--t3)'; }
+      else { bg='#FFF3E0'; border='#E8900A'; emoji=''; textCol='#E8900A'; }
     }
     const todayStyle = isToday ? 'box-shadow:0 0 0 3px var(--bd);' : '';
     const todayTextWeight = isToday ? '800' : '500';
@@ -2001,8 +2001,9 @@ function buildMonthView() {
   h += `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">`;
   const legend = [
     {bg:'#1D9E75',border:'#158060',label:'Treeni tehty'},
+    {bg:'#FFF3E0',border:'#E8900A',label:'Treeni tekemättä'},
     {bg:'#E24B4A',border:'#C23535',label:'Kisa kisattu'},
-    {bg:'#FFE5E5',border:'#E24B4A',label:'Kisaamatta/tuleva'},
+    {bg:'#FFE5E5',border:'#E24B4A',label:'Kisa kisaamatta'},
     {bg:'#E8EBF0',border:'#B0B8C4',label:'Lepo'},
   ];
   legend.forEach(l => {
@@ -2967,38 +2968,40 @@ function renderCal(){
   const summaryEl=document.getElementById('cal-month-summary');
   if(summaryEl){
     const doneMap=get('done_map')||{};
-    const comps=get('comps')||[];
+    const allComps=get('comps')||[];
     const dim2=new Date(calY,calM+1,0).getDate();
-    // Laske kuukauden tilastot
-    let treeniTehty=0,treeniYhteensa=0,kisaTehty=0,kisaYhteensa=0,lepoPaivat=0;
-    let bestMetrix=0;
+    const todayDs=dateStr(new Date());
+    let treeniTehty=0,treeniYhteensa=0,treeniTekematta=0,lepoPaivat=0;
+
     for(let d=1;d<=dim2;d++){
       const ds=calY+'-'+String(calM+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
       const dateObj=new Date(calY,calM,d);
+      const isPast=ds<=todayDs;
       const weekOffset=Math.floor((dateObj-getWeekDates(0)[0])/(7*86400000));
-      const weekDates=getWeekDates(weekOffset);
-      const plan=buildWeekPlan(weekDates);
+      const plan=buildWeekPlan(getWeekDates(weekOffset));
       const dayPlan=plan.find(dp=>dp.date===ds);
       const intensity=dayPlan?.intensity||'rest';
-      if(intensity==='comp'){
-        kisaYhteensa++;
-        if(comps.some(c=>c.date===ds&&c.mrating))kisaTehty++;
-        comps.filter(c=>c.date===ds&&c.mrating).forEach(c=>{if(c.mrating>bestMetrix)bestMetrix=c.mrating;});
-      }else if(intensity==='rest'){
-        lepoPaivat++;
+      if(intensity==='rest'||intensity==='comp'){
+        if(intensity==='rest')lepoPaivat++;
       }else{
         treeniYhteensa++;
         if(doneMap[ds])treeniTehty++;
+        else if(isPast)treeniTekematta++;
       }
     }
-    // Heatmap
+
+    // Kirjatut kisat kuukaudessa
+    const monthPrefix=calY+'-'+String(calM+1).padStart(2,'0');
+    const monthComps=allComps.filter(c=>c.date&&c.date.startsWith(monthPrefix)&&c.mrating);
+    const kisaTehty=monthComps.length;
+    const bestMetrix=monthComps.length?Math.max(...monthComps.map(c=>c.mrating)):0;
+
     let sh=buildMonthView();
-    // Yhteenveto
-    sh+=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px;margin-bottom:4px">`;
-    sh+=`<div style="background:var(--gl);border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:16px;font-weight:700;color:var(--gd)">${treeniTehty}/${treeniYhteensa}</div><div style="font-size:9px;color:var(--gd);font-weight:500">Treeniä</div></div>`;
-    sh+=`<div style="background:var(--rl);border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:16px;font-weight:700;color:var(--rd)">${kisaTehty}/${kisaYhteensa}</div><div style="font-size:9px;color:var(--rd);font-weight:500">Kisoja</div></div>`;
-    sh+=`<div style="background:#8B9BB422;border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:16px;font-weight:700;color:#8B9BB4">${lepoPaivat}</div><div style="font-size:9px;color:#8B9BB4;font-weight:500">Lepoa</div></div>`;
-    sh+=`<div style="background:var(--bl);border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:16px;font-weight:700;color:var(--bd)">${bestMetrix||'–'}</div><div style="font-size:9px;color:var(--bd);font-weight:500">Paras</div></div>`;
+    sh+=`<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:8px;margin-bottom:4px">`;
+    sh+=`<div style="background:#1D9E7522;border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:16px;font-weight:700;color:#1D9E75">${treeniTehty}/${treeniYhteensa}</div><div style="font-size:9px;color:#1D9E75;font-weight:500">Treeniä tehty</div></div>`;
+    sh+=`<div style="background:#FFE5E5;border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:16px;font-weight:700;color:#E24B4A">${kisaTehty}</div><div style="font-size:9px;color:#E24B4A;font-weight:500">Kisaa kisattu</div></div>`;
+    sh+=`<div style="background:#FFF3E0;border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:16px;font-weight:700;color:#E8900A">${treeniTekematta}</div><div style="font-size:9px;color:#E8900A;font-weight:500">Treeniä tekemättä</div></div>`;
+    sh+=`<div style="background:#E8EBF0;border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:16px;font-weight:700;color:#8B9BB4">${lepoPaivat}</div><div style="font-size:9px;color:#8B9BB4;font-weight:500">Lepoa · Paras: ${bestMetrix||'–'}</div></div>`;
     sh+=`</div>`;
     summaryEl.innerHTML=sh;
   }
