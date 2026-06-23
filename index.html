@@ -1816,17 +1816,22 @@ function renderWeekView() {
     const textCol = isToday ? sc.col : 'var(--text)';
     const dayCol = isToday ? sc.col : 'var(--t3)';
     const opacity = isPast && !isToday ? '.55' : '1';
-    const sessionRoute = {heitto_tek:'throw',heitto_nop:'throw',voima_a:'str',voima_b:'str',putti:'putti',mob:'mob',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros',kisa:'comp_day'};
+    const sessionRoute = {heitto_tek:'throw',heitto_nop:'throw',voima_a:'str',voima_b:'str',putti:'putti',mob:'mob',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros',kisa:'comp_day',lepo:'rest_day'};
     const routableSessions = sessions.filter(s=>sessionRoute[s]);
-    const clickable = routableSessions.length > 0 && !isPast;
-    const clickTarget = routableSessions.length === 1 ? sessionRoute[routableSessions[0]] : routableSessions.length > 1 ? 'session_pick' : null;
+    // Kisa ja lepo ovat aina klikattavia
+    const isCompDay = day.intensity === 'comp';
+    const isRestDay = day.intensity === 'rest';
+    const clickable = (routableSessions.length > 0 || isCompDay || isRestDay) && !isPast;
+    const clickTarget = isCompDay ? 'comp_day' : isRestDay ? 'rest_day' : routableSessions.length === 1 ? sessionRoute[routableSessions[0]] : routableSessions.length > 1 ? 'session_pick' : null;
     const pickData = routableSessions.length > 1 ? JSON.stringify({sessions:routableSessions,date:day.date}).replace(/"/g,'&quot;') : '';
     const onclickAttr = clickable
-      ? (routableSessions.length > 1
+      ? (routableSessions.length > 1 && !isCompDay && !isRestDay
         ? ' onclick="trainTabPick(\''+pickData+'\')"'
         : ' onclick="kierrosPvm=\''+day.date+'\';trainTab(\''+clickTarget+'\',null);renderTrain()"')
       : '';
-    const isDone = !!(getDone(day.date));
+    // Kisapäivä: tehty jos kisatulos kirjattu kyseiselle päivälle
+    const compDone = isCompDay && (get('comps')||[]).some(c=>c.date===day.date&&c.mrating);
+    const isDone = compDone || !!(getDone(day.date));
     const tagStyle = 'display:flex;align-items:center;gap:8px;padding:10px 12px;background:'+(isDone?'var(--gl)':cardBg)+';border-radius:var(--r);margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:'+(isDone?'1.5px solid var(--g)':cardBorder)+';opacity:'+opacity+';width:100%;text-align:left;font-family:inherit;cursor:'+(clickable?'pointer':'default');
 
     h += '<div'+onclickAttr+' style="'+tagStyle+'">';
@@ -1839,9 +1844,11 @@ function renderWeekView() {
     h += '<div style="font-size:12px;font-weight:600;color:'+(isDone?'var(--gd)':textCol)+';margin-bottom:4px;line-height:1.3">'+day.note+(isDone?' – tehty':'')+'</div>';
     h += '<div style="display:flex;gap:3px;flex-wrap:wrap">'+badges+'</div>';
     h += '</div>';
-    if(isDone){
+    if(isDone && !isCompDay){
       h += '<div onclick="event.stopPropagation();setDone(\''+day.date+'\',null);renderTrain()" style="font-size:10px;color:var(--gd);cursor:pointer;flex-shrink:0;padding:3px 7px;border:1px solid var(--g);border-radius:20px">✓ Tehty</div>';
-    } else if(isPast && day.intensity !== 'rest'){
+    } else if(compDone){
+      h += '<div style="font-size:10px;color:var(--gd);flex-shrink:0;padding:3px 7px;border:1px solid var(--g);border-radius:20px">✓ Kisattu</div>';
+    } else if(isPast && day.intensity !== 'rest' && !isCompDay){
       h += '<div onclick="event.stopPropagation();setDone(\''+day.date+'\',1);renderTrain()" style="font-size:10px;color:var(--t3);cursor:pointer;flex-shrink:0;padding:3px 7px;border:1px solid var(--border);border-radius:20px">Merkitse</div>';
     } else if(clickable){
       h += '<div style="font-size:16px;color:'+sc.col+';flex-shrink:0">'+(routableSessions.length>1?'⋮':'›')+'</div>';
@@ -2077,6 +2084,7 @@ function renderTrain(){
   else if(trainTabCur==='kierros')renderKierros();
   else if(trainTabCur==='comp_day')renderCompDay();
   else if(trainTabCur==='session_pick')renderSessionPick();
+  else if(trainTabCur==='rest_day')renderRestDay();
 }
 
 function renderThrow(){
@@ -2813,6 +2821,59 @@ function calcKierrosRatingTable(){
     valEl.textContent=rating;
     valEl.style.color=rating>=950?'var(--gd)':rating>=900?'var(--ad)':'#E24B4A';
   }
+}
+
+function renderRestDay(){
+  const cont=document.getElementById('train-content');
+  let h='<div style="background:linear-gradient(135deg,#3B5170,#6B8BB0);border-radius:var(--r);padding:16px;margin-bottom:12px;color:#fff">';
+  h+='<div style="font-size:11px;font-weight:600;opacity:.8;text-transform:uppercase">Lepopäivä</div>';
+  h+='<div style="font-size:20px;font-weight:700;margin-top:2px">😴 Aktiivinen palautuminen</div>';
+  h+='<div style="font-size:12px;opacity:.85;margin-top:4px">Lepo ei tarkoita sohvalla makaamista</div>';
+  h+='</div>';
+
+  const sections=[
+    {time:'Aamu',icon:'🌅',col:'var(--gl)',tcol:'var(--gd)',items:[
+      '10 min kevyt venyttely – lonkat, selkä, olkapäät',
+      'Ei heittoja, ei voimaa',
+      'Puttausrutiini läpi mielessä – mentaalinen kertaus',
+    ]},
+    {time:'Päivä',icon:'☀️',col:'var(--bl)',tcol:'var(--bd)',items:[
+      'Proteiini 171–190g – palautuminen tapahtuu ravinnon avulla',
+      'Kreatiini 5g',
+      'Uni tai lepo jos mahdollista',
+    ]},
+    {time:'Ilta',icon:'🌙',col:'var(--al)',tcol:'var(--ad)',items:[
+      '20 min kevyt kävely – kierrättää laktaatin pois lihaksista',
+      'Venyttely 10 min – lonkat ja selkä erityisesti',
+      'Uni 8–9h – kasvu- ja palautumishormoni erittyy yöllä',
+    ]},
+    {time:'Merkit onnistuneesta lepopäivästä',icon:'✓',col:'var(--gl)',tcol:'var(--gd)',items:[
+      'Seuraavan päivän treeni tuntuu virkeämmältä',
+      'Wobble ei nouse yli 5° seuraavassa nopeustestissä',
+      'Jalat ja hartiat tuntuvat kevyemmiltä',
+    ]},
+  ];
+
+  sections.forEach(function(s){
+    h+='<div style="background:'+s.col+';border-radius:var(--r);padding:12px 14px;margin-bottom:8px">';
+    h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">';
+    h+='<span style="font-size:20px">'+s.icon+'</span>';
+    h+='<div style="font-size:13px;font-weight:700;color:'+s.tcol+'">'+s.time+'</div>';
+    h+='</div>';
+    s.items.forEach(function(item){
+      h+='<div style="display:flex;gap:8px;padding:4px 0;font-size:12px;color:'+s.tcol+';line-height:1.4">';
+      h+='<span style="flex-shrink:0">·</span><span>'+item+'</span></div>';
+    });
+    h+='</div>';
+  });
+
+  h+='<div style="background:var(--card);border-radius:var(--r);padding:12px 14px;margin-bottom:8px">';
+  h+='<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">💬 Valmentaja</div>';
+  h+='<div style="font-size:12px;color:var(--t2);line-height:1.5">Sinulla on kamppailutausta ja 2x/pv harjoittelu – palautuminen on kriittinen osa ohjelmaa. Lepopäivä on yhtä tärkeä kuin harjoituspäivä. 36v keho tarvitsee sen.</div>';
+  h+='</div>';
+
+  h+='<button onclick="trainTab(\'week\',null);renderTrain()" class="btn btn-out" style="margin-top:4px;width:100%">← Takaisin viikko-ohjelmaan</button>';
+  cont.innerHTML=h;
 }
 
 function renderCal(){
