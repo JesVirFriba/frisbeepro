@@ -270,12 +270,18 @@ textarea{resize:none;min-height:65px}
     <div class="field"><div class="label">5m vauhdinotto</div><input type="number" step="0.1" id="sp-bh5" inputmode="decimal" placeholder="km/h"></div>
     <div class="field"><div class="label">Stand still</div><input type="number" step="0.1" id="sp-bhss" inputmode="decimal" placeholder="km/h"></div>
     <div class="field"><div class="label">Polviltaan</div><input type="number" step="0.1" id="sp-bhkn" inputmode="decimal" placeholder="km/h"></div>
+    <div class="field"><div class="label">Wobble avg (°)</div><input type="number" step="0.1" id="sp-bh-wobble" inputmode="decimal" placeholder="esim. 3.4"></div>
+    <div class="field"><div class="label">Hyzer avg (°)</div><input type="number" step="0.1" id="sp-bh-hyzer" inputmode="decimal" placeholder="esim. 9.1"></div>
+    <div class="field"><div class="label">Nokkakulma avg (°)</div><input type="number" step="0.1" id="sp-bh-nose" inputmode="decimal" placeholder="esim. -2.0"></div>
   </div>
   <div style="font-size:11px;font-weight:600;color:var(--pd);margin:8px 0 6px">FOREHAND</div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
     <div class="field"><div class="label">5m vauhdinotto</div><input type="number" step="0.1" id="sp-fh5" inputmode="decimal" placeholder="km/h"></div>
     <div class="field"><div class="label">Stand still</div><input type="number" step="0.1" id="sp-fhss" inputmode="decimal" placeholder="km/h"></div>
     <div class="field"><div class="label">Polviltaan</div><input type="number" step="0.1" id="sp-fhkn" inputmode="decimal" placeholder="km/h"></div>
+    <div class="field"><div class="label">Wobble avg (°)</div><input type="number" step="0.1" id="sp-fh-wobble" inputmode="decimal" placeholder="esim. 8.4"></div>
+    <div class="field"><div class="label">Hyzer avg (°)</div><input type="number" step="0.1" id="sp-fh-hyzer" inputmode="decimal" placeholder="esim. 20.1"></div>
+    <div class="field"><div class="label">Nokkakulma avg (°)</div><input type="number" step="0.1" id="sp-fh-nose" inputmode="decimal" placeholder="esim. 5.0"></div>
   </div>
   <div class="field"><div class="label">Muistiinpanot</div><textarea id="sp-notes" placeholder="Tuntemukset..."></textarea></div>
   <button class="btn" onclick="saveSpeed()">Tallenna</button>
@@ -1164,9 +1170,18 @@ function renderSpeed(){
 }
 function saveSpeed(){
   const speeds=get('speeds')||[];
-  speeds.push({id:Date.now(),date:v('sp-date'),disc:v('sp-disc'),bh5:num('sp-bh5'),bhss:num('sp-bhss'),bhkn:num('sp-bhkn'),fh5:num('sp-fh5'),fhss:num('sp-fhss'),fhkn:num('sp-fhkn'),notes:v('sp-notes')});
+  speeds.push({
+    id:Date.now(),date:v('sp-date'),disc:v('sp-disc'),
+    bh5:num('sp-bh5'),bhss:num('sp-bhss'),bhkn:num('sp-bhkn'),
+    bh_wobble:num('sp-bh-wobble'),bh_hyzer:num('sp-bh-hyzer'),bh_nose:num('sp-bh-nose'),
+    fh5:num('sp-fh5'),fhss:num('sp-fhss'),fhkn:num('sp-fhkn'),
+    fh_wobble:num('sp-fh-wobble'),fh_hyzer:num('sp-fh-hyzer'),fh_nose:num('sp-fh-nose'),
+    notes:v('sp-notes')
+  });
   set('speeds',speeds);flash('sp-msg');
-  ['sp-bh5','sp-bhss','sp-bhkn','sp-fh5','sp-fhss','sp-fhkn','sp-disc','sp-notes'].forEach(id=>setV(id,''));
+  ['sp-bh5','sp-bhss','sp-bhkn','sp-bh-wobble','sp-bh-hyzer','sp-bh-nose',
+   'sp-fh5','sp-fhss','sp-fhkn','sp-fh-wobble','sp-fh-hyzer','sp-fh-nose',
+   'sp-disc','sp-notes'].forEach(id=>setV(id,''));
   setTimeout(()=>{closeM('m-speed');renderSpeed()},700);
 }
 function delSpeed(id){set('speeds',(get('speeds')||[]).filter(s=>s.id!==id));renderSpeed()}
@@ -3220,11 +3235,30 @@ function renderSpeedDev(){
   if(speeds.length){
     h+='<div class="sect">Testihistoria</div>';
     speeds.slice().reverse().forEach(function(s){
-      h+='<div class="row"><div style="flex:1"><div style="font-size:11px;color:var(--t3)">'+s.date+'</div>';
-      h+='<div style="font-size:12px;display:flex;gap:8px;margin-top:2px">';
-      if(s.bh5)h+='<span style="color:var(--bd);font-weight:600">BH '+s.bh5.toFixed(1)+'</span>';
-      if(s.fh5)h+='<span style="color:var(--pd);font-weight:600">FH '+s.fh5.toFixed(1)+'</span>';
-      h+='</div></div></div>';
+      h+='<div style="background:var(--card);border-radius:var(--rs);padding:10px 12px;margin-bottom:6px">';
+      h+='<div style="font-size:11px;color:var(--t3);margin-bottom:6px">'+s.date+(s.disc?' · '+s.disc:'')+'</div>';
+      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+      // BH
+      h+='<div style="background:var(--bl);border-radius:var(--rs);padding:7px">';
+      h+='<div style="font-size:10px;font-weight:600;color:var(--bd);margin-bottom:4px">BH</div>';
+      if(s.bh5)h+='<div style="font-size:11px;color:var(--bd)">Nopeus: <b>'+s.bh5.toFixed(1)+' km/h</b></div>';
+      if(s.bhss)h+='<div style="font-size:11px;color:var(--bd)">Avg: <b>'+s.bhss.toFixed(1)+'</b></div>';
+      if(s.bh_wobble!=null&&s.bh_wobble>0)h+='<div style="font-size:11px;color:'+(s.bh_wobble<=3?'var(--gd)':s.bh_wobble<=5?'var(--ad)':'#E24B4A')+'">Wobble: <b>'+s.bh_wobble+'°</b></div>';
+      if(s.bh_hyzer!=null&&s.bh_hyzer>0)h+='<div style="font-size:11px;color:var(--bd)">Hyzer: <b>'+s.bh_hyzer+'°</b></div>';
+      if(s.bh_nose!=null&&s.bh_nose!==0)h+='<div style="font-size:11px;color:var(--bd)">Nokka: <b>'+s.bh_nose+'°</b></div>';
+      h+='</div>';
+      // FH
+      h+='<div style="background:var(--pl);border-radius:var(--rs);padding:7px">';
+      h+='<div style="font-size:10px;font-weight:600;color:var(--pd);margin-bottom:4px">FH</div>';
+      if(s.fh5)h+='<div style="font-size:11px;color:var(--pd)">Nopeus: <b>'+s.fh5.toFixed(1)+' km/h</b></div>';
+      if(s.fhss)h+='<div style="font-size:11px;color:var(--pd)">Avg: <b>'+s.fhss.toFixed(1)+'</b></div>';
+      if(s.fh_wobble!=null&&s.fh_wobble>0)h+='<div style="font-size:11px;color:'+(s.fh_wobble<=5?'var(--gd)':s.fh_wobble<=8?'var(--ad)':'#E24B4A')+'">Wobble: <b>'+s.fh_wobble+'°</b></div>';
+      if(s.fh_hyzer!=null&&s.fh_hyzer>0)h+='<div style="font-size:11px;color:'+(s.fh_hyzer<=15?'var(--gd)':s.fh_hyzer<=18?'var(--ad)':'#E24B4A')+'">Hyzer: <b>'+s.fh_hyzer+'°</b></div>';
+      if(s.fh_nose!=null&&s.fh_nose!==0)h+='<div style="font-size:11px;color:var(--pd)">Nokka: <b>'+s.fh_nose+'°</b></div>';
+      h+='</div>';
+      h+='</div>';
+      if(s.notes)h+='<div style="font-size:11px;color:var(--t2);margin-top:6px">'+s.notes+'</div>';
+      h+='</div>';
     });
   }else{h+='<div class="empty"><div class="ei">⚡</div><div class="et">Ei nopeustestejä</div></div>';}
   document.getElementById('dev-content').innerHTML=h;
