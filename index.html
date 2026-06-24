@@ -1801,9 +1801,9 @@ function buildWeekPlan(weekDates) {
 
     let dayPlan;
     if (isComp) {
-      const compNote = isCompWeek
-        ? (i===5?'KISA – Kuortane K1':'KISA – Kuortane K2')
-        : 'KISA – lepo';
+      const eventsAll = get('events') || [];
+      const dayEvent = eventsAll.find(e => e.date === ds && (e.type === 'kisa' || e.type === 'viikkokisa'));
+      const compNote = dayEvent ? 'KISA – ' + dayEvent.name : 'KISA – lepo';
       dayPlan = { ...WEEK_STRUCTURE.comp, note: compNote, day: base[i].day, label: base[i].label, date: ds };
     } else if (isVK) {
       // Viikkokisa korvaa treenisuunnitelman mutta ei laukaise comp_week rakennetta
