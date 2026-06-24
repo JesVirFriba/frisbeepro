@@ -1884,18 +1884,19 @@ function renderWeekView() {
     const sessionRoute = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',putti:'putti',mob:'mob',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros',kisa:'comp_day',lepo:'rest_day'};
     const routableSessions = sessions.filter(s=>sessionRoute[s]);
     // Kisa ja lepo ovat aina klikattavia
-    const isCompDay = day.intensity === 'comp';
+    const isCompDay = day.intensity === 'comp' && !vkDates.has(day.date);
+    const isVKDay = vkDates.has(day.date);
     const isRestDay = day.intensity === 'rest';
-    const clickable = (routableSessions.length > 0 || isCompDay || isRestDay) && !isPast;
-    const clickTarget = isCompDay ? 'comp_day' : isRestDay ? 'rest_day' : routableSessions.length === 1 ? sessionRoute[routableSessions[0]] : routableSessions.length > 1 ? 'session_pick' : null;
+    const clickable = (routableSessions.length > 0 || isCompDay || isVKDay || isRestDay) && !isPast;
+    const clickTarget = isVKDay ? 'viikkokisa' : isCompDay ? 'comp_day' : isRestDay ? 'rest_day' : routableSessions.length === 1 ? sessionRoute[routableSessions[0]] : routableSessions.length > 1 ? 'session_pick' : null;
     const pickData = routableSessions.length > 1 ? JSON.stringify({sessions:routableSessions,date:day.date}).replace(/"/g,'&quot;') : '';
     const onclickAttr = clickable
-      ? (routableSessions.length > 1 && !isCompDay && !isRestDay
+      ? (routableSessions.length > 1 && !isCompDay && !isVKDay && !isRestDay
         ? ' onclick="trainTabPick(\''+pickData+'\')"'
         : ' onclick="kierrosPvm=\''+day.date+'\';trainTab(\''+clickTarget+'\',null);renderTrain()"')
       : '';
     // Kisapäivä: tehty jos kisatulos kirjattu kyseiselle päivälle
-    const compDone = isCompDay && (get('comps')||[]).some(c=>c.date===day.date&&c.mrating);
+    const compDone = (isCompDay||isVKDay) && (get('comps')||[]).some(c=>c.date===day.date&&c.mrating);
     const isDone = compDone || !!(getDone(day.date));
     const tagStyle = 'display:flex;align-items:center;gap:8px;padding:10px 12px;background:'+(isDone?'var(--gl)':cardBg)+';border-radius:var(--r);margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:'+(isDone?'1.5px solid var(--g)':cardBorder)+';opacity:'+opacity+';width:100%;text-align:left;font-family:inherit;cursor:'+(clickable?'pointer':'default');
 
@@ -2229,6 +2230,7 @@ function renderTrain(){
   else if(trainTabCur==='kierros')renderKierros();
   else if(trainTabCur==='comp_day')renderCompDay();
   else if(trainTabCur==='session_pick')renderSessionPick();
+  else if(trainTabCur==='viikkokisa')renderViikkokisa();
   else if(trainTabCur==='rest_day')renderRestDay();
 }
 
@@ -3041,6 +3043,78 @@ function calcKierrosRatingTable(){
     valEl.textContent=rating;
     valEl.style.color=rating>=950?'var(--gd)':rating>=900?'var(--ad)':'#E24B4A';
   }
+}
+
+function renderViikkokisa(){
+  const cont=document.getElementById('train-content');
+  const today=new Date().toISOString().slice(0,10);
+
+  // Haetaan tämän päivän viikkokisa events-mapista
+  const events=get('events')||[];
+  const vkEvent=events.find(e=>e.type==='viikkokisa'&&e.date===today)
+    || events.find(e=>e.type==='viikkokisa'&&e.date>=today);
+  const kisaNimi=vkEvent?vkEvent.name:'Viikkokisa';
+  const kisaNote=vkEvent&&vkEvent.note?vkEvent.note:'';
+
+  // Haetaan viimeisimmät tavoitteet kierros_mapista jos löytyy
+  const kierros=get('kierros_map')||{};
+  const viimeinen=Object.entries(kierros).filter(([k,v])=>v.type==='viikkokisa').sort().slice(-1)[0];
+  const edellinenTavoite=viimeinen?viimeinen[1].focus:'';
+
+  // Vakiotavoitteet jos ei asetettu
+  const tavoite1='Kiekkovalinta tuulessa – pre-shot rutiini: asetu → tuuli → kiekko → katso → hengitä';
+  const tavoite2='C1-puttaus yli 70% – rutiini joka putilla, ei poikkeuksia';
+
+  let h='';
+
+  // Otsikkokortti
+  h+='<div style="background:var(--rl);border-radius:var(--r);padding:14px 16px;margin-bottom:12px;border:1.5px solid var(--rd)">';
+  h+='<div style="font-size:11px;font-weight:600;color:var(--rd);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Viikkokisa – laboratorio</div>';
+  h+='<div style="font-size:18px;font-weight:700;color:var(--rd)">🏆 '+kisaNimi+'</div>';
+  if(kisaNote)h+='<div style="font-size:11px;color:var(--rd);opacity:.8;margin-top:4px">'+kisaNote+'</div>';
+  h+='</div>';
+
+  // Valmentajan muistutus
+  h+='<div class="coach-msg" style="margin-bottom:12px">';
+  h+='💬 <strong>Valmentaja</strong><br>';
+  h+='Viikkokisa on laboratorio – ei suoritus. Tänään ei jahdita tulosta vaan harjoitellaan kahta asiaa oikeassa kisatilanteessa. Virheet ovat tietoa.';
+  h+='</div>';
+
+  // Kehitystavoitteet
+  h+='<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">🎯 Tämän kisan kehitystavoitteet</div>';
+
+  const tavoitteet=[tavoite1,tavoite2];
+  tavoitteet.forEach(function(t,i){
+    h+='<div style="background:var(--gl);border-radius:var(--rs);padding:11px 14px;margin-bottom:8px;border-left:3px solid var(--gd)">';
+    h+='<div style="font-size:11px;font-weight:700;color:var(--gd);margin-bottom:3px">TAVOITE '+(i+1)+'</div>';
+    h+='<div style="font-size:12px;color:var(--gd);line-height:1.5">'+t+'</div>';
+    h+='</div>';
+  });
+
+  if(edellinenTavoite){
+    h+='<div style="font-size:11px;color:var(--t2);margin-bottom:12px">Edellinen tavoite: '+edellinenTavoite+'</div>';
+  }
+
+  // Muistilista
+  h+='<div style="font-size:13px;font-weight:700;color:var(--text);margin:14px 0 8px">✅ Ennen kierrosta</div>';
+  const muistilista=[
+    'Syö kunnolla 1–2h ennen kisaa',
+    'Putti lämmittely – 5 vaihetta joka putilla',
+    'Kiekkokassi tarkistettu – oikeat kiekot tuulioloihin',
+    'Hengitys – yksi syvä hengitys ennen ensimmäistä heittoa',
+  ];
+  muistilista.forEach(function(m){
+    h+='<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--border)">';
+    h+='<span style="font-size:14px;flex-shrink:0">☐</span>';
+    h+='<span style="font-size:12px;color:var(--text)">'+m+'</span>';
+    h+='</div>';
+  });
+
+  // Kirjaa tulos -nappi
+  h+='<button onclick="openM(\'m-kierros\')" style="width:100%;margin-top:16px;padding:13px;border-radius:var(--r);border:none;background:var(--g);color:#fff;font-size:14px;font-weight:700;cursor:pointer">📝 Kirjaa tulos kisan jälkeen</button>';
+  h+='<button onclick="trainTab(\'week\',null);renderTrain()" class="btn btn-out" style="width:100%;margin-top:8px">← Takaisin viikko-ohjelmaan</button>';
+
+  cont.innerHTML=h;
 }
 
 function renderRestDay(){
