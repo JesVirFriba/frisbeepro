@@ -1709,8 +1709,8 @@ const WEEK_STRUCTURE = {
     {day:'Ke', label:'Keskiviikko',sessions:['putti'],             icon:'🎯', intensity:'low',    note:'Putti – C1 rutiini, ei volyymia'},
     {day:'To', label:'Torstai',  sessions:['lepo'],                icon:'😴', intensity:'rest',   note:'Lepo – ei harjoittelua'},
     {day:'Pe', label:'Perjantai', sessions:['aktivointi','putti'], icon:'⚡', intensity:'low',    note:'Aktivointi + lyhyt putti'},
-    {day:'La', label:'Lauantai',  sessions:['kisa'],               icon:'🏆', intensity:'comp',   note:'KISA – Kuortane K1'},
-    {day:'Su', label:'Sunnuntai', sessions:['kisa'],               icon:'🏆', intensity:'comp',   note:'KISA – Kuortane K2'},
+    {day:'La', label:'Lauantai',  sessions:['kisa'],               icon:'🏆', intensity:'comp',   note:'KISA – päivä 1'},
+    {day:'Su', label:'Sunnuntai', sessions:['kisa'],               icon:'🏆', intensity:'comp',   note:'KISA – päivä 2'},
   ],
   // Competition day replaces training
   comp: {sessions:['kisa'], icon:'🏆', intensity:'comp', note:'KISA – lepo'},
@@ -1881,7 +1881,7 @@ function renderWeekView() {
     const textCol = isToday ? sc.col : 'var(--text)';
     const dayCol = isToday ? sc.col : 'var(--t3)';
     const opacity = isPast && !isToday ? '.55' : '1';
-    const sessionRoute = {heitto_tek:'throw',heitto_nop:'throw',voima_a:'str',voima_b:'str',putti:'putti',mob:'mob',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros',kisa:'comp_day',lepo:'rest_day'};
+    const sessionRoute = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',putti:'putti',mob:'mob',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros',kisa:'comp_day',lepo:'rest_day'};
     const routableSessions = sessions.filter(s=>sessionRoute[s]);
     // Kisa ja lepo ovat aina klikattavia
     const isCompDay = day.intensity === 'comp';
@@ -2178,13 +2178,21 @@ function trainTabPick(pickDataStr){
 
 function renderSessionPick(){
   const cont = document.getElementById('train-content');
-  const SESSION_ROUTE = {heitto_tek:'throw',heitto_nop:'throw',voima_a:'str',voima_b:'str',putti:'putti',mob:'mob',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros'};
+  const SESSION_ROUTE = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',putti:'putti',mob:'mob',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros'};
   const SESSION_NAMES = {
-    heitto_tek:'🥏 Tekniikkaheitto', heitto_nop:'⚡ Nopeusheitto',
+    heitto_tek:'🥏 Tekniikan ylläpito', heitto_nop:'⚡ Nopeusheitto',
     voima_a:'💪 Voima A', voima_b:'💪 Voima B',
     putti:'🎯 Puttausrutiini', mob:'🧘 Liikkuvuus',
     aktivointi:'⚡ Aktivointi', comp_day:'🏆 Kisapäivä',
     kierros:'🏃 Kenttäkierros'
+  };
+  const SESSION_DESC = {
+    heitto_tek:'RPE 3–4 · Tekniikkasarjat · ~1h',
+    heitto_nop:'RPE 10 · Maksiminopeus · ~1h',
+    putti:'C1-rutiini · Joka putilla samat 5 vaihetta',
+    mob:'Liikkuvuus + palauttelu',
+    aktivointi:'Kevyt herättely ennen kisaa',
+    kierros:'Kenttäkierros'
   };
   let h = '<div style="background:var(--card);border-radius:var(--r);padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.07)">';
   h += '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">Valitse sessio</div>';
@@ -2192,10 +2200,17 @@ function renderSessionPick(){
   sessionPickList.forEach(function(s){
     const target = SESSION_ROUTE[s];
     if(!target) return;
+    const name = SESSION_NAMES[s]||s;
+    const desc = SESSION_DESC[s]||'';
+    const emojiMatch = name.match(/^(\S+)\s*(.*)/);
+    const emoji = emojiMatch?emojiMatch[1]:'🥏';
+    const label = emojiMatch?emojiMatch[2]:name;
     const dateParam = (s==='kierros'&&sessionPickDate) ? 'kierrosPvm=\''+sessionPickDate+'\';' : '';
     h += '<button onclick="'+dateParam+'trainTab(\''+target+'\',null);renderTrain()" style="display:flex;align-items:center;gap:12px;width:100%;padding:14px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r);margin-bottom:8px;cursor:pointer;font-family:inherit;text-align:left">';
-    h += '<span style="font-size:24px">'+SESSION_NAMES[s].slice(0,2)+'</span>';
-    h += '<div><div style="font-size:14px;font-weight:600;color:var(--text)">'+SESSION_NAMES[s].slice(3)+'</div></div>';
+    h += '<span style="font-size:24px">'+emoji+'</span>';
+    h += '<div><div style="font-size:14px;font-weight:600;color:var(--text)">'+label+'</div>';
+    if(desc) h += '<div style="font-size:11px;color:var(--t2);margin-top:2px">'+desc+'</div>';
+    h += '</div>';
     h += '<div style="margin-left:auto;font-size:18px;color:var(--t3)">›</div>';
     h += '</button>';
   });
@@ -2206,7 +2221,7 @@ function renderSessionPick(){
 
 function renderTrain(){
   if(trainTabCur==='week')renderWeekView();
-  else if(trainTabCur==='throw')renderThrow();
+  else if(trainTabCur==='throw'||trainTabCur==='throw_tek'||trainTabCur==='throw_nop')renderThrow();
   else if(trainTabCur==='str')renderStr();
   else if(trainTabCur==='putti')renderPuttiTrain();
   else if(trainTabCur==='mob')renderMob();
@@ -2219,9 +2234,15 @@ function renderTrain(){
 
 function renderThrow(){
   const cont=document.getElementById('train-content');
+  const isNopeus=trainTabCur==='throw_nop';
+  const isTek=trainTabCur==='throw_tek';
+  const modeTitle=isNopeus?'⚡ Nopeusheitto':isTek?'🥏 Tekniikan ylläpito':'🥏 Heittoharjoittelu';
+  const modeDesc=isNopeus?'RPE 10 – maksimiteho joka heitossa · 3 min palautus sarjojen välissä':isTek?'RPE 3–4 – rauhallinen tekniikka · älykiekko mukaan jos mahdollista':'';
+  const modeBg=isNopeus?'var(--pl)':'var(--bl)';
+  const modeCol=isNopeus?'var(--pd)':'var(--bd)';
   const phase=throwWk<=4?'Tekniikkablokki':'Nopeusblokki';
   const sessions=THROW_SESSIONS[throwWk]||THROW_SESSIONS[1];
-  let h=`<div class="wk-scroll" id="throw-wk"><\/div><div class="sect">${phase} – viikko ${throwWk}<\/div>`;
+  let h=`<div style="background:${modeBg};border-radius:var(--r);padding:12px 14px;margin-bottom:12px"><div style="font-size:14px;font-weight:700;color:${modeCol}">${modeTitle}</div>${modeDesc?`<div style="font-size:11px;color:${modeCol};opacity:.8;margin-top:3px">${modeDesc}</div>`:''}</div><div class="wk-scroll" id="throw-wk"></div><div class="sect">${phase} – viikko ${throwWk}</div>`
   sessions.forEach(sess=>{
     const allDone=sess.exercises.every(e=>getSets('th_'+throwWk+'_'+sess.id+'_'+e.id)>=e.totalSets);
     h+=`<div class="str-card">
