@@ -1692,15 +1692,15 @@ function calcKierrosRating(prefix){
 
 // ===== WEEK & MONTH PROGRAM =====
 const WEEK_STRUCTURE = {
-  // Base week: optimized for disc golf athlete
+  // Base week: kisakausi – nopeuden ylläpito (Merelä Jakso 2)
   base: [
-    {day:'Ma', label:'Maanantai', sessions:['heitto_tek','putti'], icon:'🥏', intensity:'medium', note:'Tekniikkaheitto + putti'},
-    {day:'Ti', label:'Tiistai',   sessions:['voima_a'],            icon:'💪', intensity:'high',   note:'Voima A – alaraaja + rotaatio'},
-    {day:'Ke', label:'Keskiviikko',sessions:['putti','mob'],       icon:'🎯', intensity:'low',    note:'Putti + liikkuvuus'},
-    {day:'To', label:'Torstai',  sessions:['heitto_nop'],          icon:'⚡', intensity:'high',   note:'Nopeusheitto'},
-    {day:'Pe', label:'Perjantai', sessions:['voima_b'],            icon:'💪', intensity:'medium', note:'Voima B – keskivartalo + yläraaja'},
+    {day:'Ma', label:'Maanantai', sessions:['lepo'],               icon:'😴', intensity:'rest',   note:'Lepo – palautuminen'},
+    {day:'Ti', label:'Tiistai',   sessions:['heitto_nop'],         icon:'⚡', intensity:'high',   note:'Nopeusheitto – RPE 10'},
+    {day:'Ke', label:'Keskiviikko',sessions:['lepo'],              icon:'😴', intensity:'rest',   note:'Lepo'},
+    {day:'To', label:'Torstai',  sessions:['heitto_tek','putti'],  icon:'🥏', intensity:'medium', note:'Tekniikan ylläpito – RPE 3–4'},
+    {day:'Pe', label:'Perjantai', sessions:['lepo'],               icon:'😴', intensity:'rest',   note:'Lepo'},
     {day:'La', label:'Lauantai',  sessions:['putti','kierros'],    icon:'🎯', intensity:'medium', note:'Putti + kenttäkierros'},
-    {day:'Su', label:'Sunnuntai', sessions:['lepo'],               icon:'😴', intensity:'rest',   note:'Täysi lepo – palautuminen'},
+    {day:'Su', label:'Sunnuntai', sessions:['lepo'],               icon:'😴', intensity:'rest',   note:'Lepo – tai viikkokisa'},
   ],
   // Competition week (before big comp): reduced load
   comp_week: [
