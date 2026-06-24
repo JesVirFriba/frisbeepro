@@ -1869,6 +1869,7 @@ function renderWeekView() {
   </div>`;
 
   // Day cards
+  const vkDates = getViikkokisaDatesInRange(weekDates[0], weekDates[6]);
   plan.forEach(day => {
     const isToday = day.date === today;
     const isPast = day.date < today;
