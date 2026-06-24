@@ -2332,15 +2332,25 @@ function renderPuttiTrain(){
   const today2=new Date().toISOString().slice(0,10);
   const sarjatRaw=get('putti_sarjat_'+today2)||[];
   // Support both old format (numbers) and new format (objects)
-  const sarjat=sarjatRaw.map(function(s){return typeof s==='object'?s:{made:s,dist:3};});
+  const sarjat=sarjatRaw.map(function(s){return typeof s==='object'?s:{made:s,dist:3,tyyli:'normaali'};});
   const sarjaTehty=sarjat.reduce((a,s)=>a+(s.made||0),0);
   const sarjaYht=sarjat.length*10;
   const sarjaPct=sarjaYht>0?Math.round(sarjaTehty/sarjaYht*100):null;
+
+  // Puttiasento-valinta
+  const puttiTyyli=get('putti_tyyli')||'normaali';
 
   h+='<div class="card card-p" style="margin-bottom:10px">';
   h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
   h+='<div style="font-size:13px;font-weight:600">Tänään – sarjat</div>';
   h+='<div style="font-size:12px;color:var(--t2)">'+sarjaTehty+'/'+sarjaYht+(sarjaPct!==null?' · '+sarjaPct+'%':'')+'</div>';
+  h+='</div>';
+  h+='<div style="display:flex;gap:6px;margin-bottom:10px">';
+  ['normaali','haara'].forEach(function(t){
+    const sel=puttiTyyli===t;
+    const label=t==='normaali'?'🧍 Normaali':'🦵 Haaraputti';
+    h+='<button class="putti-tyyli-btn" data-tyyli="'+t+'" style="flex:1;padding:8px 6px;border-radius:var(--rs);border:1.5px solid '+(sel?'var(--gd)':'var(--border)')+';background:'+(sel?'var(--gl)':'transparent')+';color:'+(sel?'var(--gd)':'var(--t2)')+';font-size:12px;font-weight:'+(sel?'700':'400')+';cursor:pointer">'+label+'</button>';
+  });
   h+='</div>';
 
   // Sarjat listana
@@ -2398,30 +2408,66 @@ function renderPuttiTrain(){
 
   // Prosentit C1/C2 jaoteltuna
   h+='<div class="sect">Puttausprosentit</div>';
+
+  // Lasketaan normaali vs haara erikseen
+  const totalsN={};const totalsH={};
+  PTDISTS.forEach(d=>{totalsN[d.key]={m:0,a:0};totalsH[d.key]={m:0,a:0};});
+  sessions.forEach(s=>{
+    const tyyli=s.tyyli||'normaali';
+    PTDISTS.forEach(d=>{
+      if(s[d.key]){
+        if(tyyli==='haara'){totalsH[d.key].m+=s[d.key].m;totalsH[d.key].a+=s[d.key].a;}
+        else{totalsN[d.key].m+=s[d.key].m;totalsN[d.key].a+=s[d.key].a;}
+      }
+    });
+    // sarjat-muoto
+    if(s.sarjat){
+      s.sarjat.forEach(function(sj){
+        const dist=sj.dist||3;
+        const dk=PTDISTS.find(d=>d.dist===dist);
+        if(!dk)return;
+        const t2=sj.tyyli||'normaali';
+        if(t2==='haara'){totalsH[dk.key].m+=sj.made||0;totalsH[dk.key].a+=10;}
+        else{totalsN[dk.key].m+=sj.made||0;totalsN[dk.key].a+=10;}
+      });
+    }
+  });
+
   const c1dists=PTDISTS.filter(d=>d.circle==='C1');
   const c2dists=PTDISTS.filter(d=>d.circle==='C2');
+
+  // Tyylivalinta tilastoille
+  const tilastoTyyli=get('putti_tilasto_tyyli')||'kaikki';
+  h+='<div style="display:flex;gap:5px;margin-bottom:10px">';
+  [['kaikki','Kaikki'],['normaali','🧍 Normaali'],['haara','🦵 Haara']].forEach(function(opt){
+    const sel=tilastoTyyli===opt[0];
+    h+='<button class="putti-tilasto-btn" data-tilasto="'+opt[0]+'" style="flex:1;padding:6px 4px;border-radius:var(--rs);border:1.5px solid '+(sel?'var(--gd)':'var(--border)')+';background:'+(sel?'var(--gl)':'transparent')+';color:'+(sel?'var(--gd)':'var(--t2)')+';font-size:11px;font-weight:'+(sel?'700':'400')+';cursor:pointer">'+opt[1]+'</button>';
+  });
+  h+='</div>';
+
+  function renderDistGrid(distArr, totRef){
+    let g='<div class="putti-grid">';
+    distArr.forEach(d=>{
+      const t=totRef[d.key];const p=t.a>0?Math.round(t.m/t.a*100):null;
+      const col=p===null?'#ccc':p>=d.goal?'#1D9E75':p>=(d.goal*.75)?'#EF9F27':'#E24B4A';
+      g+='<div class="pd"><div class="pd-lbl">'+d.dist+'m</div>';
+      g+='<div class="pd-pct" style="color:'+col+'">'+(p===null?'–':p+'%')+'</div>';
+      g+='<div class="pd-bar"><div class="pd-fill" style="width:'+(p===null?0:Math.min(100,p))+'%;background:'+col+'"></div></div>';
+      g+='<div class="pd-sub">'+(t.a>0?t.m+'/'+t.a:'Ei dataa')+' · '+d.goal+'%</div></div>';
+    });
+    g+='</div>';
+    return g;
+  }
+
+  // Valitaan näytettävät totaalit
+  let totShow=totals;
+  if(tilastoTyyli==='normaali')totShow=totalsN;
+  if(tilastoTyyli==='haara')totShow=totalsH;
+
   h+='<div style="font-size:10px;font-weight:600;color:var(--gd);margin-bottom:6px">C1 – Circle 1</div>';
-  h+='<div class="putti-grid">';
-  c1dists.forEach(d=>{
-    const t=totals[d.key];const p=t.a>0?Math.round(t.m/t.a*100):null;
-    const col=p===null?'#ccc':p>=d.goal?'#1D9E75':p>=(d.goal*.75)?'#EF9F27':'#E24B4A';
-    h+='<div class="pd"><div class="pd-lbl">'+d.dist+'m</div>';
-    h+='<div class="pd-pct" style="color:'+col+'">'+(p===null?'–':p+'%')+'</div>';
-    h+='<div class="pd-bar"><div class="pd-fill" style="width:'+(p===null?0:Math.min(100,p))+'%;background:'+col+'"></div></div>';
-    h+='<div class="pd-sub">'+(t.a>0?t.m+'/'+t.a:'Ei dataa')+' · '+d.goal+'%</div></div>';
-  });
-  h+='</div>';
+  h+=renderDistGrid(c1dists, totShow);
   h+='<div style="font-size:10px;font-weight:600;color:var(--pd);margin-top:8px;margin-bottom:6px">C2 – Circle 2</div>';
-  h+='<div class="putti-grid">';
-  c2dists.forEach(d=>{
-    const t=totals[d.key];const p=t.a>0?Math.round(t.m/t.a*100):null;
-    const col=p===null?'#ccc':p>=d.goal?'#1D9E75':p>=(d.goal*.75)?'#EF9F27':'#E24B4A';
-    h+='<div class="pd"><div class="pd-lbl">'+d.dist+'m</div>';
-    h+='<div class="pd-pct" style="color:'+col+'">'+(p===null?'–':p+'%')+'</div>';
-    h+='<div class="pd-bar"><div class="pd-fill" style="width:'+(p===null?0:Math.min(100,p))+'%;background:'+col+'"></div></div>';
-    h+='<div class="pd-sub">'+(t.a>0?t.m+'/'+t.a:'Ei dataa')+' · '+d.goal+'%</div></div>';
-  });
-  h+='</div>';
+  h+=renderDistGrid(c2dists, totShow);
 
   if(sessions.length){
     h+='<div class="sect">Sessiohistoria</div>';
@@ -2434,8 +2480,9 @@ function renderPuttiTrain(){
       // Also check sarjat format
       const sarjaDistLabels=s.sarjat?[...new Set(s.sarjat.map(sj=>sj.dist+'m'))].join(', '):'';
       const distInfo=distLabels||sarjaDistLabels;
+      const tyyliLabel=s.tyyli==='haara'?'🦵 Haara':'🧍 Normaali';
       h+='<div class="row" style="flex-direction:column;align-items:flex-start;padding:8px 0">';
-      h+='<div style="display:flex;width:100%;align-items:center"><span class="rl">'+s.date+' · '+tot+' putausta</span>';
+      h+='<div style="display:flex;width:100%;align-items:center"><span class="rl">'+s.date+' · '+tot+' putausta · '+tyyliLabel+'</span>';
       h+='<span class="rv" style="color:'+(pct>=70?'var(--g)':'var(--t2)')+'">'+pct+'%</span>';
       h+='<button data-del-putti="'+s.id+'" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px;padding:0 3px">✕</button></div>';
       if(distInfo)h+='<div style="font-size:10px;color:var(--t3);margin-top:2px">📍 '+distInfo+'</div>';
@@ -2454,6 +2501,28 @@ function renderPuttiTrain(){
   // Phase buttons
   cont.querySelectorAll('.putti-phase-btn').forEach(btn=>{
     btn.addEventListener('click',()=>{set('putti_phase',parseInt(btn.dataset.phase));renderTrain();});
+  });
+
+  // Tilasto-tyyli napit
+  cont.querySelectorAll('.putti-tilasto-btn').forEach(function(btn){
+    function selectTilasto(e){
+      e.preventDefault();
+      set('putti_tilasto_tyyli', btn.dataset.tilasto);
+      renderTrain();
+    }
+    btn.addEventListener('click', selectTilasto);
+    btn.addEventListener('touchend', selectTilasto);
+  });
+
+  // Tyylivalinta-napit
+  cont.querySelectorAll('.putti-tyyli-btn').forEach(function(btn){
+    function selectTyyli(e){
+      e.preventDefault();
+      set('putti_tyyli', btn.dataset.tyyli);
+      renderTrain();
+    }
+    btn.addEventListener('click', selectTyyli);
+    btn.addEventListener('touchend', selectTyyli);
   });
 
   // Etäisyys-napit
@@ -2480,7 +2549,7 @@ function renderPuttiTrain(){
     if(isNaN(val)||val<0||val>10){alert('Syötä luku 0–10');return;}
     const s=get('putti_sarjat_'+today3)||[];
     const etaisyys=get('putti_etaisyys')||3;
-    s.push({made:val, dist:etaisyys});
+    s.push({made:val, dist:etaisyys, tyyli:get('putti_tyyli')||'normaali'});
     set('putti_sarjat_'+today3,s);
     renderTrain();
   }
@@ -2505,7 +2574,7 @@ function renderPuttiTrain(){
       const sarjatObj=s.map(function(v){return typeof v==='object'?v:{made:v,dist:3};});
       const made=sarjatObj.reduce((a,v)=>a+(v.made||0),0);
       const total=sarjatObj.length*10;
-      const sess={id:Date.now(),date:today3};
+      const sess={id:Date.now(),date:today3,tyyli:get('putti_tyyli')||'normaali'};
       const distKey=puttiPhase===1?'d5':puttiPhase===2?'d5':'d5';
       sess[distKey]={m:made,a:total};
       sess.sarjat=sarjatObj;
