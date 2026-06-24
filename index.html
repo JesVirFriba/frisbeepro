@@ -1828,6 +1828,9 @@ function buildWeekPlan(weekDates) {
   return plan;
 }
 
+function weekPrev(){weekViewOffset--;renderTrain();}
+function weekNext(){weekViewOffset++;renderTrain();}
+function weekToday(){weekViewOffset=0;renderTrain();}
 let weekViewOffset = 0;
 
 function renderWeekView() {
@@ -1840,12 +1843,12 @@ function renderWeekView() {
 
   // Week nav
   let h = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-    <button onclick="weekViewOffset--;renderTrain()" style="background:none;border:1px solid var(--border);border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center">‹</button>
+    <button onclick="weekPrev()" style="background:none;border:1px solid var(--border);border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center">‹</button>
     <div style="text-align:center">
       <div style="font-size:14px;font-weight:600">${weekViewOffset===0?'Tämä viikko':weekViewOffset===1?'Ensi viikko':weekViewOffset===-1?'Viime viikko':'Viikko '+(weekViewOffset>0?'+':'')+weekViewOffset}</div>
       <div style="font-size:11px;color:var(--t3)">${weekStart} – ${weekEnd}</div>
     </div>
-    <button onclick="weekViewOffset++;renderTrain()" style="background:none;border:1px solid var(--border);border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center">›</button>
+    <button onclick="weekNext()" style="background:none;border:1px solid var(--border);border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center">›</button>
   </div>`;
 
   // Week summary bar
@@ -1960,7 +1963,7 @@ function renderWeekView() {
 
   // Jump to today button if not on current week
   if (weekViewOffset !== 0) {
-    h += `<button onclick="weekViewOffset=0;renderTrain()" class="btn btn-out" style="margin-top:10px">Tänään</button>`;
+    h += `<button onclick="weekToday()" class="btn btn-out" style="margin-top:10px">Tänään</button>`;
   }
 
   cont.innerHTML = h;
@@ -2324,6 +2327,7 @@ function renderStr(){
 }
 function clickStrSet(k,s,t){const c=getSets(k);setSets(k,c>=s?s-1:s);renderStr()}
 function setStrWk(w){strWk=w;renderStr()}
+function setMobWk(w){mobWk=w;renderMob()}
 
 function renderPuttiTrain(){
   const cont=document.getElementById('train-content');
