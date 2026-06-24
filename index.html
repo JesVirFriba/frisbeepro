@@ -3095,13 +3095,12 @@ function renderViikkokisa(){
     h+='<div style="font-size:11px;color:var(--t2);margin-bottom:12px">Edellinen tavoite: '+edellinenTavoite+'</div>';
   }
 
-  // Muistilista
+  // Muistilista – kevyt, viikkokisa on harjoituskierros
   h+='<div style="font-size:13px;font-weight:700;color:var(--text);margin:14px 0 8px">✅ Ennen kierrosta</div>';
   const muistilista=[
-    'Syö kunnolla 1–2h ennen kisaa',
-    'Putti lämmittely – 5 vaihetta joka putilla',
-    'Kiekkokassi tarkistettu – oikeat kiekot tuulioloihin',
-    'Hengitys – yksi syvä hengitys ennen ensimmäistä heittoa',
+    'Putti lämmittely – rutiini joka putilla, ei määriä',
+    'Kiekkokassi – tarkista oikeat kiekot tuulioloihin',
+    'Kertaa kehitystavoitteet mielessä ennen ensimmäistä väylää',
   ];
   muistilista.forEach(function(m){
     h+='<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--border)">';
