@@ -1212,19 +1212,22 @@ function renderSpeed(){
   if(speeds.length){
     h+=`<div class="sect">Testihistoria<\/div>`;
     speeds.slice().reverse().forEach(s=>{
+      const bhVal=s.bh5||s.bhAvg||null;
+      const fhVal=s.fh5||s.fhAvg||null;
+      const typeLabel=s.type==='heitto_tek'?' · Tekniikka':s.type==='heitto_nop'?' · Nopeus':'';
       h+=`<div class="row">
         <div style="flex:1">
-          <div style="font-size:12px;color:var(--t3)">${s.date}${s.disc?' · '+s.disc:''}<\/div>
+          <div style="font-size:12px;color:var(--t3)">${s.date}${s.disc?' · '+s.disc:''}${typeLabel}</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:2px">
-            ${s.bh5?`<span style="font-size:12px;font-weight:600;color:var(--bd)">BH ${s.bh5.toFixed(1)}<\/span>`:''}
-            ${s.bhss?`<span style="font-size:11px;color:var(--bd);opacity:.7">SS ${s.bhss.toFixed(1)}<\/span>`:''}
-            ${s.fh5?`<span style="font-size:12px;font-weight:600;color:var(--pd)">FH ${s.fh5.toFixed(1)}<\/span>`:''}
-            ${s.fhss?`<span style="font-size:11px;color:var(--pd);opacity:.7">SS ${s.fhss.toFixed(1)}<\/span>`:''}
-          <\/div>
-          ${s.notes?`<div style="font-size:10px;color:var(--t3);margin-top:1px">${s.notes.slice(0,80)}${s.notes.length>80?'...':''}<\/div>`:''}
-        <\/div>
-        <button onclick="delSpeed(${s.id})" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px;padding:0 3px">✕<\/button>
-      <\/div>`;
+            ${bhVal?`<span style="font-size:12px;font-weight:600;color:var(--bd)">BH ${bhVal.toFixed(1)}</span>`:''}
+            ${s.bhss?`<span style="font-size:11px;color:var(--bd);opacity:.7">SS ${s.bhss.toFixed(1)}</span>`:''}
+            ${fhVal?`<span style="font-size:12px;font-weight:600;color:var(--pd)">FH ${fhVal.toFixed(1)}</span>`:''}
+            ${s.fhss?`<span style="font-size:11px;color:var(--pd);opacity:.7">SS ${s.fhss.toFixed(1)}</span>`:''}
+          </div>
+          ${(s.note||s.notes)?`<div style="font-size:10px;color:var(--t3);margin-top:1px">${(s.note||s.notes||'').slice(0,80)}</div>`:''}
+        </div>
+        <button onclick="delSpeed(${s.id||0})" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px;padding:0 3px">✕</button>
+      </div>`;
     });
   }
   document.getElementById('sv').innerHTML=h;
