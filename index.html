@@ -3593,8 +3593,49 @@ function renderDev(){
 function renderRatingDev(){
   const ratings=(get('ratings')||[]).sort((a,b)=>a.date.localeCompare(b.date));
   const comps=(get('comps')||[]).filter(c=>c.mrating).sort((a,b)=>a.date.localeCompare(b.date));
+  const kierros=get('kierros_map')||{};
   const p=get('profile')||DEF;
   let h=`<button class="btn btn-out btn-sm" onclick="openM('m-rating')" style="margin-bottom:12px">+ Lisää rating-kirjaus<\/button>`;
+
+  // === RATING-KEHITYSKÄYRÄ ===
+  const harj=Object.entries(kierros)
+    .filter(([k,v])=>v&&v.calcRating&&v.calcRating>0)
+    .map(([k,v])=>({date:k,rating:v.calcRating,type:'harj',name:v.kentta||v.course||'Harjoitus'}))
+    .sort((a,b)=>a.date.localeCompare(b.date));
+  const kisaArr=comps.map(c=>({date:c.date,rating:c.mrating,type:'kisa',name:c.name||'Kisa'}));
+  const allPoints=[...harj,...kisaArr].sort((a,b)=>a.date.localeCompare(b.date));
+  if(allPoints.length>=1){
+    const W=340,H=180,PL=42,PR=20,PT=16,PB=32;
+    const cW=W-PL-PR,cH=H-PT-PB;
+    const allRatings=allPoints.map(p=>p.rating);
+    const minR=Math.min(...allRatings,880),maxR=Math.max(...allRatings,970);
+    const rng=maxR-minR||50;
+    const dates=allPoints.map(p=>p.date);
+    const minD=dates[0],maxD=dates[dates.length-1];
+    const dateToX=d=>{if(minD===maxD)return PL+cW/2;const t=(new Date(d)-new Date(minD))/(new Date(maxD)-new Date(minD));return PL+t*cW;};
+    const ratingToY=r=>PT+cH-((r-minR)/rng*cH);
+    const TARGET=960,PDGA=919;
+    const tY=ratingToY(TARGET),pdgaY=ratingToY(PDGA);
+    const yLabels=[minR,Math.round(minR+rng*0.5),maxR];
+    const harjLine=harj.length>=2?harj.map((p,i)=>(i===0?'M':'L')+dateToX(p.date).toFixed(1)+','+ratingToY(p.rating).toFixed(1)).join(' '):'';
+    const kisaLine=kisaArr.length>=2?kisaArr.map((p,i)=>(i===0?'M':'L')+dateToX(p.date).toFixed(1)+','+ratingToY(p.rating).toFixed(1)).join(' '):'';
+    let svg='<div class="chart-wrap" style="padding:12px 14px"><div style="font-size:13px;font-weight:600;margin-bottom:10px">📈 Rating-kehitys – koko kausi<\/div>';
+    svg+='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;overflow:visible">';
+    yLabels.forEach(r=>{const y=ratingToY(r);svg+='<line x1="'+PL+'" y1="'+y.toFixed(1)+'" x2="'+(W-PR)+'" y2="'+y.toFixed(1)+'" stroke="var(--border)" stroke-width="0.5"/><text x="'+(PL-4)+'" y="'+(y+4).toFixed(1)+'" text-anchor="end" font-size="9" fill="var(--t2)">'+r+'<\/text>';});
+    if(TARGET>=minR&&TARGET<=maxR)svg+='<line x1="'+PL+'" y1="'+tY.toFixed(1)+'" x2="'+(W-PR)+'" y2="'+tY.toFixed(1)+'" stroke="#1D9E75" stroke-width="1" stroke-dasharray="4,3"/><text x="'+(W-PR+2)+'" y="'+(tY+4).toFixed(1)+'" font-size="8" fill="#1D9E75">960<\/text>';
+    if(PDGA>=minR&&PDGA<=maxR)svg+='<line x1="'+PL+'" y1="'+pdgaY.toFixed(1)+'" x2="'+(W-PR)+'" y2="'+pdgaY.toFixed(1)+'" stroke="#999" stroke-width="0.8" stroke-dasharray="3,3"/><text x="'+(W-PR+2)+'" y="'+(pdgaY+4).toFixed(1)+'" font-size="8" fill="#999">919<\/text>';
+    if(harjLine)svg+='<path d="'+harjLine+'" fill="none" stroke="#378ADD" stroke-width="1.5" stroke-linejoin="round"/>';
+    if(kisaLine)svg+='<path d="'+kisaLine+'" fill="none" stroke="#E24B4A" stroke-width="1.5" stroke-linejoin="round"/>';
+    harj.forEach(p=>{const x=dateToX(p.date).toFixed(1),y=ratingToY(p.rating).toFixed(1);svg+='<circle cx="'+x+'" cy="'+y+'" r="4" fill="#378ADD" stroke="white" stroke-width="1.5"><title>'+p.date+' · '+p.name+' · '+p.rating+'<\/title><\/circle>';});
+    kisaArr.forEach(p=>{const x=dateToX(p.date).toFixed(1),y=ratingToY(p.rating).toFixed(1);svg+='<circle cx="'+x+'" cy="'+y+'" r="5" fill="#E24B4A" stroke="white" stroke-width="1.5"><title>'+p.date+' · '+p.name+' · '+p.rating+'<\/title><\/circle>';});
+    svg+='<\/svg>';
+    svg+='<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;font-size:11px;color:var(--t2)">';
+    if(harj.length)svg+='<div style="display:flex;align-items:center;gap:4px"><div style="width:16px;height:3px;background:#378ADD;border-radius:2px"><\/div>Harjoitus ('+harj.length+')<\/div>';
+    if(kisaArr.length)svg+='<div style="display:flex;align-items:center;gap:4px"><div style="width:16px;height:3px;background:#E24B4A;border-radius:2px"><\/div>Kisa ('+kisaArr.length+')<\/div>';
+    svg+='<div style="display:flex;align-items:center;gap:4px"><div style="width:16px;height:3px;background:#1D9E75;border-radius:2px"><\/div>Tavoite 960<\/div>';
+    svg+='<\/div><\/div>';
+    h+=svg;
+  }
   if(ratings.length>=2){
     const pdgaV=ratings.map(r=>r.val).filter(Boolean);
     if(pdgaV.length>=2){
