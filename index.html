@@ -849,6 +849,7 @@ function showPg(id){
   document.getElementById('pg-'+id).classList.add('on');
   document.getElementById('nav-'+id).classList.add('on');
   window.scrollTo(0,0);
+  localStorage.setItem('fp_last_page', id);
   if(id==='profile')renderProfile();
   if(id==='speed')renderSpeed();
   if(id==='train')renderTrain();
@@ -2138,10 +2139,10 @@ function renderWeekView() {
   cont.innerHTML = h;
 }
 
-function buildMonthView() {
+function buildMonthView(year, month) {
   const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth();
+  if(year===undefined) year = today.getFullYear();
+  if(month===undefined) month = today.getMonth();
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
   const startDow = (firstDay.getDay() + 6) % 7; // Monday = 0
@@ -3401,7 +3402,7 @@ function renderCal(){
     const kisaTehty=monthComps.length;
     const bestMetrix=monthComps.length?Math.max(...monthComps.map(c=>c.mrating)):0;
 
-    let sh=buildMonthView();
+    let sh=buildMonthView(calY, calM);
     sh+=`<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:8px;margin-bottom:4px">`;
     sh+=`<div style="background:#1D9E7522;border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:16px;font-weight:700;color:#1D9E75">${treeniTehty}/${treeniYhteensa}</div><div style="font-size:9px;color:#1D9E75;font-weight:500">Treeniä tehty</div></div>`;
     sh+=`<div style="background:#FFE5E5;border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:16px;font-weight:700;color:#E24B4A">${kisaTehty}</div><div style="font-size:9px;color:#E24B4A;font-weight:500">Kisaa kisattu</div></div>`;
@@ -4198,7 +4199,13 @@ function syncAllCompsToCalendar(){
   }
 })();
 
-renderProfile();
+// Palauta viimeksi avattu välilehti
+const lastPage = localStorage.getItem('fp_last_page');
+if(lastPage && ['profile','speed','train','cal','comp','dev'].includes(lastPage)){
+  showPg(lastPage);
+} else {
+  renderProfile();
+}
 migrateOldKeys();
 // Auto-load from Gist on startup
 if(getGistToken()){
