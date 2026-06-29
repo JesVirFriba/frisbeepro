@@ -3618,7 +3618,7 @@ function renderRatingDev(){
     .filter(([k,v])=>v&&v.calcRating&&v.calcRating>0)
     .map(([k,v])=>({date:k,rating:v.calcRating,type:'harj',name:v.kentta||v.course||'Harjoitus'}))
     .sort((a,b)=>a.date.localeCompare(b.date));
-  const kisaArr=comps.filter(c=>c.mrating&&(c.type==='kisa'||c.type==='viikkokisa'||c.type==='pdga')).map(c=>({date:c.date,rating:c.mrating,type:'kisa',name:c.name||'Kisa'}));
+  const kisaArr=comps.filter(c=>c.mrating&&(!c.type||c.type==='kisa'||c.type==='viikkokisa'||c.type==='pdga')).map(c=>({date:c.date,rating:c.mrating,type:'kisa',name:c.name||'Kisa'}));
   const allPoints=[...harj,...kisaArr].sort((a,b)=>a.date.localeCompare(b.date));
   if(allPoints.length>=1){
     const W=340,H=180,PL=42,PR=20,PT=16,PB=32;
