@@ -2087,6 +2087,47 @@ function renderWeekView() {
     <div style="flex:1;background:var(--bg);border:0.5px solid var(--border);border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--t3)">${restCount}</div><div style="font-size:10px;color:var(--t3);font-weight:500">Lepoa</div></div>
   </div>`;
 
+  // Kuormitusmittari
+  const kisaPaivat = plan.filter(d => d.intensity==='comp' || vkDates.has(d.date));
+  if(kisaPaivat.length > 0){
+    // Laske kuormituspisteet per päivä
+    const loadMap = {'high':3,'medium':2,'low':1,'rest':0,'comp':0};
+    const dayLoads = plan.map(d => ({
+      date: d.date,
+      day: d.day,
+      load: loadMap[d.intensity]||0,
+      isKisa: d.intensity==='comp'||vkDates.has(d.date),
+      isToday: d.date===today
+    }));
+    const kisaIdx = dayLoads.findIndex(d => d.isKisa);
+    const preKisaLoad = kisaIdx > 0 ? dayLoads[kisaIdx-1].load : 0;
+    const varoitus = preKisaLoad >= 3;
+    const loadColors = ['var(--bg2)','#A8D8B9','#EFC97E','#E24B4A'];
+    const loadLabels = ['Lepo','Kevyt','Keski','Kova'];
+
+    h += '<div style="background:var(--card);border-radius:var(--r);padding:10px 14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
+    h += '<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px">📊 Kisaviikon kuormitus</div>';
+    h += '<div style="display:flex;gap:3px;align-items:flex-end;height:44px;margin-bottom:6px">';
+    dayLoads.forEach(d => {
+      const h2 = d.isKisa ? 44 : Math.max(8, d.load * 12);
+      const bg = d.isKisa ? 'var(--rd)' : loadColors[d.load];
+      const border = d.isToday ? '2px solid var(--gd)' : 'none';
+      h += `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">`;
+      h += `<div style="width:100%;height:${h2}px;background:${bg};border-radius:3px;border:${border};position:relative">`;
+      if(d.isKisa) h += `<span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:10px">🏆</span>`;
+      h += `</div>`;
+      h += `<div style="font-size:9px;color:var(--t3)">${d.day.slice(0,2)}</div>`;
+      h += `</div>`;
+    });
+    h += '</div>';
+    if(varoitus){
+      h += '<div style="font-size:11px;color:var(--rd);background:var(--rl);border-radius:var(--rs);padding:6px 10px">⚠️ Kova treeni kisaa edeltävänä päivänä – harkitse lepoa</div>';
+    } else {
+      h += '<div style="font-size:11px;color:var(--gd)">✅ Kuormitus OK ennen kisaa</div>';
+    }
+    h += '</div>';
+  }
+
   // Day cards
   const vkDates = getViikkokisaDatesInRange(weekDates[0], weekDates[6]);
   plan.forEach(day => {
