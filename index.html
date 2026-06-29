@@ -4332,20 +4332,22 @@ const todayEvents = (get('events')||[]);
 const todayKisaEvent = todayEvents.find(e => e.date === todayStr && (e.type==='kisa'||e.type==='viikkokisa'));
 const kisaCheckedToday = localStorage.getItem('fp_kisa_opened') === todayStr;
 
-if(todayKisaEvent && todayHour < 18 && !kisaCheckedToday){
-  // Kisapäivä ja aamu/päivä – avaa treeni-välilehti ja comp_day
-  localStorage.setItem('fp_kisa_opened', todayStr);
-  showPg('train');
-  trainTab('comp_day', null);
-  renderTrain();
+// Palauta viimeksi avattu välilehti
+const lastPage = localStorage.getItem('fp_last_page');
+if(lastPage && ['profile','speed','train','cal','comp','dev'].includes(lastPage)){
+  showPg(lastPage);
 } else {
-  // Palauta viimeksi avattu välilehti
-  const lastPage = localStorage.getItem('fp_last_page');
-  if(lastPage && ['profile','speed','train','cal','comp','dev'].includes(lastPage)){
-    showPg(lastPage);
-  } else {
-    renderProfile();
-  }
+  renderProfile();
+}
+
+// Jos kisapäivä ja aamu – näytä ilmoitus (ei pakkonavigointia)
+if(todayKisaEvent && todayHour < 18 && !kisaCheckedToday){
+  localStorage.setItem('fp_kisa_opened', todayStr);
+  setTimeout(function(){
+    if(typeof showToast === 'function'){
+      showToast('🏆 Kisapäivä! Avaa Treeni → kisapäiväprotokolla');
+    }
+  }, 800);
 }
 migrateOldKeys();
 // Auto-load from Gist on startup
