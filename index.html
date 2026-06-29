@@ -2088,7 +2088,8 @@ function renderWeekView() {
   </div>`;
 
   // Kuormitusmittari
-  const kisaPaivat = plan.filter(d => d.intensity==='comp' || vkDates.has(d.date));
+  const kisaVkDates = getViikkokisaDatesInRange(weekDates[0], weekDates[6]);
+  const kisaPaivat = plan.filter(d => d.intensity==='comp' || kisaVkDates.has(d.date));
   if(kisaPaivat.length > 0){
     // Laske kuormituspisteet per päivä
     const loadMap = {'high':3,'medium':2,'low':1,'rest':0,'comp':0};
@@ -2096,7 +2097,7 @@ function renderWeekView() {
       date: d.date,
       day: d.day,
       load: loadMap[d.intensity]||0,
-      isKisa: d.intensity==='comp'||vkDates.has(d.date),
+      isKisa: d.intensity==='comp'||kisaVkDates.has(d.date),
       isToday: d.date===today
     }));
     const kisaIdx = dayLoads.findIndex(d => d.isKisa);
