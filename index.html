@@ -2108,9 +2108,9 @@ function renderWeekView() {
 
     h += '<div style="background:var(--card);border-radius:var(--r);padding:10px 14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
     h += '<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px">📊 Kisaviikon kuormitus</div>';
-    h += '<div style="display:flex;gap:3px;align-items:flex-end;height:44px;margin-bottom:6px">';
+    h += '<div style="display:flex;gap:3px;align-items:flex-end;height:40px;margin-bottom:6px">';
     dayLoads.forEach(d => {
-      const h2 = d.isKisa ? 44 : Math.max(8, d.load * 12);
+      const h2 = d.isKisa ? 40 : d.load===3 ? 28 : d.load===2 ? 18 : d.load===1 ? 10 : 4;
       const bg = d.isKisa ? 'var(--rd)' : loadColors[d.load];
       const border = d.isToday ? '2px solid var(--gd)' : 'none';
       h += `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">`;
