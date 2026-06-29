@@ -2091,7 +2091,6 @@ function renderWeekView() {
   const kisaVkDates = getViikkokisaDatesInRange(weekDates[0], weekDates[6]);
   const kisaPaivat = plan.filter(d => d.intensity==='comp' || kisaVkDates.has(d.date));
   if(kisaPaivat.length > 0){
-    // Laske kuormituspisteet per päivä
     const loadMap = {'high':3,'medium':2,'low':1,'rest':0,'comp':0};
     const dayLoads = plan.map(d => ({
       date: d.date,
@@ -2100,36 +2099,34 @@ function renderWeekView() {
       isKisa: d.intensity==='comp'||kisaVkDates.has(d.date),
       isToday: d.date===today
     }));
-    const kisaIdx = dayLoads.findIndex(d => d.isKisa);
+    const kisaIdx = dayLoads.findIndex(d => d.isKisa && d.date >= today);
     const preKisaLoad = kisaIdx > 0 ? dayLoads[kisaIdx-1].load : 0;
     const varoitus = preKisaLoad >= 3;
-    const loadColors = ['var(--bg2)','#A8D8B9','#EFC97E','#E24B4A'];
-    const loadLabels = ['Lepo','Kevyt','Keski','Kova'];
+    const loadColors = {'0':'#E8E8E8','1':'#A8D8B9','2':'#EFC97E','3':'#E57373'};
 
-    h += '<div style="background:var(--card);border-radius:var(--r);padding:10px 14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
-    h += '<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:10px">📊 Kisaviikon kuormitus</div>';
-    h += '<div style="display:flex;gap:3px;align-items:flex-end;height:40px;margin-bottom:4px">';
-    dayLoads.forEach(d => {
-      const h2 = d.isKisa ? 40 : d.load===3 ? 28 : d.load===2 ? 18 : d.load===1 ? 10 : 4;
-      const bg = d.isKisa ? 'var(--rd)' : loadColors[d.load];
-      const border = d.isToday ? '2px solid var(--gd)' : 'none';
-      h += `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;overflow:hidden">`;
-      h += `<div style="width:100%;height:${h2}px;background:${bg};border-radius:3px;border:${border};position:relative;overflow:hidden">`;
-      if(d.isKisa) h += `<span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:10px;line-height:1">🏆</span>`;
-      h += `</div>`;
-      h += `<div style="font-size:9px;color:var(--t3)">${d.day.slice(0,2)}</div>`;
-      h += `</div>`;
+    h += '<div style="margin-bottom:12px;padding:10px 12px;background:var(--card);border-radius:var(--r);box-shadow:0 1px 3px rgba(0,0,0,.06)">';
+    h += '<div style="font-size:11px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Kisaviikon kuormitus</div>';
+    h += '<div style="display:flex;gap:4px;margin-bottom:6px">';
+    dayLoads.forEach(function(d){
+      const col = d.isKisa ? '#B71C1C' : loadColors[String(d.load)];
+      const border = d.isToday ? '2px solid var(--gd)' : '1.5px solid transparent';
+      h += '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">';
+      h += '<div style="width:100%;height:28px;border-radius:4px;background:'+col+';border:'+border+';display:flex;align-items:center;justify-content:center">';
+      if(d.isKisa) h += '<span style="font-size:11px">🏆</span>';
+      h += '</div>';
+      h += '<div style="font-size:9px;color:var(--t3);text-align:center">'+d.day.slice(0,2)+'</div>';
+      h += '</div>';
     });
     h += '</div>';
     if(varoitus){
-      h += '<div style="font-size:11px;color:var(--rd);background:var(--rl);border-radius:var(--rs);padding:6px 10px">⚠️ Kova treeni kisaa edeltävänä päivänä – harkitse lepoa</div>';
+      h += '<div style="font-size:11px;color:#B71C1C;padding:5px 8px;background:#FFEBEE;border-radius:6px">⚠️ Kova treeni kisaa edeltävänä päivänä</div>';
     } else {
       h += '<div style="font-size:11px;color:var(--gd)">✅ Kuormitus OK ennen kisaa</div>';
     }
     h += '</div>';
   }
 
-  // Day cards
+    // Day cards
   const vkDates = getViikkokisaDatesInRange(weekDates[0], weekDates[6]);
   plan.forEach(day => {
     const isToday = day.date === today;
