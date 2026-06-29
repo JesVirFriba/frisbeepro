@@ -2107,15 +2107,15 @@ function renderWeekView() {
     const loadLabels = ['Lepo','Kevyt','Keski','Kova'];
 
     h += '<div style="background:var(--card);border-radius:var(--r);padding:10px 14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
-    h += '<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px">📊 Kisaviikon kuormitus</div>';
-    h += '<div style="display:flex;gap:3px;align-items:flex-end;height:40px;margin-bottom:6px">';
+    h += '<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:10px">📊 Kisaviikon kuormitus</div>';
+    h += '<div style="display:flex;gap:3px;align-items:flex-end;height:40px;margin-bottom:4px">';
     dayLoads.forEach(d => {
       const h2 = d.isKisa ? 40 : d.load===3 ? 28 : d.load===2 ? 18 : d.load===1 ? 10 : 4;
       const bg = d.isKisa ? 'var(--rd)' : loadColors[d.load];
       const border = d.isToday ? '2px solid var(--gd)' : 'none';
-      h += `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">`;
-      h += `<div style="width:100%;height:${h2}px;background:${bg};border-radius:3px;border:${border};position:relative">`;
-      if(d.isKisa) h += `<span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:10px">🏆</span>`;
+      h += `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;overflow:hidden">`;
+      h += `<div style="width:100%;height:${h2}px;background:${bg};border-radius:3px;border:${border};position:relative;overflow:hidden">`;
+      if(d.isKisa) h += `<span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:10px;line-height:1">🏆</span>`;
       h += `</div>`;
       h += `<div style="font-size:9px;color:var(--t3)">${d.day.slice(0,2)}</div>`;
       h += `</div>`;
