@@ -3652,6 +3652,41 @@ function renderRatingDev(){
     svg+='<\/div><\/div>';
     h+=svg;
   }
+
+  // === PDGA-RATING KAAVIO ===
+  const pdgaPoints=ratings.filter(r=>r.val).map(r=>({date:r.date,rating:r.val})).sort((a,b)=>a.date.localeCompare(b.date));
+  if(pdgaPoints.length>=1){
+    const W2=340,H2=160,PL2=42,PR2=20,PT2=16,PB2=32;
+    const cW2=W2-PL2-PR2,cH2=H2-PT2-PB2;
+    const pdgaRatings2=pdgaPoints.map(p=>p.rating);
+    const minR2=Math.min(...pdgaRatings2,900),maxR2=Math.max(...pdgaRatings2,950);
+    const rng2=maxR2-minR2||20;
+    const dates2=pdgaPoints.map(p=>p.date);
+    const minD2=dates2[0],maxD2=dates2[dates2.length-1];
+    const dateToX2=d=>{if(minD2===maxD2)return PL2+cW2/2;const t=(new Date(d)-new Date(minD2))/(new Date(maxD2)-new Date(minD2));return PL2+t*cW2;};
+    const ratingToY2=r=>PT2+cH2-((r-minR2)/rng2*cH2);
+    const TARGET2=940,tY2=ratingToY2(TARGET2);
+    const pdgaLine2=pdgaPoints.length>=2?pdgaPoints.map((p,i)=>(i===0?'M':'L')+dateToX2(p.date).toFixed(1)+','+ratingToY2(p.rating).toFixed(1)).join(' '):'';
+    const yLabels2=[minR2,Math.round(minR2+rng2*0.5),maxR2];
+    let svg2='<div class="chart-wrap" style="padding:12px 14px;margin-top:8px"><div style="font-size:13px;font-weight:600;margin-bottom:10px">📊 PDGA-rating kehitys<\/div>';
+    svg2+='<svg viewBox="0 0 '+W2+' '+H2+'" style="width:100%;overflow:visible">';
+    yLabels2.forEach(r=>{const y=ratingToY2(r);svg2+='<line x1="'+PL2+'" y1="'+y.toFixed(1)+'" x2="'+(W2-PR2)+'" y2="'+y.toFixed(1)+'" stroke="var(--border)" stroke-width="0.5"/><text x="'+(PL2-4)+'" y="'+(y+4).toFixed(1)+'" text-anchor="end" font-size="9" fill="var(--t2)">'+r+'<\/text>';});
+    if(TARGET2>=minR2&&TARGET2<=maxR2)svg2+='<line x1="'+PL2+'" y1="'+tY2.toFixed(1)+'" x2="'+(W2-PR2)+'" y2="'+tY2.toFixed(1)+'" stroke="#1D9E75" stroke-width="1" stroke-dasharray="4,3"/><text x="'+(W2-PR2+2)+'" y="'+(tY2+4).toFixed(1)+'" font-size="8" fill="#1D9E75">940<\/text>';
+    if(pdgaLine2)svg2+='<path d="'+pdgaLine2+'" fill="none" stroke="#7B5EA7" stroke-width="1.5" stroke-linejoin="round"/>';
+    pdgaPoints.forEach(p=>{const x=dateToX2(p.date).toFixed(1),y=ratingToY2(p.rating).toFixed(1);svg2+='<circle cx="'+x+'" cy="'+y+'" r="5" fill="#7B5EA7" stroke="white" stroke-width="1.5"><title>'+p.date+' · PDGA '+p.rating+'<\/title><\/circle>';});
+    svg2+='<\/svg>';
+    svg2+='<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;font-size:11px;color:var(--t2)">';
+    svg2+='<div style="display:flex;align-items:center;gap:4px"><div style="width:16px;height:3px;background:#7B5EA7;border-radius:2px"><\/div>PDGA-rating<\/div>';
+    svg2+='<div style="display:flex;align-items:center;gap:4px"><div style="width:16px;height:3px;background:#1D9E75;border-radius:2px"><\/div>Tavoite 940<\/div>';
+    const viimeisin=pdgaPoints[pdgaPoints.length-1];
+    const ensimmainen=pdgaPoints[0];
+    const muutos=viimeisin.rating-ensimmainen.rating;
+    svg2+='<\/div>';
+    svg2+='<div style="font-size:12px;color:var(--t2);margin-top:4px">Nyt: <b style="color:#7B5EA7">'+viimeisin.rating+'<\/b> · Muutos: <b style="color:'+(muutos>=0?'var(--gd)':'#E24B4A')+'">'+(muutos>0?'+':'')+muutos+'<\/b><\/div>';
+    svg2+='<\/div>';
+    h+=svg2;
+  }
+
   if(ratings.length>=2){
     const pdgaV=ratings.map(r=>r.val).filter(Boolean);
     if(pdgaV.length>=2){
