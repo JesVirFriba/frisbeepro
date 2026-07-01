@@ -2593,7 +2593,20 @@ function renderPuttiTrain(){
   const sessions=get('putti_sessions')||[];
   const totals={};
   PTDISTS.forEach(d=>{totals[d.key]={m:0,a:0}});
-  sessions.forEach(s=>PTDISTS.forEach(d=>{if(s[d.key]){totals[d.key].m+=s[d.key].m;totals[d.key].a+=s[d.key].a}}));
+  sessions.forEach(s=>{
+    // Vanha muoto: s.d6, s.d8 jne
+    PTDISTS.forEach(d=>{if(s[d.key]){totals[d.key].m+=s[d.key].m;totals[d.key].a+=s[d.key].a}});
+    // Uusi muoto: s.sarjat array
+    if(s.sarjat){
+      s.sarjat.forEach(function(sj){
+        const dist=sj.dist||3;
+        const dk=PTDISTS.find(d=>d.dist===dist);
+        if(!dk)return;
+        totals[dk.key].m+=sj.made||0;
+        totals[dk.key].a+=10;
+      });
+    }
+  });
 
   const puttiPhase=get('putti_phase')||1;
   const todayKey='putti_today_'+new Date().toISOString().slice(0,10);
