@@ -1552,6 +1552,7 @@ function wireCompEvents(cont, protocol){
 
 function renderCompDay(){
   var cont=document.getElementById('train-content');
+  var today=new Date().toISOString().slice(0,10);
   var protocol=buildCompProtocol();
   var todayChecks=get('comp_day_checks')||{};
   var totalSteps=protocol.reduce(function(a,p){return a+p.steps.length},0);
