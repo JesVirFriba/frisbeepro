@@ -2072,7 +2072,6 @@ function renderWeekView() {
 
   // Week summary bar
   const compCount = plan.filter(d => d.intensity === 'comp').length;
-  const trainCount = plan.filter(d => d.intensity !== 'rest' && d.intensity !== 'comp').length;
   const restCount = plan.filter(d => d.intensity === 'rest').length;
   // Laske uniikit treeni-päivät viikolta
   const wDates = weekDates.map(d => dateStr(d));
