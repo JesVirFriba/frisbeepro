@@ -2074,14 +2074,13 @@ function renderWeekView() {
   const compCount = plan.filter(d => d.intensity === 'comp').length;
   const trainCount = plan.filter(d => d.intensity !== 'rest' && d.intensity !== 'comp').length;
   const restCount = plan.filter(d => d.intensity === 'rest').length;
-  const doneMap = get('done_map') || {};
-  const doneCount = plan.filter(d => {
-    if(d.intensity === 'rest' || d.intensity === 'comp') return false;
-    const dm = doneMap[d.date];
-    if(!dm) return false;
-    const type = dm.type || '';
-    return type !== 'kisa' && type !== 'viikkokisa';
-  }).length;
+  // Laske sessiot viikolta
+  const wDates = weekDates.map(d => dateStr(d));
+  const puttiSessCount = (get('putti_sessions')||[]).filter(s => wDates.includes(s.date)).length;
+  const speedSessCount = (get('speeds')||[]).filter(s => wDates.includes(s.date)).length;
+  const kierrosSessCount = Object.entries(get('kierros_map')||{}).filter(([k,v]) => wDates.includes(k) && v.result).length;
+  const doneCount = puttiSessCount + speedSessCount + kierrosSessCount;
+  const trainCount = plan.filter(d => d.intensity !== 'rest' && d.intensity !== 'comp').reduce((sum, d) => sum + (d.sessions||[]).filter(s => s !== 'lepo' && s !== 'kisa').length, 0);
   const doneCompCount = plan.filter(d => d.intensity === 'comp' && (get('comps')||[]).some(c=>c.date===d.date&&c.mrating)).length;
   const weekComps = plan.filter(d=>d.intensity==='comp').map(d=>{
     const comps=(get('comps')||[]).filter(c=>c.date===d.date);
