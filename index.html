@@ -2072,14 +2072,9 @@ function renderWeekView() {
 
   // Week summary bar
   const compCount = plan.filter(d => d.intensity === 'comp').length;
+  const trainCount = plan.filter(d => d.intensity !== 'rest' && d.intensity !== 'comp').length;
   const restCount = plan.filter(d => d.intensity === 'rest').length;
-  // Laske uniikit treeni-päivät viikolta
-  const wDates = weekDates.map(d => dateStr(d));
-  const puttiDays = new Set((get('putti_sessions')||[]).filter(s => wDates.includes(s.date)).map(s => s.date)).size;
-  const speedDays = new Set((get('speeds')||[]).filter(s => wDates.includes(s.date)).map(s => s.date)).size;
-  const kierrosDays = new Set(Object.entries(get('kierros_map')||{}).filter(([k,v]) => wDates.includes(k) && v.result).map(([k]) => k)).size;
-  const doneCount = puttiDays + speedDays + kierrosDays;
-  const trainCount = plan.filter(d => d.intensity !== 'rest' && d.intensity !== 'comp').reduce((sum, d) => sum + (d.sessions||[]).filter(s => s !== 'lepo' && s !== 'kisa').length, 0);
+  const doneCount = plan.filter(d => d.intensity !== 'rest' && d.intensity !== 'comp' && getDone(d.date)).length;
   const doneCompCount = plan.filter(d => d.intensity === 'comp' && (get('comps')||[]).some(c=>c.date===d.date&&c.mrating)).length;
   const weekComps = plan.filter(d=>d.intensity==='comp').map(d=>{
     const comps=(get('comps')||[]).filter(c=>c.date===d.date);
