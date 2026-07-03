@@ -4340,6 +4340,10 @@ function syncAllCompsToCalendar(){
   }
 })();
 
+// Globaalit apumuuttujat
+window.today = new Date().toISOString().slice(0,10);
+setInterval(function(){ window.today = new Date().toISOString().slice(0,10); }, 60000);
+
 // Kisapäivän automaattinen avautuminen
 const todayStr = new Date().toISOString().slice(0,10);
 const todayHour = new Date().getHours();
