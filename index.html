@@ -883,10 +883,10 @@ function renderProfile(){
   let lastMx=p.metrix||939;
   if(lastMxFromComps)lastMx=lastMxFromComps;
   else if(lastMxFromRatings)lastMx=lastMxFromRatings;
-  const bhSp=speeds.filter(s=>s.bh5>0);
-  const fhSp=speeds.filter(s=>s.fh5>0);
-  const bestBH=bhSp.length?Math.max(...bhSp.map(s=>s.bh5)):null;
-  const bestFH=fhSp.length?Math.max(...fhSp.map(s=>s.fh5)):null;
+  const bhSp=speeds.filter(s=>(s.bh5||s.bhAvg||0)>0);
+  const fhSp=speeds.filter(s=>(s.fh5||s.fhAvg||0)>0);
+  const bestBH=bhSp.length?Math.max(...bhSp.map(s=>s.bh5||s.bhAvg||0)):null;
+  const bestFH=fhSp.length?Math.max(...fhSp.map(s=>s.fh5||s.fhAvg||0)):null;
   const bestComp=comps.length?comps.slice().sort((a,b)=>(b.mrating||0)-(a.mrating||0))[0]:null;
   const rPct=p.target&&p.rating&&p.target>p.rating?Math.min(100,Math.round(((lastPDGA-p.rating)/(p.target-p.rating))*100)):0;
 
@@ -1096,10 +1096,10 @@ function buildCtx(){
   const disc=get('disc_analytics');
   const lastPDGA=ratings.length?ratings[ratings.length-1].val:p.rating;
   const lastMx=ratings.length&&ratings[ratings.length-1].mval?ratings[ratings.length-1].mval:p.metrix;
-  const bhSp=speeds.filter(s=>s.bh5>0);
-  const fhSp=speeds.filter(s=>s.fh5>0);
-  const bestBH=bhSp.length?Math.max(...bhSp.map(s=>s.bh5)):null;
-  const bestFH=fhSp.length?Math.max(...fhSp.map(s=>s.fh5)):null;
+  const bhSp=speeds.filter(s=>(s.bh5||s.bhAvg||0)>0);
+  const fhSp=speeds.filter(s=>(s.fh5||s.fhAvg||0)>0);
+  const bestBH=bhSp.length?Math.max(...bhSp.map(s=>s.bh5||s.bhAvg||0)):null;
+  const bestFH=fhSp.length?Math.max(...fhSp.map(s=>s.fh5||s.fhAvg||0)):null;
   const PTDISTS2=['d4','d6','d8','d10','d12','d16','d20'];
   const PLBLS2={d4:'C1·4m',d6:'C1·6m',d8:'C1·8m',d10:'C1·10m',d12:'C2·12m',d16:'C2·16m',d20:'C2·20m'};
   const pt={};PTDISTS2.forEach(k=>{pt[k]={m:0,a:0}});
@@ -1168,10 +1168,10 @@ function renderSpeed(){
   const p=get('profile')||DEF;
   const speeds=(get('speeds')||[]).sort((a,b)=>a.date.localeCompare(b.date));
   const disc=get('disc_analytics');
-  const bhSp=speeds.filter(s=>s.bh5>0);
-  const fhSp=speeds.filter(s=>s.fh5>0);
-  const bestBH=bhSp.length?Math.max(...bhSp.map(s=>s.bh5)):null;
-  const bestFH=fhSp.length?Math.max(...fhSp.map(s=>s.fh5)):null;
+  const bhSp=speeds.filter(s=>(s.bh5||s.bhAvg||0)>0);
+  const fhSp=speeds.filter(s=>(s.fh5||s.fhAvg||0)>0);
+  const bestBH=bhSp.length?Math.max(...bhSp.map(s=>s.bh5||s.bhAvg||0)):null;
+  const bestFH=fhSp.length?Math.max(...fhSp.map(s=>s.fh5||s.fhAvg||0)):null;
   let h='';
   if(bestBH||bestFH){
     h+=`<div class="speed-hero">
@@ -1184,7 +1184,7 @@ function renderSpeed(){
       ${[['BH 5m',Math.max(...speeds.map(s=>s.bh5||0)).toFixed(1),'bd'],['BH SS',Math.max(...speeds.map(s=>s.bhss||0)).toFixed(1),'bd'],['BH KN',Math.max(...speeds.map(s=>s.bhkn||0)||[0]).toFixed(1),'bd'],['FH 5m',Math.max(...speeds.map(s=>s.fh5||0)).toFixed(1),'pd'],['FH SS',Math.max(...speeds.map(s=>s.fhss||0)).toFixed(1),'pd'],['FH KN',Math.max(...speeds.map(s=>s.fhkn||0)||[0]).toFixed(1),'pd']].map(([l,val,col])=>`<div class="stc"><div class="stc-l">${l}<\/div><div class="stc-v" style="color:var(--${col})">${parseFloat(val)>0?val:'–'}<\/div><\/div>`).join('')}
     <\/div>`;
     if(bhSp.length>=2){
-      const mx=Math.max(...bhSp.map(s=>s.bh5)),mn=Math.min(...bhSp.map(s=>s.bh5)),rng=mx-mn||5;
+      const mx=Math.max(...bhSp.map(s=>s.bh5||s.bhAvg||0)),mn=Math.min(...bhSp.map(s=>s.bh5)),rng=mx-mn||5;
       h+=`<div class="chart-wrap"><div style="font-size:13px;font-weight:600;margin-bottom:10px">BH kehitys<\/div><div class="bar-chart">`;
       bhSp.slice(-12).forEach(s=>{const pct=Math.round(((s.bh5-mn)/rng)*75)+15;h+=`<div class="bc"><div class="bv">${s.bh5.toFixed(0)}<\/div><div class="bb" style="height:${pct}%;background:${s.bh5===mx?'#1D9E75':'#85B7EB'}"><\/div><div class="bl">${s.date.slice(5)}<\/div><\/div>`;});
       h+=`<\/div><\/div>`;
