@@ -271,6 +271,7 @@ textarea{resize:none;min-height:65px}
     <select id="qr-course" style="width:100%;padding:9px;border-radius:var(--rs);border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px">
       <option value="">– Valitse rata –</option>
       <option value="karkkila-gold-2024">Karkkila Gold (2024, par 59)</option>
+      <option value="kippasuo-pro-long-2026">Kippasuo Pro Long (2026, par 64)</option>
       <option value="tali-kesa-2025">Tali (Kesä 2025, par 58)</option>
       <option value="keinukallio-2024">Keinukallio (2024, par 62)</option>
       <option value="ford-punaiset-2023">Ford (Punaiset 2023, par 60)</option>
@@ -1711,6 +1712,15 @@ const COURSES = [
     rating:1028,
     holes:[4,5,3,3,3,3,3,4,3,3,3,3,3,3,3,4,3,3],
     ratingTable:{58:1079,59:1070,60:1062,61:1053,62:1045,63:1036,64:1028,65:1019,66:1011,67:1002,68:994,69:985,70:977,71:968,72:960,73:951,74:943,75:934,76:926,77:917,78:909,79:900,80:892,81:883,82:875,83:866,84:858,85:850,86:841,87:832,88:824,89:816,90:807,91:799,92:790,93:782,94:773,95:765,96:756,97:748,98:739,99:731,100:722,101:714,102:705,103:697,104:688,105:680,106:671,107:663,108:654,109:646,110:637,111:629,112:620,113:612,114:603,115:595,116:586,117:578}
+  },
+  {
+    id:'kippasuo-pro-long-2026',
+    name:'Kippasuo',
+    layout:'Pro Long (2026)',
+    par:64,
+    rating:947,
+    holes:[],
+    ratingTable:{54:1098,55:1086,56:1075,57:1064,58:1053,59:1042,60:1030,61:1019,62:1008,63:997,64:986,65:974,66:963,67:952,68:941,69:930,70:937,71:907,72:896,73:885,74:873,75:862,76:851,77:840,78:828,79:817,80:806}
   },
   {
     id:'karkkila-gold-2024',
@@ -3413,7 +3423,7 @@ function renderViikkokisa(){
   });
 
   // Kirjaa tulos -nappi
-  h+='<button onclick="openM(\'m-kierros\')" style="width:100%;margin-top:16px;padding:13px;border-radius:var(--r);border:none;background:var(--g);color:#fff;font-size:14px;font-weight:700;cursor:pointer">📝 Kirjaa tulos kisan jälkeen</button>';
+  h+='<button onclick="trainTab(\'kierros\',null);renderTrain()" style="width:100%;margin-top:16px;padding:13px;border-radius:var(--r);border:none;background:var(--g);color:#fff;font-size:14px;font-weight:700;cursor:pointer">📝 Kirjaa tulos kisan jälkeen</button>';
   h+='<button onclick="trainTab(\'week\',null);renderTrain()" class="btn btn-out" style="width:100%;margin-top:8px">← Takaisin viikko-ohjelmaan</button>';
 
   cont.innerHTML=h;
