@@ -2594,10 +2594,8 @@ function renderPuttiTrain(){
   const totals={};
   PTDISTS.forEach(d=>{totals[d.key]={m:0,a:0}});
   sessions.forEach(s=>{
-    // Vanha muoto: s.d6, s.d8 jne
-    PTDISTS.forEach(d=>{if(s[d.key]){totals[d.key].m+=s[d.key].m;totals[d.key].a+=s[d.key].a}});
-    // Uusi muoto: s.sarjat array
-    if(s.sarjat){
+    // Uusi muoto: s.sarjat array – käytetään tätä jos löytyy
+    if(s.sarjat && s.sarjat.length > 0){
       s.sarjat.forEach(function(sj){
         const dist=sj.dist||3;
         const dk=PTDISTS.find(d=>d.dist===dist);
@@ -2605,6 +2603,9 @@ function renderPuttiTrain(){
         totals[dk.key].m+=sj.made||0;
         totals[dk.key].a+=10;
       });
+    } else {
+      // Vanha muoto: s.d6, s.d8 jne – käytetään vain jos sarjat puuttuu
+      PTDISTS.forEach(d=>{if(s[d.key]){totals[d.key].m+=s[d.key].m;totals[d.key].a+=s[d.key].a}});
     }
   });
 
@@ -2740,21 +2741,23 @@ function renderPuttiTrain(){
   PTDISTS.forEach(d=>{totalsN[d.key]={m:0,a:0};totalsH[d.key]={m:0,a:0};});
   sessions.forEach(s=>{
     const tyyli=s.tyyli||'normaali';
-    PTDISTS.forEach(d=>{
-      if(s[d.key]){
-        if(tyyli==='haara'){totalsH[d.key].m+=s[d.key].m;totalsH[d.key].a+=s[d.key].a;}
-        else{totalsN[d.key].m+=s[d.key].m;totalsN[d.key].a+=s[d.key].a;}
-      }
-    });
-    // sarjat-muoto
-    if(s.sarjat){
+    if(s.sarjat && s.sarjat.length > 0){
+      // Uusi muoto: sarjat array
       s.sarjat.forEach(function(sj){
         const dist=sj.dist||3;
         const dk=PTDISTS.find(d=>d.dist===dist);
         if(!dk)return;
-        const t2=sj.tyyli||'normaali';
+        const t2=sj.tyyli||tyyli;
         if(t2==='haara'){totalsH[dk.key].m+=sj.made||0;totalsH[dk.key].a+=10;}
         else{totalsN[dk.key].m+=sj.made||0;totalsN[dk.key].a+=10;}
+      });
+    } else {
+      // Vanha muoto: d6, d8 jne
+      PTDISTS.forEach(d=>{
+        if(s[d.key]){
+          if(tyyli==='haara'){totalsH[d.key].m+=s[d.key].m;totalsH[d.key].a+=s[d.key].a;}
+          else{totalsN[d.key].m+=s[d.key].m;totalsN[d.key].a+=s[d.key].a;}
+        }
       });
     }
   });
