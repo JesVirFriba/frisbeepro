@@ -2190,10 +2190,20 @@ function renderWeekView() {
       h += '<div style="font-size:10px;color:var(--gd);flex-shrink:0;padding:3px 7px;border:1px solid var(--g);border-radius:20px">✓ Kisattu</div>';
     } else if(isPast && day.intensity !== 'rest' && !isCompDay){
       h += '<div onclick="event.stopPropagation();setDone(\''+day.date+'\',1);renderTrain()" style="font-size:10px;color:var(--t3);cursor:pointer;flex-shrink:0;padding:3px 7px;border:1px solid var(--border);border-radius:20px">Merkitse</div>';
+    } else if(clickable && routableSessions.length > 1){
+      const SESSION_SHORT={heitto_tek:'Tekniikka',heitto_nop:'Nopeus',putti:'Putti',mob:'Liikkuvuus',str:'Voima',aktivointi:'Aktivointi',kierros:'Kierros',voima_a:'Voima A',voima_b:'Voima B'};
+      const subKey='fp_sub_'+day.date;
+      const doneSubs=JSON.parse(localStorage.getItem(subKey)||'{}');
+      h += '<div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">';
+      routableSessions.forEach(function(s){
+        const sdone=!!doneSubs[s];
+        const slbl=SESSION_SHORT[s]||s;
+        h += '<div onclick="event.stopPropagation();(function(){var k=\'fp_sub_'+day.date+'\';var d=JSON.parse(localStorage.getItem(k)||\'{}\');d[\''+s+'\']=!d[\''+s+'\'];localStorage.setItem(k,JSON.stringify(d));var allDone=Object.keys(d).length>0&&Object.values(d).every(Boolean);setDone(\''+day.date+'\',allDone?1:null);renderTrain();})()" style="font-size:10px;cursor:pointer;padding:2px 6px;border-radius:10px;border:1px solid '+(sdone?'var(--g)':'var(--border)')+';background:'+(sdone?'var(--gl)':'transparent')+';color:'+(sdone?'var(--gd)':'var(--t2)')+'">'+(sdone?'✓ ':'')+slbl+'</div>';
+      });
+      h += '</div>';
     } else if(clickable){
-      h += '<div style="font-size:16px;color:'+sc.col+';flex-shrink:0">'+(routableSessions.length>1?'⋮':'›')+'</div>';
-    }
-    h += '</div>';
+      h += '<div style="font-size:16px;color:'+sc.col+';flex-shrink:0">›</div>';
+    }    h += '</div>';
   });
 
   // Week summary card for past weeks
