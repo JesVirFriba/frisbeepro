@@ -935,7 +935,6 @@ function renderProfile(){
   // Get today's session from week plan – sama logiikka kuin viikko-ohjelma
   const todayPlan=(()=>{
     if(isCompToday)return{note:'KISAPÄIVÄ – seuraa protokollaa',icon:'🏆'};
-    if(isPreComp)return{note:'Aktivointi + putti – kisa huomenna',icon:'⚡'};
     try {
       const wDates=getWeekDates(0);
       const plan=buildWeekPlan(wDates);
