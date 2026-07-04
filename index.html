@@ -932,21 +932,17 @@ function renderProfile(){
   const isCompToday=nextComp&&nextComp.date===todayStr;
   const isPreComp=nextComp&&nextComp.date===tomorrowStr;
 
-  // Get today's session from week plan
+  // Get today's session from week plan – sama logiikka kuin viikko-ohjelma
   const todayPlan=(()=>{
-    const base=[
-      {day:0,note:'Täysi lepo – palautuminen',icon:'😴'},
-      {day:1,note:'Tekniikkaheitto + putti',icon:'🥏'},
-      {day:2,note:'Voima A – alaraaja + rotaatio',icon:'💪'},
-      {day:3,note:'Aktivointi + putti',icon:'⚡'},
-      {day:4,note:'Nopeusheitto',icon:'⚡'},
-      {day:5,note:'Voima B – keskivartalo + yläraaja',icon:'💪'},
-      {day:6,note:'Putti + kenttäkierros',icon:'🎯'},
-    ];
-    const dow=new Date().getDay();
     if(isCompToday)return{note:'KISAPÄIVÄ – seuraa protokollaa',icon:'🏆'};
     if(isPreComp)return{note:'Aktivointi + putti – kisa huomenna',icon:'⚡'};
-    return base[dow]||base[0];
+    try {
+      const wDates=getWeekDates(0);
+      const plan=buildWeekPlan(wDates);
+      const entry=plan.find(d=>d.date===todayStr);
+      if(entry)return{note:entry.note,icon:entry.icon};
+    } catch(e){}
+    return{note:'Treeniä tänään',icon:'🥏'};
   })();
 
   // Coach message logic
