@@ -1186,7 +1186,7 @@ function renderSpeed(){
     if(bhSp.length>=2){
       const mx=Math.max(...bhSp.map(s=>s.bh5||s.bhAvg||0)),mn=Math.min(...bhSp.map(s=>s.bh5||s.bhAvg||0)),rng=mx-mn||5;
       h+=`<div class="chart-wrap"><div style="font-size:13px;font-weight:600;margin-bottom:10px">BH kehitys<\/div><div class="bar-chart">`;
-      bhSp.slice(-12).forEach(s=>{const pct=Math.round(((s.bh5-mn)/rng)*75)+15;h+=`<div class="bc"><div class="bv">${s.bh5.toFixed(0)}<\/div><div class="bb" style="height:${pct}%;background:${s.bh5===mx?'#1D9E75':'#85B7EB'}"><\/div><div class="bl">${s.date.slice(5)}<\/div><\/div>`;});
+      bhSp.slice(-12).forEach(s=>{const v=s.bh5||s.bhAvg||0;const pct=Math.round(((v-mn)/rng)*75)+15;h+=`<div class="bc"><div class="bv">${v.toFixed(0)}<\/div><div class="bb" style="height:${pct}%;background:${v===mx?'#1D9E75':'#85B7EB'}"><\/div><div class="bl">${s.date.slice(5)}<\/div><\/div>`});
       h+=`<\/div><\/div>`;
     }
   }else{
@@ -2918,12 +2918,8 @@ function renderPuttiTrain(){
       if(e)e.preventDefault();
       const s=get('putti_sarjat_'+today3)||[];
       if(!s.length)return;
-      const sarjatObj=s.map(function(v){return typeof v==='object'?v:{made:v,dist:3};});
-      const made=sarjatObj.reduce((a,v)=>a+(v.made||0),0);
-      const total=sarjatObj.length*10;
+      const sarjatObj=s.map(function(v){return typeof v==='object'?v:{made:v,dist:6,tyyli:'normaali'};});
       const sess={id:Date.now(),date:today3,tyyli:get('putti_tyyli')||'normaali'};
-      const distKey=puttiPhase===1?'d5':puttiPhase===2?'d5':'d5';
-      sess[distKey]={m:made,a:total};
       sess.sarjat=sarjatObj;
       const sessions2=get('putti_sessions')||[];
       sessions2.push(sess);
@@ -4572,7 +4568,17 @@ function syncAllCompsToCalendar(){
       cleaned++;
     }
   });
-  if(cleaned > 0) {
+  // Siivoa puttisessioista duplikaatti d-kentät jos sarjat on olemassa
+  if(d.putti_sessions) {
+    d.putti_sessions = d.putti_sessions.map(function(s) {
+      if(s.sarjat && s.sarjat.length > 0) {
+        var clean = {id:s.id, date:s.date, tyyli:s.tyyli||'normaali', sarjat:s.sarjat};
+        return clean;
+      }
+      return s;
+    });
+  }
+  if(cleaned > 0 || true) {
     localStorage.setItem('fp_complete_v1', JSON.stringify(d));
   }
 })();
