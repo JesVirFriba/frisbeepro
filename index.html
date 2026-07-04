@@ -3475,9 +3475,24 @@ function renderKierros(){
     prevDates.forEach(function(d){
       const kd=allKierros[d];const isOpen=saved._histOpen===d;
       const prevCourse=getCourseById(kd.courseId||'');
-      h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden"><div class="kierros-hist-toggle" data-date="'+d+'" style="display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer"><div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text)">'+d+(prevCourse?' · '+prevCourse.name:kd.kentta?' · '+kd.kentta:'')+'</div><div style="font-size:11px;color:var(--t2)">'+(kd.focus||'Ei fokusta')+(kd.result?' · '+kd.result+' ht':'')+(kd.calcRating?' · '+kd.calcRating+' rating':'')+'</div></div><div style="font-size:14px;color:var(--t3)">'+(isOpen?'▲':'▼')+'</div></div>'+(isOpen?'<div style="padding:0 14px 12px;border-top:.5px solid var(--border)">'+(kd.positive?'<div style="font-size:12px;color:var(--gd);margin-top:8px">✓ '+kd.positive+'</div>':'')+(prevCourse?'<div style="font-size:11px;color:var(--t2);margin-top:4px">'+prevCourse.layout+' · Par '+prevCourse.par+' · Rating '+prevCourse.rating+'</div>':'')+'</div>':'')+'</div>';
-    });
-  }
+      const c1str=(kd.c1_made!==undefined&&kd.c1_att)?'C1: '+kd.c1_made+'/'+kd.c1_att+' = '+Math.round(kd.c1_made/kd.c1_att*100)+'%':'';
+      const fhstr=kd.fh_hit!==undefined?'FH: '+kd.fh_hit:'';
+      const obstr=kd.ob_count?'OB: '+kd.ob_count:'';
+      const statsStr=[c1str,fhstr,obstr].filter(Boolean).join(' · ');
+      h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden">';
+      h+='<div class="kierros-hist-toggle" data-date="'+d+'" style="display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer">';
+      h+='<div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text)">'+d+(prevCourse?' · '+prevCourse.name:kd.kentta?' · '+kd.kentta:'')+'</div>';
+      h+='<div style="font-size:11px;color:var(--t2)">'+(kd.focus||'Ei fokusta')+(kd.result?' · '+kd.result+' ht':'')+(kd.calcRating?' · '+kd.calcRating+' rating':'')+'</div></div>';
+      h+='<div style="font-size:14px;color:var(--t3)">'+(isOpen?'▲':'▼')+'</div></div>';
+      if(isOpen){
+        h+='<div style="padding:0 14px 12px;border-top:.5px solid var(--border)">';
+        if(kd.positive)h+='<div style="font-size:12px;color:var(--gd);margin-top:8px">✓ '+kd.positive+'</div>';
+        if(prevCourse)h+='<div style="font-size:11px;color:var(--t2);margin-top:4px">'+prevCourse.layout+' · Par '+prevCourse.par+' · Rating '+prevCourse.rating+'</div>';
+        if(statsStr)h+='<div style="font-size:11px;color:var(--t2);margin-top:4px">'+statsStr+'</div>';
+        h+='</div>';
+      }
+      h+='</div>';
+    }); }
   h+='<button onclick="trainTab(\'week\',null);renderTrain()" class="btn btn-out" style="margin-top:4px;width:100%">← Takaisin viikko-ohjelmaan</button>';
   h+='<div class="page-spacer"></div>';cont.innerHTML=h;
   // Wire course selection
