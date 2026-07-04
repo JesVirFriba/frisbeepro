@@ -2506,6 +2506,7 @@ function renderTrain(){
   else if(trainTabCur==='putti')renderPuttiTrain();
   else if(trainTabCur==='mob')renderMob();
   else if(trainTabCur==='aktivointi')renderAktivointi();
+  else if(trainTabCur==='kierros_vayla')renderKierrosVayla();
   else if(trainTabCur==='kierros')renderKierros();
   else if(trainTabCur==='comp_day')renderCompDay();
   else if(trainTabCur==='session_pick')renderSessionPick();
@@ -3179,6 +3180,190 @@ function renderAktivointi(){
   });
 }
 
+// Väyläkohtainen kierroskirjaus
+let vaylaKierrosPvm = null;
+let vaylaKierrosCourse = null;
+let vaylaKierrosHole = 1;
+let vaylaKierrosData = {}; // {hole: {score, fh, c1in, c1ohi, bull, ob}}
+
+function startVaylaKierros(courseId, pvm) {
+  vaylaKierrosCourse = getCourseById(courseId);
+  vaylaKierrosPvm = pvm || new Date().toISOString().slice(0,10);
+  vaylaKierrosHole = 1;
+  // Ladataan olemassaoleva data jos on
+  const saved = getKierros(vaylaKierrosPvm) || {};
+  vaylaKierrosData = saved.vaylaData || {};
+  trainTab('kierros_vayla', null);
+  renderTrain();
+}
+
+function vaylaSetScore(delta) {
+  const h = vaylaKierrosHole;
+  const par = vaylaKierrosCourse ? (vaylaKierrosCourse.holes[h-1] || 3) : 3;
+  if (!vaylaKierrosData[h]) vaylaKierrosData[h] = {score: par, fh:0, c1in:0, c1ohi:0, bull:0, ob:0};
+  vaylaKierrosData[h].score = Math.max(1, (vaylaKierrosData[h].score||par) + delta);
+  renderTrain();
+}
+
+function vaylaCounter(field, delta) {
+  const h = vaylaKierrosHole;
+  const par = vaylaKierrosCourse ? (vaylaKierrosCourse.holes[h-1] || 3) : 3;
+  if (!vaylaKierrosData[h]) vaylaKierrosData[h] = {score: par, fh:0, c1in:0, c1ohi:0, bull:0, ob:0};
+  vaylaKierrosData[h][field] = Math.max(0, (vaylaKierrosData[h][field]||0) + delta);
+  renderTrain();
+}
+
+function vaylaNav(dir) {
+  const total = vaylaKierrosCourse ? vaylaKierrosCourse.holes.length : 18;
+  vaylaKierrosHole = Math.max(1, Math.min(total, vaylaKierrosHole + dir));
+  renderTrain();
+}
+
+function vaylaSaveKierros() {
+  const course = vaylaKierrosCourse;
+  const holes = course ? course.holes : Array(18).fill(3);
+  const total = holes.length;
+  let totalScore = 0, totalPar = 0, c1in = 0, c1ohi = 0, fh = 0, bull = 0, ob = 0;
+  const holesArr = [];
+  for (let i = 1; i <= total; i++) {
+    const par = holes[i-1] || 3;
+    const d = vaylaKierrosData[i] || {score: par, fh:0, c1in:0, c1ohi:0, bull:0, ob:0};
+    totalScore += d.score || par;
+    totalPar += par;
+    c1in += d.c1in || 0;
+    c1ohi += d.c1ohi || 0;
+    fh += d.fh || 0;
+    bull += d.bull || 0;
+    ob += d.ob || 0;
+    holesArr.push(d.score || par);
+  }
+  const parDiff = totalScore - totalPar;
+  const calcRating = course ? getRatingFromTable(course, totalScore) : null;
+  const saved = getKierros(vaylaKierrosPvm) || {};
+  const entry = {
+    ...saved,
+    date: vaylaKierrosPvm,
+    result: String(totalScore),
+    par: parDiff,
+    courseId: course ? course.id : '',
+    kentta: course ? course.name : '',
+    calcRating,
+    holes: holesArr,
+    vaylaData: vaylaKierrosData,
+    c1_made: c1in,
+    c1_att: c1in + c1ohi,
+    c1_pct: (c1in+c1ohi) > 0 ? Math.round(c1in/(c1in+c1ohi)*100) : null,
+    fh_hit: fh,
+    bull_hit: bull,
+    ob_count: ob
+  };
+  setKierros(vaylaKierrosPvm, entry);
+  setDone(vaylaKierrosPvm, 1);
+  showToast('Kierros tallennettu' + (calcRating ? ' · ' + calcRating : ''));
+  trainTab('week', null);
+  renderTrain();
+}
+
+function renderKierrosVayla() {
+  const cont = document.getElementById('train-content');
+  const course = vaylaKierrosCourse;
+  const holes = course ? course.holes : Array(18).fill(3);
+  const total = holes.length;
+  const h = vaylaKierrosHole;
+  const par = holes[h-1] || 3;
+  const d = vaylaKierrosData[h] || {score: par, fh:0, c1in:0, c1ohi:0, bull:0, ob:0};
+  const score = d.score !== undefined ? d.score : par;
+  const diff = score - par;
+  const diffStr = diff === 0 ? 'E' : diff > 0 ? '+'+diff : String(diff);
+  const diffCol = diff <= -2 ? '#0C447C' : diff === -1 ? '#3B6D11' : diff === 0 ? 'var(--text-secondary)' : diff === 1 ? '#633806' : '#791F1F';
+  const diffBg = diff <= -2 ? '#E6F1FB' : diff === -1 ? '#EAF3DE' : diff === 0 ? 'var(--surface-1)' : diff === 1 ? '#FAEEDA' : '#FCEBEB';
+
+  // Tilastot tähän mennessä
+  let totC1in=0, totC1ohi=0, totFH=0, totScore=0, totPar=0;
+  for(let i=1; i<=total; i++){
+    const di = vaylaKierrosData[i]||{};
+    const pi = holes[i-1]||3;
+    totC1in += di.c1in||0;
+    totC1ohi += di.c1ohi||0;
+    totFH += di.fh||0;
+    totScore += (di.score||pi);
+    totPar += pi;
+  }
+  const totDiff = totScore - totPar;
+  const totDiffStr = totDiff === 0 ? 'E' : totDiff > 0 ? '+'+totDiff : String(totDiff);
+  const c1pct = (totC1in+totC1ohi)>0 ? Math.round(totC1in/(totC1in+totC1ohi)*100)+'%' : '–';
+  const doneHoles = Object.keys(vaylaKierrosData).length;
+
+  let html = '';
+
+  // Edistymispalkki
+  html += '<div style="display:flex;gap:3px;margin-bottom:14px">';
+  for(let i=1; i<=total; i++){
+    const isDone = !!vaylaKierrosData[i];
+    const isCur = i === h;
+    const bg = isCur ? '#378ADD' : isDone ? '#1D9E75' : 'var(--border)';
+    html += `<div style="flex:1;height:3px;border-radius:2px;background:${bg}"></div>`;
+  }
+  html += '</div>';
+
+  // Header
+  html += `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">`;
+  html += `<div><div style="font-size:26px;font-weight:500;color:var(--text-primary)">Väylä ${h}</div><div style="font-size:13px;color:var(--t2);margin-top:1px">Par ${par} · ${course?course.name:''}</div></div>`;
+  html += `<div style="display:flex;gap:8px">`;
+  html += `<button onclick="vaylaNav(-1)" style="width:36px;height:36px;border-radius:50%;border:0.5px solid var(--border);background:var(--card);font-size:18px;cursor:pointer;color:var(--text)">‹</button>`;
+  html += `<button onclick="vaylaNav(1)" style="width:36px;height:36px;border-radius:50%;border:0.5px solid var(--border);background:var(--card);font-size:18px;cursor:pointer;color:var(--text)">›</button>`;
+  html += `</div></div>`;
+
+  // Tulos-kortti
+  html += `<div style="background:var(--card);border-radius:12px;border:0.5px solid var(--border);padding:14px 16px;margin-bottom:10px">`;
+  html += `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">`;
+  html += `<div style="font-size:48px;font-weight:500;color:var(--text);line-height:1">${score}</div>`;
+  html += `<div style="font-size:18px;font-weight:500;padding:4px 14px;border-radius:20px;background:${diffBg};color:${diffCol}">${diffStr}</div>`;
+  html += `</div>`;
+  html += `<div style="display:flex;gap:8px">`;
+  html += `<button onclick="vaylaSetScore(-1)" style="flex:1;height:52px;border-radius:8px;border:0.5px solid var(--border);background:var(--bg);font-size:28px;cursor:pointer;color:var(--text)">−</button>`;
+  html += `<button onclick="vaylaSetScore(1)" style="flex:1;height:52px;border-radius:8px;border:0.5px solid var(--border);background:var(--bg);font-size:28px;cursor:pointer;color:var(--text)">+</button>`;
+  html += `</div></div>`;
+
+  // Tilasto-kortti
+  const stats = [
+    {key:'fh', label:'Fairway hit', val:d.fh||0, col:'#1D9E75'},
+    {key:'c1in', label:'C1-putti sisään', val:d.c1in||0, col:'#1D9E75'},
+    {key:'c1ohi', label:'C1-putti ohi', val:d.c1ohi||0, col:'#E24B4A'},
+    {key:'bull', label:'Bullseye hit', val:d.bull||0, col:'#378ADD'},
+    {key:'ob', label:'OB / penalty', val:d.ob||0, col:'#BA7517'},
+  ];
+  html += `<div style="background:var(--card);border-radius:12px;border:0.5px solid var(--border);padding:4px 16px;margin-bottom:10px">`;
+  stats.forEach((s, i) => {
+    const color = s.val > 0 ? s.col : 'var(--t2)';
+    html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;${i<stats.length-1?'border-bottom:0.5px solid var(--border)':''}">`;
+    html += `<div style="font-size:14px;color:var(--text)">${s.label}</div>`;
+    html += `<div style="display:flex;align-items:center;gap:14px">`;
+    html += `<button onclick="vaylaCounter('${s.key}',-1)" style="width:32px;height:32px;border-radius:50%;border:0.5px solid var(--border);background:var(--bg);font-size:18px;cursor:pointer;color:var(--t2)">−</button>`;
+    html += `<div style="font-size:18px;font-weight:500;min-width:20px;text-align:center;color:${color}">${s.val}</div>`;
+    html += `<button onclick="vaylaCounter('${s.key}',1)" style="width:32px;height:32px;border-radius:50%;border:0.5px solid var(--border);background:var(--bg);font-size:18px;cursor:pointer;color:var(--t2)">+</button>`;
+    html += `</div></div>`;
+  });
+  html += `</div>`;
+
+  // Summary
+  html += `<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--t2);margin-bottom:10px">`;
+  html += `<span>Kierros: ${totDiffStr} · ${doneHoles}/${total} väylää</span>`;
+  html += `<span>C1: ${c1pct} · FH: ${totFH}</span>`;
+  html += `</div>`;
+
+  // Nappi
+  if(h < total) {
+    html += `<button onclick="vaylaNav(1)" style="width:100%;height:48px;border-radius:8px;border:none;background:#1D9E75;color:#fff;font-size:15px;font-weight:500;cursor:pointer">Seuraava väylä →</button>`;
+  } else {
+    html += `<button onclick="vaylaSaveKierros()" style="width:100%;height:48px;border-radius:8px;border:none;background:#1D9E75;color:#fff;font-size:15px;font-weight:500;cursor:pointer">💾 Tallenna kierros</button>`;
+  }
+
+  html += `<button onclick="trainTab('week',null);renderTrain()" style="width:100%;margin-top:8px;height:40px;border-radius:8px;border:0.5px solid var(--border);background:transparent;color:var(--t2);font-size:13px;cursor:pointer">← Takaisin</button>`;
+
+  cont.innerHTML = html;
+}
+
 function renderKierros(){
   const cont=document.getElementById('train-content');
   const today=kierrosPvm||new Date().toISOString().slice(0,10);
@@ -3234,6 +3419,12 @@ function renderKierros(){
   h+='</div></div>';
   // Kierroksen jälkeen
   const hasAfterData=result||positive||saved.kentta;
+  // Väyläkohtainen kirjaus -nappi
+  if(selectedCourse){
+    h+='<div style="margin-bottom:10px">';
+    h+='<button onclick="startVaylaKierros(\''+selectedCourseId+'\',\''+today+'\')" style="width:100%;padding:12px;border-radius:var(--r);border:1.5px solid var(--bd);background:var(--bl);color:var(--bd);font-size:13px;font-weight:600;cursor:pointer">🥏 Aloita väyläkohtainen kirjaus</button>';
+    h+='</div>';
+  }
   h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:8px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
   h+='<div style="font-size:13px;font-weight:700;color:var(--pd);margin-bottom:8px">📊 Kierroksen jälkeen</div>';
   h+='<div style="display:flex;gap:8px;margin-bottom:8px"><div style="flex:1"><div style="font-size:11px;color:var(--t3);margin-bottom:4px">Tulos (heitot)</div><input id="kierros-result" type="number" placeholder="'+(selectedCourse?selectedCourse.par:60)+'" oninput="calcKierrosRatingTable()" value="'+(result||'')+'" style="width:100%;padding:8px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--bg);color:var(--text)"></div><div style="flex:1"><div style="font-size:11px;color:var(--t3);margin-bottom:4px">Kenttä (vapaa)</div><input id="kierros-kentta" type="text" placeholder="'+(selectedCourse?selectedCourse.name:'esim. Tali')+'" value="'+(saved.kentta||'')+'" style="width:100%;padding:8px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--bg);color:var(--text)"></div></div>';
