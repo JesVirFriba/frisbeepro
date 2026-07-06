@@ -928,6 +928,9 @@ function renderProfile(){
   const allEvents=(get('events')||[]);
   const upcomingComps=allEvents.filter(e=>e.type==='kisa'&&e.date>=todayStr).sort((a,b)=>a.date.localeCompare(b.date));
   const nextComp=upcomingComps[0]||null;
+  // Tärkeimmät kisat erikseen
+  const smKarsinnat=upcomingComps.find(c=>c.name&&c.name.toLowerCase().includes('sm') && c.name.toLowerCase().includes('karsinnat'));
+  const daysToSM=smKarsinnat?Math.ceil((new Date(smKarsinnat.date)-new Date(todayStr))/(1000*60*60*24)):null;
   const daysToComp=nextComp?Math.ceil((new Date(nextComp.date)-new Date(todayStr))/(1000*60*60*24)):null;
   const isCompToday=nextComp&&nextComp.date===todayStr;
   const isPreComp=nextComp&&nextComp.date===tomorrowStr;
@@ -949,7 +952,7 @@ function renderProfile(){
     if(isCompToday)return'🏆 KISAPÄIVÄ. Muista protokolla: saapuminen ajoissa, hengitys -30min, putti rutiinilla. Aloita PAR-tavoitteella – ei birdie-jahti heti.';
     if(isPreComp)return`⚡ Kisa huomenna (${nextComp.name||''}). Tänään kevyt aktivointi + putti. Väylästrategia mielessä ennen nukkumaanmenoa. Uni 8-9h.`;
     if(daysToComp&&daysToComp<=7)return`📅 ${nextComp.name||'Kisa'} ${daysToComp} päivän päästä. Pidä harjoittelu suunnitelman mukaan – ei ylikuormitusta kisaviikolla.`;
-    if(daysToComp&&daysToComp<=14)return`🎯 SM-karsinnat ${daysToComp} päivää. Fokus: pre-shot rutiini joka heittoon. Bogey-recovery harjoittelussa.`;
+    if(daysToComp&&daysToComp<=14)return`🎯 ${nextComp.name||'Kisa'} ${daysToComp} päivää. Fokus: pre-shot rutiini joka heittoon. Bogey-recovery harjoittelussa.`;
     return'💪 Perustreeni käynnissä. Muista kirjata nopeustestit ja puttitulokset sovellukseen.';
   })();
 
@@ -974,6 +977,7 @@ function renderProfile(){
       💬 <strong style="color:var(--text)">Valmentaja Claude:</strong> ${coachMsg}
     </div>
     ${nextComp&&!isCompToday?`<div style="margin-top:8px;font-size:11px;color:var(--t3);text-align:right">Seuraava: <strong>${nextComp.name||'Kisa'}</strong> ${nextComp.date}</div>`:''}
+    ${smKarsinnat&&daysToSM&&daysToSM>1?`<div style="margin-top:4px;font-size:11px;color:var(--rd);text-align:right;font-weight:600">🎯 SM-karsinnat: <strong>${daysToSM} päivää</strong></div>`:''}
   </div>`;
 
   // Puttitilastokortti
