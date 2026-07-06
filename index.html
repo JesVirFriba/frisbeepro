@@ -2828,8 +2828,14 @@ function renderPuttiTrain(){
   if(sessions.length){
     h+='<div class="sect">Sessiohistoria</div>';
     sessions.slice().reverse().slice(0,8).forEach(s=>{
-      const tot=PTDISTS.reduce((a,d)=>s[d.key]?a+s[d.key].a:a,0);
-      const made=PTDISTS.reduce((a,d)=>s[d.key]?a+s[d.key].m:a,0);
+      let tot, made;
+      if(s.sarjat && s.sarjat.length > 0){
+        tot = s.sarjat.length * 10;
+        made = s.sarjat.reduce((a,sj)=>a+(sj.made||0), 0);
+      } else {
+        tot = PTDISTS.reduce((a,d)=>s[d.key]?a+s[d.key].a:a, 0);
+        made = PTDISTS.reduce((a,d)=>s[d.key]?a+s[d.key].m:a, 0);
+      }
       const pct=tot>0?Math.round(made/tot*100):0;
       // Show which distances were trained
       const distLabels=PTDISTS.filter(d=>s[d.key]&&s[d.key].a>0).map(d=>d.dist+'m').join(', ');
