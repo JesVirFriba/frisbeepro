@@ -1601,6 +1601,31 @@ function renderCompDay(){
   h+='<button onclick="openStressHoleModal()" style="width:100%;padding:9px;border-radius:var(--rs);border:1.5px dashed var(--rd);background:transparent;color:var(--rd);font-size:12px;font-weight:600;cursor:pointer">⚠️ '+(stressHoles.length?'Muokkaa stressiväyliä':'+ Lisää stressiväylät')+'</button>';
   h+='</div>';
 
+  // Rata-kohtainen analyysi kierros_mapista
+  var kisaEvent=(get('events')||[]).find(function(e){return e.date===today&&(e.type==='kisa'||e.type==='viikkokisa');});
+  var rataAnalyysi=null;
+  if(kisaEvent){
+    var allKierros=get('kierros_map')||{};
+    // Etsi lähin harjoituskirjaus jossa on stress_holes
+    var analysisEntry=Object.values(allKierros).find(function(k){return k.stress_holes&&k.stress_holes.length>0&&k.course&&kisaEvent.note&&kisaEvent.note.toLowerCase().includes('kuortane')&&k.course.includes('malluunen');});
+    if(!analysisEntry) analysisEntry=Object.values(allKierros).find(function(k){return k.stress_holes&&k.stress_holes.length>0;});
+    rataAnalyysi=analysisEntry;
+  }
+  if(rataAnalyysi&&rataAnalyysi.stress_holes){
+    h+='<div style="background:var(--card);border-radius:var(--r);padding:12px 14px;margin-bottom:10px;border-left:3px solid var(--rd)">';
+    h+='<div style="font-size:12px;font-weight:700;color:var(--rd);margin-bottom:8px">⚠️ '+rataAnalyysi.name+' – stressiväylät</div>';
+    rataAnalyysi.stress_holes.forEach(function(sh){
+      h+='<div style="padding:6px 0;border-bottom:0.5px solid var(--border)">';
+      h+='<div style="font-size:12px;font-weight:700;color:var(--text)">Väylä '+sh.hole+' · Par '+sh.par+' · '+sh.dist+'m</div>';
+      h+='<div style="font-size:11px;color:var(--t2);margin-top:2px">'+sh.strategy+'</div>';
+      h+='</div>';
+    });
+    if(rataAnalyysi.birdie_holes&&rataAnalyysi.birdie_holes.length){
+      h+='<div style="margin-top:8px;font-size:11px;color:var(--gd);font-weight:600">🟢 Birdiepaikat: väylät '+rataAnalyysi.birdie_holes.join(', ')+'</div>';
+    }
+    h+='</div>';
+  }
+
   h+='<div style="display:flex;gap:6px;margin-bottom:12px">';
   h+='<button id="comp-reset" class="btn btn-out btn-sm" style="flex:1">↺ Nollaa kisapäivä</button>';
   h+='<button id="comp-done" class="btn btn-sm" style="flex:1">✓ Kaikki tehty</button>';
