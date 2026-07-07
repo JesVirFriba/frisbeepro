@@ -1734,7 +1734,8 @@ const COURSES = [
     layout:'Malluunen PRO AAA1',
     par:64,
     rating:1028,
-    holes:[4,5,3,3,3,3,3,4,3,3,3,3,3,3,3,4,3,3],
+    holes:[5,4,4,3,3,5,3,4,3,4,3,3,3,3,3,4,3,4],
+    holeDists:[236,202,154,119,106,244,130,157,120,145,84,102,102,91,100,144,110,215],
     ratingTable:{58:1079,59:1070,60:1062,61:1053,62:1045,63:1036,64:1028,65:1019,66:1011,67:1002,68:994,69:985,70:977,71:968,72:960,73:951,74:943,75:934,76:926,77:917,78:909,79:900,80:892,81:883,82:875,83:866,84:858,85:850,86:841,87:832,88:824,89:816,90:807,91:799,92:790,93:782,94:773,95:765,96:756,97:748,98:739,99:731,100:722,101:714,102:705,103:697,104:688,105:680,106:671,107:663,108:654,109:646,110:637,111:629,112:620,113:612,114:603,115:595,116:586,117:578}
   },
   {
@@ -3307,6 +3308,7 @@ function renderKierrosVayla() {
   const total = holes.length;
   const h = vaylaKierrosHole;
   const par = holes[h-1] || 3;
+  const dist = (course && course.holeDists) ? (course.holeDists[h-1] || null) : null;
   const d = vaylaKierrosData[h] || {score: par, fh:0, c1in:0, c1ohi:0, bull:0, ob:0};
   const score = d.score !== undefined ? d.score : par;
   const diff = score - par;
@@ -3344,7 +3346,7 @@ function renderKierrosVayla() {
 
   // Header
   html += `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">`;
-  html += `<div><div style="font-size:26px;font-weight:500;color:var(--text-primary)">Väylä ${h}</div><div style="font-size:13px;color:var(--t2);margin-top:1px">Par ${par} · ${course?course.name:''}</div></div>`;
+  html += `<div><div style="font-size:26px;font-weight:500;color:var(--text-primary)">Väylä ${h}</div><div style="font-size:13px;color:var(--t2);margin-top:1px">Par ${par}${dist ? ' · '+dist+'m' : ''} · ${course?course.name:''}</div></div>`;
   html += `<div style="display:flex;gap:8px">`;
   html += `<button onclick="vaylaNav(-1)" style="width:36px;height:36px;border-radius:50%;border:0.5px solid var(--border);background:var(--card);font-size:18px;cursor:pointer;color:var(--text)">‹</button>`;
   html += `<button onclick="vaylaNav(1)" style="width:36px;height:36px;border-radius:50%;border:0.5px solid var(--border);background:var(--card);font-size:18px;cursor:pointer;color:var(--text)">›</button>`;
