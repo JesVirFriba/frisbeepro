@@ -749,7 +749,7 @@ const DEF={name:'Jesse Virtanen',pdga:'252010',rating:919,metrix:939,target:940,
 // ===== NAV =====
 let calY=new Date().getFullYear(),calM=new Date().getMonth();
 let compTab='upcoming',devTabCur='rating',trainTabCur='week',kierrosPvm=null;
-let throwWk=1,strWk=1,putWk=1,mobWk=1;
+let throwWk=parseInt(localStorage.getItem('fp_throw_wk')||'1')||1,strWk=1,putWk=1,mobWk=1;
 
 
 // ===== CONSTANTS =====
@@ -2597,7 +2597,7 @@ function renderThrow(){
 }
 function clickThSet(k,s,t){const c=getSets(k);setSets(k,c>=s?s-1:s);renderThrow()}
 function resetSets(k,pg){setSets(k,0);if(pg==='throw')renderThrow();else if(pg==='str')renderStr()}
-function setThrowWk(w){throwWk=w;renderThrow()}
+function setThrowWk(w){throwWk=w;localStorage.setItem('fp_throw_wk',w);renderThrow()}
 function toggleCard(key){set('card_'+key,get('card_'+key)===false?true:false);renderTrain()}
 
 function renderStr(){
