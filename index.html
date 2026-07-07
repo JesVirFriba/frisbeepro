@@ -1180,7 +1180,7 @@ function renderSpeed(){
       <\/div>
     <\/div>
     <div class="speed-grid">
-      ${[['BH 5m',Math.max(...speeds.map(s=>s.bh5||0)).toFixed(1),'bd'],['BH SS',Math.max(...speeds.map(s=>s.bhss||0)).toFixed(1),'bd'],['BH KN',Math.max(...speeds.map(s=>s.bhkn||0)||[0]).toFixed(1),'bd'],['FH 5m',Math.max(...speeds.map(s=>s.fh5||0)).toFixed(1),'pd'],['FH SS',Math.max(...speeds.map(s=>s.fhss||0)).toFixed(1),'pd'],['FH KN',Math.max(...speeds.map(s=>s.fhkn||0)||[0]).toFixed(1),'pd']].map(([l,val,col])=>`<div class="stc"><div class="stc-l">${l}<\/div><div class="stc-v" style="color:var(--${col})">${parseFloat(val)>0?val:'–'}<\/div><\/div>`).join('')}
+      ${[['BH paras',Math.max(...speeds.map(s=>s.bhMax||s.bh5||s.bhAvg||0)).toFixed(1),'bd'],['BH SS',Math.max(...speeds.map(s=>s.bhss||0)).toFixed(1),'bd'],['BH KN',Math.max(...speeds.map(s=>s.bhkn||0)||[0]).toFixed(1),'bd'],['FH paras',Math.max(...speeds.map(s=>s.fhMax||s.fh5||s.fhAvg||0)).toFixed(1),'pd'],['FH SS',Math.max(...speeds.map(s=>s.fhss||0)).toFixed(1),'pd'],['FH KN',Math.max(...speeds.map(s=>s.fhkn||0)||[0]).toFixed(1),'pd']].map(([l,val,col])=>`<div class="stc"><div class="stc-l">${l}<\/div><div class="stc-v" style="color:var(--${col})">${parseFloat(val)>0?val:'–'}<\/div><\/div>`).join('')}
     <\/div>`;
     if(bhSp.length>=2){
       const mx=Math.max(...bhSp.map(s=>s.bhMax||s.bh5||s.bhAvg||0)),mn=Math.min(...bhSp.map(s=>s.bhMax||s.bh5||s.bhAvg||0)),rng=mx-mn||5;
@@ -4211,8 +4211,8 @@ function delRating(id){set('ratings',(get('ratings')||[]).filter(r=>r.id!==id));
 
 function renderSpeedDev(){
   const speeds=(get('speeds')||[]).sort((a,b)=>a.date.localeCompare(b.date));
-  const bhSp=speeds.filter(s=>s.bh5>0);
-  const fhSp=speeds.filter(s=>s.fh5>0);
+  const bhSp=speeds.filter(s=>(s.bhMax||s.bh5||s.bhAvg||0)>0);
+  const fhSp=speeds.filter(s=>(s.fhMax||s.fh5||s.fhAvg||0)>0);
   let h='<button class="btn btn-out btn-sm" onclick="showPg(\'speed\')" style="margin-bottom:12px">→ Kirjaa nopeustesti (Nopeus-välilehti)</button>';
   if(bhSp.length>=2){
     var bhByMo3={};bhSp.forEach(function(s){var mo=s.date.slice(0,7);var v=s.bh5||s.bhAvg||0;if(!bhByMo3[mo]||(s.bh5||s.bhAvg||0)>(bhByMo3[mo].bh5||bhByMo3[mo].bhAvg||0))bhByMo3[mo]=s;});
@@ -4229,12 +4229,12 @@ function renderSpeedDev(){
   if(fhSp.length>=2){
     var fhByMo={};fhSp.forEach(function(s){var mo=s.date.slice(0,7);if(!fhByMo[mo]||(s.fh5||s.fhAvg||0)>(fhByMo[mo].fh5||fhByMo[mo].fhAvg||0))fhByMo[mo]=s;});
     var fhMo=Object.keys(fhByMo).sort().map(function(k){return fhByMo[k]});
-    var mxF=Math.max(...fhMo.map(s=>s.fh5)),mnF=Math.min(...fhMo.map(s=>s.fh5)),rngF=mxF-mnF||5;
+    var mxF=Math.max(...fhMo.map(s=>s.fhMax||s.fh5||s.fhAvg||0)),mnF=Math.min(...fhMo.map(s=>s.fhMax||s.fh5||s.fhAvg||0)),rngF=mxF-mnF||5;
     h+='<div class="chart-wrap"><div style="font-size:13px;font-weight:600;margin-bottom:9px">FH kehitys <span style="font-size:10px;color:var(--pd);font-weight:400">· Tavoite: wobble alle 5°</span></div><div class="bar-chart">';
     fhMo.slice(-12).forEach(function(s){
-      var pct=Math.round(((s.fh5-mnF)/rngF)*75)+15;
+      var fhvv=s.fhMax||s.fh5||s.fhAvg||0;var pct=Math.round(((fhvv-mnF)/rngF)*75)+15;
       var lbl=s.date.slice(5,7)+'/'+s.date.slice(2,4);
-      h+='<div class="bc"><div class="bv">'+s.fh5.toFixed(0)+'</div><div class="bb" style="height:'+pct+'%;background:'+(s.fh5===mxF?'#8B5CF6':'#C4B5FD')+'"></div><div class="bl">'+lbl+'</div></div>';
+      var fhv=s.fhMax||s.fh5||s.fhAvg||0;h+='<div class="bc"><div class="bv">'+fhv.toFixed(0)+'</div><div class="bb" style="height:'+pct+'%;background:'+(fhv===mxF?'#8B5CF6':'#C4B5FD')+'"></div><div class="bl">'+lbl+'</div></div>';
     });
     h+='</div><div style="font-size:11px;color:var(--t2);margin-top:4px">Max: <b style="color:var(--pd)">${mxF.toFixed(1)} km/h</b> · Kehitys: <b style="color:'+(mxF-fhMo[0].fh5>=0?'var(--gd)':'#E24B4A')+'">'+(mxF-fhMo[0].fh5>0?'+':'')+(mxF-fhMo[0].fh5).toFixed(1)+' km/h</b></div></div>';
   }
@@ -4256,7 +4256,7 @@ function renderSpeedDev(){
       // FH
       h+='<div style="background:var(--pl);border-radius:var(--rs);padding:7px">';
       h+='<div style="font-size:10px;font-weight:600;color:var(--pd);margin-bottom:4px">FH</div>';
-      if(s.fh5)h+='<div style="font-size:11px;color:var(--pd)">Nopeus: <b>'+s.fh5.toFixed(1)+' km/h</b></div>';
+      var fv=s.fhMax||s.fh5||s.fhAvg||0;if(fv)h+='<div style="font-size:11px;color:var(--pd)">Nopeus: <b>'+fv.toFixed(1)+' km/h</b></div>';
       if(s.fhss)h+='<div style="font-size:11px;color:var(--pd)">Avg: <b>'+s.fhss.toFixed(1)+'</b></div>';
       if(s.fh_wobble!=null&&s.fh_wobble>0)h+='<div style="font-size:11px;color:'+(s.fh_wobble<=5?'var(--gd)':s.fh_wobble<=8?'var(--ad)':'#E24B4A')+'">Wobble: <b>'+s.fh_wobble+'°</b></div>';
       if(s.fh_hyzer!=null&&s.fh_hyzer>0)h+='<div style="font-size:11px;color:'+(s.fh_hyzer<=15?'var(--gd)':s.fh_hyzer<=18?'var(--ad)':'#E24B4A')+'">Hyzer: <b>'+s.fh_hyzer+'°</b></div>';
