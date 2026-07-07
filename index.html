@@ -4149,6 +4149,52 @@ function renderRatingDev(){
       h+=`<\/div>`;
     }
   }
+  // C1-puttaustrendi kisatuloksista
+  const c1comps = (get('comps')||[]).filter(c=>c.c1_pct&&c.date).sort((a,b)=>a.date.localeCompare(b.date));
+  if(c1comps.length >= 2){
+    const W3=340,H3=120,PL3=36,PR3=12,PT3=12,PB3=24;
+    const cW3=W3-PL3-PR3,cH3=H3-PT3-PB3;
+    const pcts=c1comps.map(c=>c.c1_pct);
+    const mn3=Math.max(0,Math.min(...pcts)-10),mx3=Math.min(100,Math.max(...pcts)+10);
+    const rng3=mx3-mn3||20;
+    const dates3=c1comps.map(c=>c.date);
+    const minD3=dates3[0],maxD3=dates3[dates3.length-1];
+    const xF=d=>minD3===maxD3?PL3+cW3/2:PL3+(new Date(d)-new Date(minD3))/(new Date(maxD3)-new Date(minD3))*cW3;
+    const yF=p=>PT3+cH3-((p-mn3)/rng3*cH3);
+    const line=c1comps.map((c,i)=>(i===0?'M':'L')+xF(c.date).toFixed(1)+','+yF(c.c1_pct).toFixed(1)).join(' ');
+    const avg=Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length);
+    const avgY=yF(avg);
+    const target70Y=yF(70);
+    let svg3='<div class="chart-wrap" style="padding:12px 14px;margin-top:8px">';
+    svg3+='<div style="font-size:13px;font-weight:600;margin-bottom:8px">🎯 C1-puttaustrendi kisatuloksissa</div>';
+    svg3+='<svg viewBox="0 0 '+W3+' '+H3+'" style="width:100%;overflow:visible">';
+    // 70% tavoiteviiva
+    svg3+='<line x1="'+PL3+'" y1="'+target70Y.toFixed(1)+'" x2="'+(W3-PR3)+'" y2="'+target70Y.toFixed(1)+'" stroke="#1D9E75" stroke-width="1" stroke-dasharray="4,3"/>';
+    svg3+='<text x="'+(W3-PR3+2)+'" y="'+(target70Y+4).toFixed(1)+'" font-size="8" fill="#1D9E75">70%</text>';
+    // Grid
+    [mn3, Math.round(mn3+rng3/2), mx3].forEach(p=>{
+      const y=yF(p);
+      svg3+='<line x1="'+PL3+'" y1="'+y.toFixed(1)+'" x2="'+(W3-PR3)+'" y2="'+y.toFixed(1)+'" stroke="var(--border)" stroke-width="0.5"/>';
+      svg3+='<text x="'+(PL3-4)+'" y="'+(y+4).toFixed(1)+'" text-anchor="end" font-size="9" fill="var(--t2)">'+p+'%</text>';
+    });
+    // Viiva
+    svg3+='<path d="'+line+'" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linejoin="round"/>';
+    // Pisteet + tooltips
+    c1comps.forEach(c=>{
+      const x=xF(c.date).toFixed(1),y=yF(c.c1_pct).toFixed(1);
+      const col=c.c1_pct>=70?'#1D9E75':c.c1_pct>=50?'#EFC97E':'#E24B4A';
+      svg3+='<circle cx="'+x+'" cy="'+y+'" r="4" fill="'+col+'" stroke="white" stroke-width="1.5"><title>'+c.date+' · '+(c.name||'').slice(0,20)+' · '+c.c1_pct+'%</title></circle>';
+    });
+    svg3+='</svg>';
+    svg3+='<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-top:4px">';
+    svg3+='<span>'+c1comps.length+' kisaa · keskiarvo '+avg+'%</span>';
+    const last=c1comps[c1comps.length-1];
+    const col=last.c1_pct>=70?'var(--gd)':'var(--rd)';
+    svg3+='<span>Viimeisin: <b style="color:'+col+'">'+last.c1_pct+'%</b></span>';
+    svg3+='</div></div>';
+    h+=svg3;
+  }
+
   if(ratings.length){
     h+=`<div class="sect">Historia<\/div>`;
     ratings.slice().reverse().forEach(r=>{
