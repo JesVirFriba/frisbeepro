@@ -2584,7 +2584,15 @@ function renderThrow(){
     h+=`<textarea style="width:100%;min-height:50px;font-size:12px;padding:7px;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg);color:var(--text);resize:none;margin-top:6px;font-family:inherit" placeholder="Muistiinpanot..." id="thn_${sess.id}" onchange="set('${nk}',this.value)">${get(nk)||''}<\/textarea>
     <\/div><\/div>`;
   });
-  h+='<div class="page-spacer"></div>';cont.innerHTML=h;
+  h+='<div class="page-spacer"></div>';
+  const throwToday2=window.today||new Date().toISOString().slice(0,10);
+  const throwDone2=getDone(throwToday2);
+  if(!throwDone2){
+    h+='<div style="padding:0 0 16px"><button onclick="setDone(\''+throwToday2+'\',1);showToast(\'Heittotreeni merkitty tehdyksi ✅\');renderTrain()" style="width:100%;padding:13px;border-radius:var(--r);border:none;background:var(--g);color:#fff;font-size:14px;font-weight:700;cursor:pointer">✓ Merkitse heittotreeni tehdyksi</button></div>';
+  } else {
+    h+='<div style="padding:0 0 16px"><button onclick="setDone(\''+throwToday2+'\',null);renderTrain()" style="width:100%;padding:13px;border-radius:var(--r);border:1.5px solid var(--g);background:var(--gl);color:var(--gd);font-size:14px;font-weight:700;cursor:pointer">✓ Tehty – peruuta</button></div>';
+  }
+  cont.innerHTML=h;
   mkWkTabs('throw-wk',throwWk,8,'setThrowWk');
 }
 function clickThSet(k,s,t){const c=getSets(k);setSets(k,c>=s?s-1:s);renderThrow()}
