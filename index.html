@@ -18,7 +18,18 @@
   --cl:#FAECE7;--cd:#712B13;
   --bg:#f5f5f3;--card:#fff;--text:#1a1a1a;--t2:#555;--t3:#999;
   --border:#e5e5e5;--r:12px;--rs:8px;
-  --nav:70px;--safe:env(safe-area-inset-bottom,0px)
+  --nav:70px;--safe:env(safe-area-inset-bottom,0px);
+  --yd:#8a6800;--yb:#fffbea;
+}
+body.dark{
+  --bg:#111113;--card:#1c1c1e;--text:#f2f2f7;--t2:#aeaeb2;--t3:#636366;
+  --border:#2c2c2e;
+  --gl:#0d3326;--gd:#4cd9a0;
+  --bl:#0d1f33;--bd:#6ea8d8;
+  --rl:#330d0d;--rd:#e87474;
+  --pl:#1a1730;--pd:#9b91f5;
+  --al:#2e1f00;--ad:#e8b84b;
+  --yd:#e8b84b;--yb:#2e1f00;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:var(--bg);color:var(--text);font-size:16px;overscroll-behavior:none}
@@ -460,6 +471,9 @@ textarea{resize:none;min-height:65px}
 <div class="modal-bg" id="m-settings"><div class="modal">
   <button class="modal-close" onclick="closeM('m-settings')">✕</button>
   <div class="modal-title">Asetukset & varmuuskopio</div>
+  <div style="display:flex;justify-content:center;margin-bottom:16px">
+    <button id="dark-toggle" onclick="setDarkMode(!document.body.classList.contains('dark'))" style="padding:9px 20px;border-radius:20px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:13px;font-weight:600;cursor:pointer">🌙 Tumma</button>
+  </div>
   <div class="field"><div class="label">PDGA-rating (nykytaso)</div><input id="s-rating" type="number" inputmode="numeric"></div>
   <div class="field"><div class="label">Metrix-rating</div><input id="s-metrix" type="number" inputmode="numeric"></div>
   <div class="field"><div class="label">PDGA tavoiterating</div><input id="s-target" type="number" inputmode="numeric"></div>
@@ -861,7 +875,7 @@ function showPg(id){
 function openM(id){
   document.getElementById(id).classList.add('show');
   if(id==='m-putti-sess')renderPuttiInputs();
-  if(id==='m-settings')renderSettings();
+  if(id==='m-settings'){renderSettings(); const btn=document.getElementById('dark-toggle'); if(btn) btn.textContent=document.body.classList.contains('dark')?'☀️ Vaalea':'🌙 Tumma';}
   const t=new Date().toISOString().slice(0,10);
   ['sp-date','ev-date','co-date','pt-date','rat-date'].forEach(f=>{const el=document.getElementById(f);if(el&&!el.value)el.value=t});
 }
@@ -4752,6 +4766,20 @@ function syncAllCompsToCalendar(){
   d._sets_migrated=true;
   localStorage.setItem('fp_complete_v1',JSON.stringify(d));
   if(count>0) console.log('Migroitu '+count+' sarjamerkintää');
+})();
+
+// Dark mode
+function setDarkMode(on){
+  document.body.classList.toggle('dark', on);
+  const d=JSON.parse(localStorage.getItem('fp_complete_v1')||'{}');
+  d.dark_mode=on;
+  localStorage.setItem('fp_complete_v1',JSON.stringify(d));
+  const btn=document.getElementById('dark-toggle');
+  if(btn) btn.textContent=on?'☀️ Vaalea':'🌙 Tumma';
+}
+(function initDarkMode(){
+  const d=JSON.parse(localStorage.getItem('fp_complete_v1')||'{}');
+  if(d.dark_mode) document.body.classList.add('dark');
 })();
 
 // Globaalit apumuuttujat
