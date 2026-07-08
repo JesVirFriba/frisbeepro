@@ -787,7 +787,7 @@ const PTDISTS=[
 // ===== MIGRATION from old keys =====
 (function migrate(){
   const OLD=['fp_v1','fp_v2','fp_jesse_v1','fg_mobile_v1','fg_v4','fp_complete_v1'];
-  const FIELDS=['ratings','speeds','events','comps','metrix','goals','putti_sessions','coach_notes','chat_history'];
+  const FIELDS=['ratings','speeds','events','comps','metrix','goals','putti_sessions','coach_notes','chat_history','throw_sets','kierros_map','done_map'];
   if(localStorage.getItem('fpc_migrated_v2'))return;
   let cur={};try{cur=JSON.parse(localStorage.getItem(SK)||'{}')}catch(e){}
   OLD.forEach(ok=>{
@@ -2462,8 +2462,22 @@ const MOB_EX=[
 ];
 const AREA_LBLS={'a-lo':'Lonkka','a-se':'Selkä','a-ol':'Olkapää','a-ko':'Koko keho','a-co':'Core'};
 
-function getSets(k){return get('sets_'+k)||0}
-function setSets(k,n){set('sets_'+k,n)}
+function getSets(k){
+  // Uusi: fp_complete_v1.throw_sets
+  const d=JSON.parse(localStorage.getItem('fp_complete_v1')||'{}');
+  const ts=d.throw_sets||{};
+  if(ts[k]!==undefined) return ts[k];
+  // Fallback: vanha sets_-avain
+  const old=localStorage.getItem('sets_'+k);
+  return old ? parseInt(old) : 0;
+}
+function setSets(k,n){
+  const d=JSON.parse(localStorage.getItem('fp_complete_v1')||'{}');
+  if(!d.throw_sets) d.throw_sets={};
+  if(n===0||n===null) delete d.throw_sets[k];
+  else d.throw_sets[k]=n;
+  localStorage.setItem('fp_complete_v1',JSON.stringify(d));
+}
 function getW(k){return get('wt_'+k)||''}
 function mkWkTabs(cid,cur,max,fn){
   let h='';for(let i=1;i<=max;i++)h+=`<button class="wk-btn${i===cur?' on':''}" onclick="${fn}(${i})">Vk ${i}<\/button>`;
@@ -4574,7 +4588,7 @@ function exportToUrl(){
   const data = localStorage.getItem(SK)||'{}';
   const d = JSON.parse(data);
   // Only export essential arrays + profile (not migration flags etc)
-  const FIELDS=['ratings','speeds','events','comps','metrix','goals','putti_sessions','chat_history','coach_notes'];
+  const FIELDS=['ratings','speeds','events','comps','metrix','goals','putti_sessions','chat_history','coach_notes','throw_sets','kierros_map','done_map'];
   const exportData={};
   FIELDS.forEach(f=>{if(d[f]&&d[f].length)exportData[f]=d[f]});
   if(d.profile)exportData.profile=d.profile;
@@ -4687,6 +4701,28 @@ function syncAllCompsToCalendar(){
   if(cleaned > 0 || true) {
     localStorage.setItem('fp_complete_v1', JSON.stringify(d));
   }
+})();
+
+// Migraatio: siirrä vanhat sets_* avaimet fp_complete_v1.throw_sets:een
+(function migrateSets(){
+  const d=JSON.parse(localStorage.getItem('fp_complete_v1')||'{}');
+  if(d._sets_migrated) return;
+  if(!d.throw_sets) d.throw_sets={};
+  let count=0;
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(key && key.startsWith('sets_')){
+      const k=key.slice(5);
+      const val=parseInt(localStorage.getItem(key)||'0');
+      if(val>0 && d.throw_sets[k]===undefined){
+        d.throw_sets[k]=val;
+        count++;
+      }
+    }
+  }
+  d._sets_migrated=true;
+  localStorage.setItem('fp_complete_v1',JSON.stringify(d));
+  if(count>0) console.log('Migroitu '+count+' sarjamerkintää');
 })();
 
 // Globaalit apumuuttujat
