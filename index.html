@@ -758,7 +758,7 @@ function migrateOldKeys(){
 }
 
 // ===== DEFAULT PROFILE =====
-const DEF={name:'Jesse Virtanen',pdga:'252010',rating:919,metrix:939,target:940,metrix_target:960,div:'MPO',home:'',coach:'Claude (AI-valmentaja)',bh_target:110,fh_target:88}
+const DEF={name:'Jesse Virtanen',pdga:'252010',rating:919,metrix:939,target:940,metrix_target:960,div:'MPO',home:'',coach:'Claude (AI-valmentaja)',bh_target:125,fh_target:110}
 
 // ===== NAV =====
 let calY=new Date().getFullYear(),calM=new Date().getMonth();
@@ -4384,7 +4384,7 @@ function renderGoalsDev(){
   const icons={rating:'📊',metrix:'📊',speed:'⚡',speedfh:'⚡',putti:'🎯',kisa:'🏆',muu:'⭐'};
   let h='<button class=\"btn btn-out btn-sm\" onclick=\"openM(\'m-goal\')\" style=\"margin-bottom:12px\">+ Lisää tavoite</button>';
   if(!goals.length){
-    h+='<div class=\"coach-msg\">💬 Jesse, lisää ensimmäiset tavoitteet: 1) PDGA 919→940, 2) BH nopeus →110 km/h, 3) Kisatavoite tälle kaudelle.</div>';
+    h+='<div class=\"coach-msg\">💬 Jesse, lisää ensimmäiset tavoitteet: 1) PDGA 919→940, 2) BH nopeus →125 km/h, 3) Kisatavoite tälle kaudelle.</div>';
     h+='<div class=\"empty\"><div class=\"ei\">⭐</div><div class=\"et\">Ei tavoitteita</div></div>';
   }else{
     goals.forEach(function(g){
@@ -4477,7 +4477,7 @@ function renderSettings(){
   const p=get('profile')||DEF;
   setV('s-rating',p.rating||919);setV('s-metrix',p.metrix||939);
   setV('s-target',p.target||940);setV('s-mtarget',p.metrix_target||960);
-  setV('s-bh',p.bh_target||110);setV('s-fh',p.fh_target||88);setV('s-home',p.home||'');
+  setV('s-bh',p.bh_target||125);setV('s-fh',p.fh_target||110);setV('s-home',p.home||'');
   // Show token status
   const token=getGistToken();
   const gistEl=document.getElementById('gist-status-settings');
