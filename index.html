@@ -1607,8 +1607,27 @@ function renderCompDay(){
   if(kisaEvent){
     var allKierros=get('kierros_map')||{};
     // Etsi lähin harjoituskirjaus jossa on stress_holes
-    var analysisEntry=Object.values(allKierros).find(function(k){return k.stress_holes&&k.stress_holes.length>0&&k.course&&kisaEvent.note&&kisaEvent.note.toLowerCase().includes('kuortane')&&k.course.includes('malluunen');});
-    if(!analysisEntry) analysisEntry=Object.values(allKierros).find(function(k){return k.stress_holes&&k.stress_holes.length>0;});
+    // Etsi rata-analyysi kisatapahtuman radan perusteella
+    var courseMap = {
+      'kuortane': 'malluunen',
+      'keinukallio': 'keinukallio',
+      'tali': 'tali',
+      'kippis': 'kippasuo',
+      'ford': 'ford',
+      'karkkila': 'karkkila'
+    };
+    var eventName = (kisaEvent.name||kisaEvent.note||'').toLowerCase();
+    var matchedCourse = null;
+    Object.entries(courseMap).forEach(function(entry){
+      if(eventName.includes(entry[0])) matchedCourse = entry[1];
+    });
+    var analysisEntry = Object.values(allKierros).find(function(k){
+      return k.stress_holes && k.stress_holes.length > 0 && k.course &&
+             (matchedCourse ? k.course.includes(matchedCourse) : false);
+    });
+    if(!analysisEntry) analysisEntry = Object.values(allKierros).find(function(k){
+      return k.stress_holes && k.stress_holes.length > 0 && k.type === 'analyysi';
+    });
     rataAnalyysi=analysisEntry;
   }
   if(rataAnalyysi&&rataAnalyysi.stress_holes){
