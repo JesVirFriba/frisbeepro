@@ -4789,6 +4789,48 @@ function setDarkMode(on){
   if(d.dark_mode) document.body.classList.add('dark');
 })();
 
+// Automaattinen data-siivous käynnistyksessä
+(function autoCleanup(){
+  const d = JSON.parse(localStorage.getItem('fp_complete_v1')||'{}');
+  let changed = false;
+
+  // 1. Comps – lisää type-kenttä jos puuttuu
+  if(d.comps) {
+    d.comps.forEach(function(c){
+      if(!c.type && c.mrating !== undefined) {
+        const name = (c.name||'').toLowerCase();
+        c.type = name.includes('viikkokisa') ? 'viikkokisa' : 'kisa';
+        changed = true;
+      }
+    });
+  }
+
+  // 2. Events – poista duplikaatit
+  if(d.events) {
+    const seen = new Set();
+    const before = d.events.length;
+    d.events = d.events.filter(function(e){
+      const key = (e.date||'') + '|' + (e.name||e.title||'');
+      if(seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    if(d.events.length !== before) changed = true;
+  }
+
+  // 3. C1_pct – laske puuttuvat
+  if(d.comps) {
+    d.comps.forEach(function(c){
+      if(c.c1_made !== undefined && c.c1_att && !c.c1_pct) {
+        c.c1_pct = Math.round(c.c1_made / c.c1_att * 100);
+        changed = true;
+      }
+    });
+  }
+
+  if(changed) localStorage.setItem('fp_complete_v1', JSON.stringify(d));
+})();
+
 // Globaalit apumuuttujat
 window.today = new Date().toISOString().slice(0,10);
 setInterval(function(){ window.today = new Date().toISOString().slice(0,10); }, 60000);
