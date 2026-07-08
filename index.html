@@ -274,6 +274,7 @@ textarea{resize:none;min-height:65px}
     <div style="display:flex;gap:6px">
       <button id="qr-type-vk" onclick="qrSetType('viikkokisa')" style="flex:1;padding:8px;border-radius:var(--rs);border:1.5px solid var(--g);background:var(--gl);color:var(--gd);font-size:12px;font-weight:700;cursor:pointer">🏃 Viikkokisa</button>
       <button id="qr-type-pdga" onclick="qrSetType('pdga')" style="flex:1;padding:8px;border-radius:var(--rs);border:1.5px solid var(--border);background:transparent;color:var(--t2);font-size:12px;cursor:pointer">🏆 PDGA</button>
+      <button id="qr-type-kisa" onclick="qrSetType('kisa')" style="flex:1;padding:8px;border-radius:var(--rs);border:1.5px solid var(--border);background:transparent;color:var(--t2);font-size:12px;cursor:pointer">🎯 Muu kisa</button>
     </div>
   </div>
 
@@ -281,14 +282,15 @@ textarea{resize:none;min-height:65px}
     <div style="font-size:12px;color:var(--t2);margin-bottom:6px">Rata</div>
     <select id="qr-course" style="width:100%;padding:9px;border-radius:var(--rs);border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px">
       <option value="">– Valitse rata –</option>
-      <option value="karkkila-gold-2024">Karkkila Gold (2024, par 59)</option>
-      <option value="kippasuo-pro-long-2026">Kippasuo Pro Long (2026, par 64)</option>
       <option value="tali-kesa-2025">Tali (Kesä 2025, par 58)</option>
       <option value="keinukallio-2024">Keinukallio (2024, par 62)</option>
-      <option value="ford-punaiset-2023">Ford (Punaiset 2023, par 60)</option>
-      <option value="kivikko-blue-2023">Kivikko Blue (par 56)</option>
-      <option value="kivikko-red-2024">Kivikko Red (par 57)</option>
+      <option value="kippasuo-pro-long-2026">Kippis Pro SM-layout (2026, par 63)</option>
       <option value="malluunen-pro-2020">Kuortane Malluunen (par 64)</option>
+      <option value="ford-punaiset-2023">Ford Punaiset (2023, par 54)</option>
+      <option value="ford-siniset-2023">Ford Siniset (2023, par 60)</option>
+      <option value="kivikko-blue-2023">Kivikko Blue (2023, par 56)</option>
+      <option value="kivikko-red-2024">Kivikko Red (2024, par 57)</option>
+      <option value="karkkila-gold-2024">Karkkila Gold (2024, par 59)</option>
       <option value="muu">Muu rata</option>
     </select>
   </div>
@@ -2048,14 +2050,12 @@ function qrSetType(t){
   qrType=t;
   const vk=document.getElementById('qr-type-vk');
   const pdga=document.getElementById('qr-type-pdga');
-  if(!vk||!pdga)return;
-  if(t==='viikkokisa'){
-    vk.style.cssText='flex:1;padding:8px;border-radius:var(--rs);border:1.5px solid var(--g);background:var(--gl);color:var(--gd);font-size:12px;font-weight:700;cursor:pointer';
-    pdga.style.cssText='flex:1;padding:8px;border-radius:var(--rs);border:1.5px solid var(--border);background:transparent;color:var(--t2);font-size:12px;cursor:pointer';
-  } else {
-    pdga.style.cssText='flex:1;padding:8px;border-radius:var(--rs);border:1.5px solid var(--g);background:var(--gl);color:var(--gd);font-size:12px;font-weight:700;cursor:pointer';
-    vk.style.cssText='flex:1;padding:8px;border-radius:var(--rs);border:1.5px solid var(--border);background:transparent;color:var(--t2);font-size:12px;cursor:pointer';
-  }
+  const kisa=document.getElementById('qr-type-kisa');
+  const on='flex:1;padding:8px;border-radius:var(--rs);border:1.5px solid var(--g);background:var(--gl);color:var(--gd);font-size:12px;font-weight:700;cursor:pointer';
+  const off='flex:1;padding:8px;border-radius:var(--rs);border:1.5px solid var(--border);background:transparent;color:var(--t2);font-size:12px;cursor:pointer';
+  if(vk) vk.style.cssText = t==='viikkokisa' ? on : off;
+  if(pdga) pdga.style.cssText = t==='pdga' ? on : off;
+  if(kisa) kisa.style.cssText = t==='kisa' ? on : off;
 }
 function qrCalcRating(){
   const courseId=document.getElementById('qr-course').value;
@@ -2093,7 +2093,7 @@ function saveQuickResult(){
     id:Date.now(),
     date:today,
     type:qrType,
-    name:qrType==='viikkokisa'?'Viikkokisa '+today:'PDGA '+today,
+    name:qrType==='viikkokisa'?'Viikkokisa '+today:qrType==='pdga'?'PDGA '+today:'Kisa '+today,
     course:courseId,
     result:score,
     par:parDiff,
