@@ -3315,9 +3315,23 @@ function vaylaCounter(field, delta) {
   renderTrain();
 }
 
+function vaylaSaveProgress() {
+  if (!vaylaKierrosCourse || !vaylaKierrosPvm) return;
+  const saved = getKierros(vaylaKierrosPvm) || {};
+  const entry = {
+    ...saved,
+    date: vaylaKierrosPvm,
+    courseId: vaylaKierrosCourse.id,
+    kentta: vaylaKierrosCourse.name,
+    vaylaData: vaylaKierrosData
+  };
+  setKierros(vaylaKierrosPvm, entry);
+}
+
 function vaylaNav(dir) {
   const total = vaylaKierrosCourse ? vaylaKierrosCourse.holes.length : 18;
   vaylaKierrosHole = Math.max(1, Math.min(total, vaylaKierrosHole + dir));
+  vaylaSaveProgress();
   renderTrain();
 }
 
@@ -3462,7 +3476,7 @@ function renderKierrosVayla() {
     html += `<button onclick="vaylaSaveKierros()" style="width:100%;height:48px;border-radius:8px;border:none;background:#1D9E75;color:#fff;font-size:15px;font-weight:500;cursor:pointer">💾 Tallenna kierros</button>`;
   }
 
-  html += `<button onclick="trainTab('week',null);renderTrain()" style="width:100%;margin-top:8px;height:40px;border-radius:8px;border:0.5px solid var(--border);background:transparent;color:var(--t2);font-size:13px;cursor:pointer">← Takaisin</button>`;
+  html += `<button onclick="vaylaSaveProgress();trainTab('week',null);renderTrain()" style="width:100%;margin-top:8px;height:40px;border-radius:8px;border:0.5px solid var(--border);background:transparent;color:var(--t2);font-size:13px;cursor:pointer">← Takaisin</button>`;
 
   cont.innerHTML = html;
 }
