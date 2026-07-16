@@ -1,4 +1,52 @@
 <!DOCTYPE html>
+<!--
+  ===== FRISBEEPRO – SISÄLLYSLUETTELO =====
+  Yksi tiedosto (CSS+HTML+JS). Rivinumerot suuntaa-antavia, päivity tätä jos rakenne muuttuu paljon.
+
+  CSS
+    61    [style]-lohko alkaa (värit, layout, komponenttityylit)
+    256   [/style] loppuu
+
+  HTML-RAKENNE
+    258   [body] alkaa – sivut (#pg-profile, #pg-speed, #pg-train, #pg-cal, #pg-comp, #pg-dev) + modaalit
+    556   [script]-lohko alkaa
+
+  JAVASCRIPT (rivinumerot scriptin sisällä)
+    557   STORAGE – get()/set() perus-wrapperit (KAIKKI datan tallennus tästä läpi → Gist-sync)
+    625   GITHUB GIST SYNC – gistSave/gistLoad/gistScheduleSave (debounced 4s) + beforeunload-suoja
+    748   DONE & KIERROS HELPERS – getDone/setDone/getKierros/setKierros/getSubChecks/toggleSubCheck
+    823   DEFAULT PROFILE / NAV / CONSTANTS
+    864   MIGRATION vanhoista localStorage-avaimista (kertaalleen, flagilla suojattu)
+    888   PRELOAD DATA (esitäytetty data ensikäynnistyksellä)
+    947   PROFILE – etusivu (renderProfile, rivi 948)
+    1163  COPY TO CLAUDE – "Kopioi tilanne" -yhteenveto
+    1242  SPEED – nopeussivu (renderSpeed, rivi 1243)
+    1331  TRAINING – harjoittelu alkaa
+    1334  STRESSIVÄYLÄT – rata/väyläkohtainen stressiväylä-data
+    1418  COMPETITION DAY PROTOCOL – kisapäivä (renderCompDay, rivi 1630)
+    1789  KENTTÄTIETOKANTA – radat (par, rating-taulukot)
+    1882  METRIX COURSE FETCH
+    1932  METRIX RATING CALCULATOR
+    1958  WEEK & MONTH PROGRAM – viikko-ohjelma, pika-tuloskirjaus (saveQuickResult)
+    2191  renderWeekView – viikkonäkymä, tupla-sessio-checkboxit
+    2605  renderSessionPick / renderTrain – harjoittelun alasivureititys
+    2663  renderThrow – heittotreeni (sarjalaskuri: getSets/setSets)
+    2714  renderStr – voimatreeni
+    2763  renderPuttiTrain / renderPuttiInputs / savePutti – puttaus
+    3120  renderMob / renderAktivointi – liikkuvuus
+    3437  Väyläkohtainen kierroskirjaus – vaylaNav/vaylaSaveProgress/renderKierrosVayla
+    3538  renderKierros – koko kierroksen kirjaus (tulos + tilastot)
+    3744  renderViikkokisa / renderRestDay
+    3868  renderCal – kalenteri
+    3938  COMPETITIONS – kisat (renderComp, saveComp)
+    4088  DEVELOPMENT – kehityssivut (rating/nopeus/putti/metrix/tavoitteet/chat-kehitys)
+    4551  renderSettings – asetukset (Gist-token, dark mode, tuonti/vienti)
+    4771  URL-BASED DATA IMPORT
+    4818  Migraatiot (sets_*, fp_sub_*) + dark mode init + autoCleanup – kaikki käynnistyksessä
+
+  Isompi rakennemuutos (useampi tiedosto: index.html + app.js + style.css) suunniteltu off-seasoniin
+  (loka-→), ei tehty vielä koska kesken kisakauden ei haluta ottaa deploy-riskiä.
+-->
 <html lang="fi">
 <head>
 <meta charset="UTF-8">
