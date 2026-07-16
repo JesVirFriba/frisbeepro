@@ -724,6 +724,19 @@ function setKierros(date,data){
   m[date]=data;
   set('kierros_map',m);
 }
+function getSubChecks(date){
+  return (get('sub_checks')||{})[date] || {};
+}
+function toggleSubCheck(date, key){
+  const all = get('sub_checks')||{};
+  const d = all[date] || {};
+  d[key] = !d[key];
+  all[date] = d;
+  set('sub_checks', all);
+  const allDone = Object.keys(d).length>0 && Object.values(d).every(Boolean);
+  setDone(date, allDone?1:null);
+  renderTrain();
+}
 
 // Migrate old done_ and kierros_ keys to new format
 function migrateOldKeys(){
@@ -878,7 +891,7 @@ function openM(id){
   document.getElementById(id).classList.add('show');
   if(id==='m-putti-sess')renderPuttiInputs();
   if(id==='m-settings'){renderSettings(); const btn=document.getElementById('dark-toggle'); if(btn) btn.textContent=document.body.classList.contains('dark')?'☀️ Vaalea':'🌙 Tumma';}
-  const t=new Date().toISOString().slice(0,10);
+  const t=dateStr(new Date());
   ['sp-date','ev-date','co-date','pt-date','rat-date'].forEach(f=>{const el=document.getElementById(f);if(el&&!el.value)el.value=t});
 }
 function closeM(id){document.getElementById(id).classList.remove('show')}
@@ -939,8 +952,8 @@ function renderProfile(){
   <\/div>`;
 
   // Dynamic today card
-  const todayStr=new Date().toISOString().slice(0,10);
-  const tomorrowStr=new Date(Date.now()+86400000).toISOString().slice(0,10);
+  const todayStr=dateStr(new Date());
+  const tomorrowStr=dateStr(new Date(Date.now()+86400000));
   const allEvents=(get('events')||[]);
   const upcomingComps=allEvents.filter(e=>e.type==='kisa'&&e.date>=todayStr).sort((a,b)=>a.date.localeCompare(b.date));
   const nextComp=upcomingComps[0]||null;
@@ -1106,7 +1119,7 @@ function buildCtx(){
   const speeds=(get('speeds')||[]).sort((a,b)=>a.date.localeCompare(b.date));
   const comps=(get('comps')||[]).sort((a,b)=>b.date.localeCompare(a.date));
   const goals=get('goals')||[];
-  const events=(get('events')||[]).filter(e=>e.date>=new Date().toISOString().slice(0,10)).sort((a,b)=>a.date.localeCompare(b.date));
+  const events=(get('events')||[]).filter(e=>e.date>=dateStr(new Date())).sort((a,b)=>a.date.localeCompare(b.date));
   const chatHist=(get('chat_history')||[]).sort((a,b)=>b.id-a.id).slice(0,5);
   const disc=get('disc_analytics');
   const lastPDGA=ratings.length?ratings[ratings.length-1].val:p.rating;
@@ -1272,14 +1285,14 @@ function delSpeed(id){set('speeds',(get('speeds')||[]).filter(s=>s.id!==id));ren
 
 // ===== STRESSIVÄYLÄT =====
 function getStressHoles(compDate){
-  return get('stress_holes_'+(compDate||new Date().toISOString().slice(0,10)))||[];
+  return get('stress_holes_'+(compDate||dateStr(new Date())))||[];
 }
 function setStressHoles(compDate,holes){
-  set('stress_holes_'+(compDate||new Date().toISOString().slice(0,10)),holes);
+  set('stress_holes_'+(compDate||dateStr(new Date())),holes);
 }
 
 function openStressHoleModal(){
-  const today=new Date().toISOString().slice(0,10);
+  const today=dateStr(new Date());
   const holes=getStressHoles(today);
   const box=document.createElement('div');
   box.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
@@ -1360,7 +1373,7 @@ function toggleKisaCheck(id){
   var checks=get('kisa_quick_checks')||{};
   // Nollaa jos eri päivä
   var lastCheckDate=localStorage.getItem('fp_kisa_check_date');
-  var today=new Date().toISOString().slice(0,10);
+  var today=dateStr(new Date());
   if(lastCheckDate!==today){checks={};localStorage.setItem('fp_kisa_check_date',today);}
   if(checks[id]) delete checks[id];
   else checks[id]=true;
@@ -1515,7 +1528,7 @@ function wireCompEvents(cont, protocol){
   // Quick result save
   var qrSave=cont.querySelector('#qr-save');
   if(qrSave){
-    function saveQuickResult(e){
+    function saveCompDayQuickResult(e){
       e.preventDefault();
       var result=cont.querySelector('#qr-result').value;
       var metrix=cont.querySelector('#qr-metrix').value;
@@ -1528,7 +1541,7 @@ function wireCompEvents(cont, protocol){
       }
       if(!result&&!metrix){alert('Syötä vähintään tulos tai Metrix');return;}
       var comps=get('comps')||[];
-      var today=new Date().toISOString().slice(0,10);
+      var today=dateStr(new Date());
       comps.push({id:Date.now(),date:today,name:'Kisapäivä '+today,type:'kisa',
         result:parseInt(result)||null,mrating:parseInt(metrix)||null,
         trackrating:parseInt(rrating)||null,note:note});
@@ -1541,8 +1554,8 @@ function wireCompEvents(cont, protocol){
       if(cont.querySelector('#qr-par'))cont.querySelector('#qr-par').value='';
       if(cont.querySelector('#qr-rrating'))cont.querySelector('#qr-rrating').value='';
     }
-    qrSave.addEventListener('click',saveQuickResult);
-    qrSave.addEventListener('touchend',saveQuickResult);
+    qrSave.addEventListener('click',saveCompDayQuickResult);
+    qrSave.addEventListener('touchend',saveCompDayQuickResult);
   }
   var doneBtn=cont.querySelector('#comp-done');
   if(doneBtn){
@@ -1568,7 +1581,7 @@ function wireCompEvents(cont, protocol){
 
 function renderCompDay(){
   var cont=document.getElementById('train-content');
-  var today=new Date().toISOString().slice(0,10);
+  var today=dateStr(new Date());
   var protocol=buildCompProtocol();
   var todayChecks=get('comp_day_checks')||{};
   var totalSteps=protocol.reduce(function(a,p){return a+p.steps.length},0);
@@ -2103,17 +2116,13 @@ function saveQuickResult(){
     c1_pct:made&&att?Math.round(made/att*100):null,
     notes:notes
   };
-  const d=JSON.parse(localStorage.getItem('fp_complete_v1')||'{}');
-  const kierros=d.kierros_map||{};
-  kierros[today]=entry;
-  d.kierros_map=kierros;
-  const comps=d.comps||[];
+  setKierros(today, entry);
+  const comps=get('comps')||[];
   comps.push(entry);
-  d.comps=comps;
-  const done=d.done_map||{};
-  done[today]={done:true,type:qrType};
-  d.done_map=done;
-  localStorage.setItem('fp_complete_v1',JSON.stringify(d));
+  set('comps', comps);
+  const doneMap=get('done_map')||{};
+  doneMap[today]={done:true,type:qrType};
+  set('done_map', doneMap);
   closeM('m-quick-result');
   showToast('Tulos kirjattu'+(rating?' · '+rating:''));
 }
@@ -2265,13 +2274,12 @@ function renderWeekView() {
       h += '<div onclick="event.stopPropagation();setDone(\''+day.date+'\',1);renderTrain()" style="font-size:10px;color:var(--t3);cursor:pointer;flex-shrink:0;padding:3px 7px;border:1px solid var(--border);border-radius:20px">Merkitse</div>';
     } else if(clickable && routableSessions.length > 1){
       const SESSION_SHORT={heitto_tek:'Tekniikka',heitto_nop:'Nopeus',putti:'Putti',mob:'Liikkuvuus',str:'Voima',aktivointi:'Aktivointi',kierros:'Kierros',voima_a:'Voima A',voima_b:'Voima B'};
-      const subKey='fp_sub_'+day.date;
-      const doneSubs=JSON.parse(localStorage.getItem(subKey)||'{}');
+      const doneSubs=getSubChecks(day.date);
       h += '<div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">';
       routableSessions.forEach(function(s){
         const sdone=!!doneSubs[s];
         const slbl=SESSION_SHORT[s]||s;
-        h += '<div onclick="event.stopPropagation();(function(){var k=\'fp_sub_'+day.date+'\';var d=JSON.parse(localStorage.getItem(k)||\'{}\');d[\''+s+'\']=!d[\''+s+'\'];localStorage.setItem(k,JSON.stringify(d));var allDone=Object.keys(d).length>0&&Object.values(d).every(Boolean);setDone(\''+day.date+'\',allDone?1:null);renderTrain();})()" style="font-size:10px;cursor:pointer;padding:2px 6px;border-radius:10px;border:1px solid '+(sdone?'var(--g)':'var(--border)')+';background:'+(sdone?'var(--gl)':'transparent')+';color:'+(sdone?'var(--gd)':'var(--t2)')+'">'+(sdone?'✓ ':'')+slbl+'</div>';
+        h += '<div onclick="event.stopPropagation();toggleSubCheck(\''+day.date+'\',\''+s+'\')" style="font-size:10px;cursor:pointer;padding:2px 6px;border-radius:10px;border:1px solid '+(sdone?'var(--g)':'var(--border)')+';background:'+(sdone?'var(--gl)':'transparent')+';color:'+(sdone?'var(--gd)':'var(--t2)')+'">'+(sdone?'✓ ':'')+slbl+'</div>';
       });
       h += '</div>';
     } else if(clickable){
@@ -2507,19 +2515,17 @@ const AREA_LBLS={'a-lo':'Lonkka','a-se':'Selkä','a-ol':'Olkapää','a-ko':'Koko
 
 function getSets(k){
   // Uusi: fp_complete_v1.throw_sets
-  const d=JSON.parse(localStorage.getItem('fp_complete_v1')||'{}');
-  const ts=d.throw_sets||{};
+  const ts=get('throw_sets')||{};
   if(ts[k]!==undefined) return ts[k];
   // Fallback: vanha sets_-avain
   const old=localStorage.getItem('sets_'+k);
   return old ? parseInt(old) : 0;
 }
 function setSets(k,n){
-  const d=JSON.parse(localStorage.getItem('fp_complete_v1')||'{}');
-  if(!d.throw_sets) d.throw_sets={};
-  if(n===0||n===null) delete d.throw_sets[k];
-  else d.throw_sets[k]=n;
-  localStorage.setItem('fp_complete_v1',JSON.stringify(d));
+  const throwSets=get('throw_sets')||{};
+  if(n===0||n===null) delete throwSets[k];
+  else throwSets[k]=n;
+  set('throw_sets', throwSets);
 }
 function getW(k){return get('wt_'+k)||''}
 function mkWkTabs(cid,cur,max,fn){
@@ -2642,7 +2648,7 @@ function renderThrow(){
     <\/div><\/div>`;
   });
   h+='<div class="page-spacer"></div>';
-  const throwToday2=window.today||new Date().toISOString().slice(0,10);
+  const throwToday2=window.today||dateStr(new Date());
   const throwDone2=getDone(throwToday2);
   if(!throwDone2){
     h+='<div style="padding:0 0 16px"><button onclick="setDone(\''+throwToday2+'\',1);showToast(\'Heittotreeni merkitty tehdyksi ✅\');renderTrain()" style="width:100%;padding:13px;border-radius:var(--r);border:none;background:var(--g);color:#fff;font-size:14px;font-weight:700;cursor:pointer">✓ Merkitse heittotreeni tehdyksi</button></div>';
@@ -2728,7 +2734,7 @@ function renderPuttiTrain(){
   });
 
   const puttiPhase=get('putti_phase')||1;
-  const todayKey='putti_today_'+new Date().toISOString().slice(0,10);
+  const todayKey='putti_today_'+dateStr(new Date());
   const todayDone=get(todayKey)||0;
   const todayTarget=puttiPhase===1?50:puttiPhase===2?60:30;
   const pct_today=Math.min(100,Math.round(todayDone/todayTarget*100));
@@ -2774,7 +2780,7 @@ function renderPuttiTrain(){
   h+='<div style=\"font-size:12px;color:'+ph.tcol+';line-height:1.6\">'+ph.focus+'</div></div>';
 
   // Sarjakirjaus
-  const today2=new Date().toISOString().slice(0,10);
+  const today2=dateStr(new Date());
   const sarjatRaw=get('putti_sarjat_'+today2)||[];
   // Support both old format (numbers) and new format (objects)
   const sarjat=sarjatRaw.map(function(s){return typeof s==='object'?s:{made:s,dist:3,tyyli:'normaali'};});
@@ -2994,7 +3000,7 @@ function renderPuttiTrain(){
   const sarjaSaveBtn=cont.querySelector('#putti-sarja-save');
   const sarjaUndoBtn=cont.querySelector('#putti-sarja-undo');
   const sarjaSaveSessBtn=cont.querySelector('#putti-sarja-save-sess');
-  const today3=new Date().toISOString().slice(0,10);
+  const today3=dateStr(new Date());
 
   function addSarja(e){
     if(e)e.preventDefault();
@@ -3057,7 +3063,7 @@ function savePutti(){
   PTDISTS.forEach(d=>{const m=parseInt(document.getElementById('pt-m-'+d.key)?.value)||0;const a=parseInt(document.getElementById('pt-a-'+d.key)?.value)||0;if(a>0)sess[d.key]={m:Math.min(m,a),a}});
   const s=get('putti_sessions')||[];s.push(sess);set('putti_sessions',s);
   // Auto-mark training day as done
-  const sessDate=v('pt-date')||new Date().toISOString().slice(0,10);
+  const sessDate=v('pt-date')||dateStr(new Date());
   setDone(sessDate,1);
   flash('pt-msg');setTimeout(()=>{closeM('m-putti-sess');renderTrain()},700);
 }
@@ -3290,7 +3296,7 @@ let vaylaKierrosData = {}; // {hole: {score, fh, c1in, c1ohi, bull, ob}}
 
 function startVaylaKierros(courseId, pvm) {
   vaylaKierrosCourse = getCourseById(courseId);
-  vaylaKierrosPvm = pvm || new Date().toISOString().slice(0,10);
+  vaylaKierrosPvm = pvm || dateStr(new Date());
   vaylaKierrosHole = 1;
   // Ladataan olemassaoleva data jos on
   const saved = getKierros(vaylaKierrosPvm) || {};
@@ -3483,7 +3489,7 @@ function renderKierrosVayla() {
 
 function renderKierros(){
   const cont=document.getElementById('train-content');
-  const today=kierrosPvm||new Date().toISOString().slice(0,10);
+  const today=kierrosPvm||dateStr(new Date());
   const saved=getKierros(today)||{};
   const result=saved.result||'';
   const positive=saved.positive||'';
@@ -3672,7 +3678,7 @@ function calcKierrosC1(){
 
 function calcKierrosRatingTable(){
   const cont=document.getElementById('train-content');
-  const today=kierrosPvm||new Date().toISOString().slice(0,10);
+  const today=kierrosPvm||dateStr(new Date());
   const saved=getKierros(today)||{};
   const c=getCourseById(saved.courseId||'');
   const resEl=cont?.querySelector('#kierros-result');
@@ -3689,7 +3695,7 @@ function calcKierrosRatingTable(){
 
 function renderViikkokisa(){
   const cont=document.getElementById('train-content');
-  const today=new Date().toISOString().slice(0,10);
+  const today=dateStr(new Date());
 
   // Haetaan tämän päivän viikkokisa events-mapista
   const events=get('events')||[];
@@ -3884,7 +3890,7 @@ function delEvent(id){set('events',(get('events')||[]).filter(e=>e.id!==id));ren
 // ===== COMPETITIONS =====
 function renderComp(){
   const comps=(get('comps')||[]).sort(function(a,b){return b.date.localeCompare(a.date)});
-  const today=new Date().toISOString().slice(0,10);
+  const today=dateStr(new Date());
   const events=get('events')||[];
   const compDates=new Set(comps.map(function(c){return c.date}));
 
@@ -4531,7 +4537,7 @@ function saveSettings(){
 }
 function exportData(){
   const data=localStorage.getItem(SK)||'{}';
-  const date=new Date().toISOString().slice(0,10);
+  const date=dateStr(new Date());
   const modal=document.createElement('div');
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
   const box=document.createElement('div');
@@ -4789,6 +4795,29 @@ function syncAllCompsToCalendar(){
   if(count>0) console.log('Migroitu '+count+' sarjamerkintää');
 })();
 
+// Migraatio: siirrä vanhat fp_sub_<pvm> avaimet fp_complete_v1.sub_checks:een
+(function migrateSubChecks(){
+  const d=JSON.parse(localStorage.getItem('fp_complete_v1')||'{}');
+  if(d._subs_migrated) return;
+  if(!d.sub_checks) d.sub_checks={};
+  let count=0;
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(key && key.startsWith('fp_sub_')){
+      const date=key.slice(7);
+      let val={};
+      try{val=JSON.parse(localStorage.getItem(key)||'{}')}catch(e){}
+      if(Object.keys(val).length>0 && d.sub_checks[date]===undefined){
+        d.sub_checks[date]=val;
+        count++;
+      }
+    }
+  }
+  d._subs_migrated=true;
+  localStorage.setItem('fp_complete_v1',JSON.stringify(d));
+  if(count>0) console.log('Migroitu '+count+' tupla-sessiomerkintää');
+})();
+
 // Dark mode
 function setDarkMode(on){
   document.body.classList.toggle('dark', on);
@@ -4846,11 +4875,11 @@ function setDarkMode(on){
 })();
 
 // Globaalit apumuuttujat
-window.today = new Date().toISOString().slice(0,10);
-setInterval(function(){ window.today = new Date().toISOString().slice(0,10); }, 60000);
+window.today = dateStr(new Date());
+setInterval(function(){ window.today = dateStr(new Date()); }, 60000);
 
 // Kisapäivän automaattinen avautuminen
-const todayStr = new Date().toISOString().slice(0,10);
+const todayStr = dateStr(new Date());
 const todayHour = new Date().getHours();
 const todayEvents = (get('events')||[]);
 const todayKisaEvent = todayEvents.find(e => e.date === todayStr && (e.type==='kisa'||e.type==='viikkokisa'));
