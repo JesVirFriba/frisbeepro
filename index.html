@@ -1961,7 +1961,7 @@ const WEEK_STRUCTURE = {
   base: [
     {day:'Ma', label:'Maanantai', sessions:['lepo'],               icon:'😴', intensity:'rest',   note:'Lepo – palautuminen'},
     {day:'Ti', label:'Tiistai',   sessions:['heitto_nop'],         icon:'⚡', intensity:'high',   note:'Nopeusheitto – RPE 10'},
-    {day:'Ke', label:'Keskiviikko',sessions:['lepo'],              icon:'😴', intensity:'rest',   note:'Lepo'},
+    {day:'Ke', label:'Keskiviikko',sessions:['voima_c'],            icon:'🧩', intensity:'low',    note:'Nivelterveys – kevyt ylläpito (~15 min)'},
     {day:'To', label:'Torstai',  sessions:['heitto_tek','putti'],  icon:'🥏', intensity:'medium', note:'Tekniikan ylläpito – RPE 3–4'},
     {day:'Pe', label:'Perjantai', sessions:['lepo'],               icon:'😴', intensity:'rest',   note:'Lepo'},
     {day:'La', label:'Lauantai',  sessions:['putti','kierros'],    icon:'🎯', intensity:'medium', note:'Putti + kenttäkierros'},
@@ -1990,6 +1990,7 @@ const SESSION_COLORS = {
   heitto_nop: {bg:'#EEEDFE', col:'#3C3489', lbl:'Nopeusheitto'},
   voima_a:    {bg:'#FCEBEB', col:'#791F1F', lbl:'Voima A'},
   voima_b:    {bg:'#FAECE7', col:'#712B13', lbl:'Voima B'},
+  voima_c:    {bg:'#FAEEDA', col:'#633806', lbl:'Nivelterveys'},
   putti:      {bg:'#E1F5EE', col:'#085041', lbl:'Puttausrutiini'},
   mob:        {bg:'#FAEEDA', col:'#633806', lbl:'Liikkuvuus'},
   kierros:    {bg:'#E1F5EE', col:'#085041', lbl:'Kenttäkierros'},
@@ -2285,7 +2286,7 @@ function renderWeekView() {
     const textCol = isToday ? sc.col : 'var(--text)';
     const dayCol = isToday ? sc.col : 'var(--t3)';
     const opacity = isPast && !isToday ? '.55' : '1';
-    const sessionRoute = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',putti:'putti',mob:'mob',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros',kisa:'comp_day',lepo:'rest_day'};
+    const sessionRoute = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',voima_c:'str',putti:'putti',mob:'mob',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros',kisa:'comp_day',lepo:'rest_day'};
     const routableSessions = sessions.filter(s=>sessionRoute[s]);
     // Kisa ja lepo ovat aina klikattavia
     const isCompDay = day.intensity === 'comp' && !vkDates.has(day.date);
@@ -2321,7 +2322,7 @@ function renderWeekView() {
     } else if(isPast && day.intensity !== 'rest' && !isCompDay){
       h += '<div onclick="event.stopPropagation();setDone(\''+day.date+'\',1);renderTrain()" style="font-size:10px;color:var(--t3);cursor:pointer;flex-shrink:0;padding:3px 7px;border:1px solid var(--border);border-radius:20px">Merkitse</div>';
     } else if(clickable && routableSessions.length > 1){
-      const SESSION_SHORT={heitto_tek:'Tekniikka',heitto_nop:'Nopeus',putti:'Putti',mob:'Liikkuvuus',str:'Voima',aktivointi:'Aktivointi',kierros:'Kierros',voima_a:'Voima A',voima_b:'Voima B'};
+      const SESSION_SHORT={heitto_tek:'Tekniikka',heitto_nop:'Nopeus',putti:'Putti',mob:'Liikkuvuus',str:'Voima',aktivointi:'Aktivointi',kierros:'Kierros',voima_a:'Voima A',voima_b:'Voima B',voima_c:'Nivelhuolto'};
       const doneSubs=getSubChecks(day.date);
       h += '<div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">';
       routableSessions.forEach(function(s){
@@ -2542,6 +2543,13 @@ const STR_DATA=[
     {id:'sb5',name:'Dead bug',sets:3,reps:'8/puoli',detail:'Syvä ydinlihaskoordinaatio',hint:'Alaselkä kiinni lattiassa',bw:true},
     {id:'sb6',name:'Side plank + lonkan abduktio',sets:2,reps:'10/puoli',detail:'Lateraalivakavuus',hint:'Lantio korkealla',bw:true},
     {id:'sb7',name:'Face pull',sets:3,reps:'15',detail:'Olkapään ennaltaehkäisy',hint:'Kaapeli silmien korkeudella',bw:false}
+  ]},
+  {id:'strC',name:'Nivelterveys – kisakauden ylläpito',exercises:[
+    {id:'nh1',name:'External rotation',sets:2,reps:'15/käsi',detail:'Rotator cuff – olkapään terveys',hint:'Kyynärpää kiinni kyljessä',bw:false},
+    {id:'nh2',name:'Face pull',sets:2,reps:'15',detail:'Olkapään ennaltaehkäisy',hint:'Kaapeli tai vastuskuminauha silmien korkeudella',bw:false},
+    {id:'nh3',name:'Lateral band walk',sets:2,reps:'15/suunta',detail:'Lonkan abduktorit',hint:'Vastuskuminauha polvien yläpuolella',bw:true},
+    {id:'nh4',name:'Copenhagen plank',sets:2,reps:'20–30 sek',detail:'Adduktorit + lantio',hint:'Päällimmäinen jalka penkin päällä',bw:true},
+    {id:'nh5',name:'Dead bug',sets:2,reps:'8/puoli',detail:'Syvä ydinlihaskoordinaatio',hint:'Alaselkä kiinni lattiassa',bw:true}
   ]}
 ];
 
@@ -2604,10 +2612,10 @@ function trainTabPick(pickDataStr){
 
 function renderSessionPick(){
   const cont = document.getElementById('train-content');
-  const SESSION_ROUTE = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',putti:'putti',mob:'mob',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros'};
+  const SESSION_ROUTE = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',voima_c:'str',putti:'putti',mob:'mob',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros'};
   const SESSION_NAMES = {
     heitto_tek:'🥏 Tekniikan ylläpito', heitto_nop:'⚡ Nopeusheitto',
-    voima_a:'💪 Voima A', voima_b:'💪 Voima B',
+    voima_a:'💪 Voima A', voima_b:'💪 Voima B', voima_c:'🧩 Nivelterveys',
     putti:'🎯 Puttausrutiini', mob:'🧘 Liikkuvuus',
     aktivointi:'⚡ Aktivointi', comp_day:'🏆 Kisapäivä',
     kierros:'🏃 Kenttäkierros'
@@ -2615,6 +2623,7 @@ function renderSessionPick(){
   const SESSION_DESC = {
     heitto_tek:'RPE 3–4 · Tekniikkasarjat · ~1h',
     heitto_nop:'RPE 10 · Maksiminopeus · ~1h',
+    voima_c:'2 sarjaa/liike · ~15 min · Olkapää + lonkka',
     putti:'C1-rutiini · Joka putilla samat 5 vaihetta',
     mob:'Liikkuvuus + palauttelu',
     aktivointi:'Kevyt herättely ennen kisaa',
