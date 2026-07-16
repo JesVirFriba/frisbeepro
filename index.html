@@ -840,6 +840,12 @@ const PTDISTS=[
   {key:'d20',label:'C2 · 20m', goal:20, col:'#D85A30', circle:'C2', dist:20},
 ];
 
+const PUTTI_PHASES=[
+  {n:1,title:'Vaihe 1 – Rutiinin oppiminen',short:'Rutiinin oppiminen',weeks:'Vk 1–2',freq:'3x viikossa · 20 min',focus:'Vain 3–5 metriä · 50 puttia · Rutiini joka putilla · Ei väliä meneekö sisään',col:'var(--gl)',tcol:'var(--gd)'},
+  {n:2,title:'Vaihe 2 – Vakiinnus',short:'Vakiinnus',weeks:'Vk 3–4',freq:'3x viikossa · 25 min',focus:'3–5 m ja 6–8 m vuorotellen · 60 puttia · Kirjaa C1X% · Tavoite yli 85%',col:'var(--bl)',tcol:'var(--bd)'},
+  {n:3,title:'Vaihe 3 – Kisapaine',short:'Kisapaine',weeks:'Vk 5–6',freq:'2x viikossa · 20 min',focus:'5 puttia sisään peräkkäin ennen lopetusta · Jos missaat → aloita alusta',col:'var(--al)',tcol:'var(--ad)'}
+];
+
 // Migraatio vanhoista avaimista → uudet C1/C2 avaimet
 (function migratePuttiDists(){
   const sessions=JSON.parse(localStorage.getItem('fp_complete_v1')||'{}').putti_sessions||[];
@@ -2230,6 +2236,18 @@ function renderWeekView() {
     <div style="flex:1;background:var(--bg);border:0.5px solid var(--border);border-radius:var(--rs);padding:8px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--t3)">${restCount}</div><div style="font-size:10px;color:var(--t3);font-weight:500">Lepoa</div></div>
   </div>`;
 
+  // Puttausvaihe-banneri
+  const currentPuttiPhase = get('putti_phase')||1;
+  const puttiPh = PUTTI_PHASES[currentPuttiPhase-1];
+  h += `<div onclick="trainTab('putti',null);renderTrain()" style="display:flex;align-items:center;gap:10px;background:${puttiPh.col};border-radius:var(--r);padding:10px 12px;margin-bottom:12px;cursor:pointer">
+    <span style="font-size:18px">🎯</span>
+    <div style="flex:1">
+      <div style="font-size:12px;font-weight:700;color:${puttiPh.tcol}">Puttaus: ${puttiPh.title}</div>
+      <div style="font-size:10px;color:${puttiPh.tcol};opacity:.8">${puttiPh.weeks} · ${puttiPh.freq}</div>
+    </div>
+    <span style="color:${puttiPh.tcol};font-size:16px;opacity:.6">›</span>
+  </div>`;
+
   // Kuormitusmittari
   const kisaVkDates = getViikkokisaDatesInRange(weekDates[0], weekDates[6]);
   const kisaPaivat = plan.filter(d => d.intensity==='comp' || kisaVkDates.has(d.date));
@@ -2797,11 +2815,7 @@ function renderPuttiTrain(){
   const pct_today=Math.min(100,Math.round(todayDone/todayTarget*100));
 
   const steps=[['ASETU','Takajalka linjaan kohteeseen'],['KATSO','Ketjun alareuna – ei koko koria'],['HENGITÄ','Yksi syvä hengitys ulos ennen liikettä'],['RYTMI','Vakio tahti – ei liian hidas eikä nopea'],['SEURAA LÄPI','Käsi jatkuu kohti ketjua irrotuksen jälkeen']];
-  const phases=[
-    {n:1,title:'Vaihe 1 – Rutiinin oppiminen',weeks:'Vk 1–2',freq:'3x viikossa · 20 min',focus:'Vain 3–5 metriä · 50 puttia · Rutiini joka putilla · Ei väliä meneekö sisään',col:'var(--gl)',tcol:'var(--gd)'},
-    {n:2,title:'Vaihe 2 – Vakiinnus',weeks:'Vk 3–4',freq:'3x viikossa · 25 min',focus:'3–5 m ja 6–8 m vuorotellen · 60 puttia · Kirjaa C1X% · Tavoite yli 85%',col:'var(--bl)',tcol:'var(--bd)'},
-    {n:3,title:'Vaihe 3 – Kisapaine',weeks:'Vk 5–6',freq:'2x viikossa · 20 min',focus:'5 puttia sisään peräkkäin ennen lopetusta · Jos missaat → aloita alusta',col:'var(--al)',tcol:'var(--ad)'}
-  ];
+  const phases=PUTTI_PHASES;
   const ph=phases[puttiPhase-1];
 
   const div=document.createElement('div');
