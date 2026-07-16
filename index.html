@@ -841,9 +841,9 @@ const PTDISTS=[
 ];
 
 const PUTTI_PHASES=[
-  {n:1,title:'Vaihe 1 – Rutiinin oppiminen',short:'Rutiinin oppiminen',weeks:'Vk 1–2',freq:'3x viikossa · 20 min',focus:'Vain 3–5 metriä · 50 puttia · Rutiini joka putilla · Ei väliä meneekö sisään',col:'var(--gl)',tcol:'var(--gd)'},
-  {n:2,title:'Vaihe 2 – Vakiinnus',short:'Vakiinnus',weeks:'Vk 3–4',freq:'3x viikossa · 25 min',focus:'3–5 m ja 6–8 m vuorotellen · 60 puttia · Kirjaa C1X% · Tavoite yli 85%',col:'var(--bl)',tcol:'var(--bd)'},
-  {n:3,title:'Vaihe 3 – Kisapaine',short:'Kisapaine',weeks:'Vk 5–6',freq:'2x viikossa · 20 min',focus:'5 puttia sisään peräkkäin ennen lopetusta · Jos missaat → aloita alusta',col:'var(--al)',tcol:'var(--ad)'}
+  {n:1,title:'Vaihe 1 – Rutiinin oppiminen',short:'Rutiinin oppiminen',weeks:'Vk 1–2',freq:'3x viikossa · 20 min',focus:'Vain 4 metriä · 50 puttia · Rutiini joka putilla · Ei väliä meneekö sisään',col:'var(--gl)',tcol:'var(--gd)'},
+  {n:2,title:'Vaihe 2 – Vakiinnus',short:'Vakiinnus',weeks:'Vk 3–4',freq:'3x viikossa · 25 min',focus:'4 m ja 8 m vuorotellen · 60 puttia · Kirjaa C1X% · Tavoite yli 85%',col:'var(--bl)',tcol:'var(--bd)'},
+  {n:3,title:'Vaihe 3 – Kisapaine',short:'Kisapaine',weeks:'Vk 5–6',freq:'2x viikossa · 20 min',focus:'6 m:stä, 5 puttia sisään peräkkäin ennen lopetusta · Jos missaat → aloita alusta',col:'var(--al)',tcol:'var(--ad)'}
 ];
 
 // Migraatio vanhoista avaimista → uudet C1/C2 avaimet
@@ -1967,7 +1967,7 @@ const WEEK_STRUCTURE = {
   base: [
     {day:'Ma', label:'Maanantai', sessions:['lepo'],               icon:'😴', intensity:'rest',   note:'Lepo – palautuminen'},
     {day:'Ti', label:'Tiistai',   sessions:['heitto_nop'],         icon:'⚡', intensity:'high',   note:'Nopeusheitto – RPE 10'},
-    {day:'Ke', label:'Keskiviikko',sessions:['voima_c'],            icon:'🧩', intensity:'low',    note:'Nivelterveys – kevyt ylläpito (~15 min)'},
+    {day:'Ke', label:'Keskiviikko',sessions:['voima_c','putti'],    icon:'🧩', intensity:'low',    note:'Nivelterveys + putti (~30 min)'},
     {day:'To', label:'Torstai',  sessions:['heitto_tek','putti'],  icon:'🥏', intensity:'medium', note:'Tekniikan ylläpito – RPE 3–4'},
     {day:'Pe', label:'Perjantai', sessions:['lepo'],               icon:'😴', intensity:'rest',   note:'Lepo'},
     {day:'La', label:'Lauantai',  sessions:['putti','kierros'],    icon:'🎯', intensity:'medium', note:'Putti + kenttäkierros'},
