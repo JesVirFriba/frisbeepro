@@ -2699,7 +2699,15 @@ function renderThrow(){
   const modeCol=isNopeus?'var(--pd)':'var(--bd)';
   const phase=throwWk<=4?'Tekniikkablokki':'Nopeusblokki';
   const sessions=THROW_SESSIONS[throwWk]||THROW_SESSIONS[1];
-  let h=`<div style="background:${modeBg};border-radius:var(--r);padding:12px 14px;margin-bottom:12px"><div style="font-size:14px;font-weight:700;color:${modeCol}">${modeTitle}</div>${modeDesc?`<div style="font-size:11px;color:${modeCol};opacity:.8;margin-top:3px">${modeDesc}</div>`:''}</div><div class="wk-scroll" id="throw-wk"></div><div class="sect">${phase} – viikko ${throwWk}</div>`
+  let h=`<div style="background:${modeBg};border-radius:var(--r);padding:12px 14px;margin-bottom:12px"><div style="font-size:14px;font-weight:700;color:${modeCol}">${modeTitle}</div>${modeDesc?`<div style="font-size:11px;color:${modeCol};opacity:.8;margin-top:3px">${modeDesc}</div>`:''}</div>`;
+  const devFocus=get('dev_focus');
+  if(devFocus && devFocus.until>=dateStr(new Date())){
+    h+=`<div style="background:var(--al);border-radius:var(--r);padding:10px 12px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--ad)">🎯 Kehityskohde seurannassa ${devFocus.until} asti</div>
+      <div style="font-size:12px;color:var(--ad);margin-top:2px">${devFocus.text}</div>
+    </div>`;
+  }
+  h+=`<div class="wk-scroll" id="throw-wk"></div><div class="sect">${phase} – viikko ${throwWk}</div>`
   sessions.forEach(sess=>{
     const allDone=sess.exercises.every(e=>getSets('th_'+throwWk+'_'+sess.id+'_'+e.id)>=e.totalSets);
     h+=`<div class="str-card">
