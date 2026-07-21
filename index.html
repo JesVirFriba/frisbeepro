@@ -2344,7 +2344,7 @@ function renderWeekView() {
       h += '<div style="font-size:10px;color:var(--gd);flex-shrink:0;padding:3px 7px;border:1px solid var(--g);border-radius:20px">✓ Kisattu</div>';
     } else if(isPast && day.intensity !== 'rest' && !isCompDay){
       h += '<div onclick="event.stopPropagation();setDone(\''+day.date+'\',1);renderTrain()" style="font-size:10px;color:var(--t3);cursor:pointer;flex-shrink:0;padding:3px 7px;border:1px solid var(--border);border-radius:20px">Merkitse</div>';
-    } else if(clickable && routableSessions.length > 1){
+    } else if(clickable && routableSessions.length >= 1 && !isRestDay){
       const SESSION_SHORT={heitto_tek:'Tekniikka',heitto_nop:'Nopeus',putti:'Putti',mob:'Liikkuvuus',str:'Voima',aktivointi:'Aktivointi',kierros:'Kierros',voima_a:'Voima A',voima_b:'Voima B',voima_c:'Nivelhuolto'};
       const doneSubs=getSubChecks(day.date);
       h += '<div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">';
