@@ -2094,6 +2094,9 @@ function buildWeekPlan(weekDates) {
       };
     } else if (isPreComp) {
       dayPlan = { ...WEEK_STRUCTURE.pre_comp, day: base[i].day, label: base[i].label, date: ds };
+    } else if ((get('events')||[]).some(e => e.type==='harjoitus' && e.date===ds)) {
+      const hEvent = (get('events')||[]).find(e => e.type==='harjoitus' && e.date===ds);
+      dayPlan = { day: base[i].day, label: base[i].label, date: ds, sessions:['kierros'], icon:'🏃', intensity:'low', note: hEvent.name };
     } else {
       dayPlan = { ...base[i], date: ds };
     }
