@@ -686,7 +686,25 @@ async function gistSave(){
   if(!id)id=await gistInit();
   if(!id){gistUpdateStatus('error','Gist-virhe');return;}
   try{
-    const payload={version:1,updated:new Date().toISOString(),data:ld()};
+    // Hae ensin Gistin senhetkinen sisältö ja yhdistä se paikalliseen ennen pushia,
+    // jotta toisen laitteen sillä välin lisäämät, vain-Gistissä-olevat avaimet eivät katoa.
+    let localData=ld();
+    try{
+      const rFetch=await fetch(`https://api.github.com/gists/${id}`,
+        {headers:{Authorization:`token ${token}`,'User-Agent':'frisbeepro'}});
+      if(rFetch.ok){
+        const gist=await rFetch.json();
+        const raw=gist.files[GIST_FILENAME]?.content;
+        if(raw){
+          const parsed=JSON.parse(raw);
+          if(parsed&&parsed.data){
+            localData={...parsed.data,...localData};
+            sv(localData);
+          }
+        }
+      }
+    }catch(e){/* haku epäonnistui - jatketaan silti pelkällä paikallisella datalla */}
+    const payload={version:1,updated:new Date().toISOString(),data:localData};
     const r=await fetch(`https://api.github.com/gists/${id}`,{
       method:'PATCH',
       headers:{Authorization:`token ${token}`,'Content-Type':'application/json','User-Agent':'frisbeepro'},
@@ -713,10 +731,16 @@ async function gistLoad(){
     if(!raw)return false;
     const parsed=JSON.parse(raw);
     if(!parsed.data||!parsed.updated)return false;
-    // Compare timestamps – use newer
-    const localUpdated=ld()._updated||'1970-01-01';
-    if(parsed.updated>localUpdated){
-      const merged={...parsed.data,_updated:parsed.updated};
+    // Avainkohtainen yhdistäminen: älä koskaan hiljaa pudota avainta joka on vain toisella puolella.
+    // Jos molemmilla on sama avain, tuoreempi puoli voittaa juuri sen avaimen kohdalla - mutta
+    // kummankin puolen omat, ainutlaatuiset avaimet säilyvät aina riippumatta aikaleimasta.
+    const local=ld();
+    const localUpdated=local._updated||'1970-01-01';
+    const remoteNewer=parsed.updated>localUpdated;
+    const merged=remoteNewer ? {...local,...parsed.data} : {...parsed.data,...local};
+    merged._updated=remoteNewer?parsed.updated:localUpdated;
+    const changed=JSON.stringify(merged)!==JSON.stringify(local);
+    if(changed){
       sv(merged);
       gistUpdateStatus('saved',`Ladattu Gististä ${parsed.updated.slice(11,16)}`);
       return true;
