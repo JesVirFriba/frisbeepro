@@ -2121,6 +2121,9 @@ function buildWeekPlan(weekDates) {
     } else if ((get('events')||[]).some(e => e.type==='harjoitus' && e.date===ds)) {
       const hEvent = (get('events')||[]).find(e => e.type==='harjoitus' && e.date===ds);
       dayPlan = { day: base[i].day, label: base[i].label, date: ds, sessions:['kierros'], icon:'🏃', intensity:'low', note: hEvent.name };
+    } else if ((get('events')||[]).some(e => e.type==='loma' && ds>=e.date && ds<=(e.dateTo||e.date))) {
+      const lomaEvent = (get('events')||[]).find(e => e.type==='loma' && ds>=e.date && ds<=(e.dateTo||e.date));
+      dayPlan = { day: base[i].day, label: base[i].label, date: ds, sessions:['lepo'], icon:'🏖️', intensity:'rest', note: lomaEvent.name };
     } else {
       dayPlan = { ...base[i], date: ds };
     }
