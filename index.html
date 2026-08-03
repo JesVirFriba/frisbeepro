@@ -2124,6 +2124,9 @@ function buildWeekPlan(weekDates) {
     } else if ((get('events')||[]).some(e => e.type==='loma' && ds>=e.date && ds<=(e.dateTo||e.date))) {
       const lomaEvent = (get('events')||[]).find(e => e.type==='loma' && ds>=e.date && ds<=(e.dateTo||e.date));
       dayPlan = { day: base[i].day, label: base[i].label, date: ds, sessions:['lepo'], icon:'🏖️', intensity:'rest', note: lomaEvent.name };
+    } else if ((get('events')||[]).some(e => e.type==='palautus' && e.date===ds)) {
+      const pEvent = (get('events')||[]).find(e => e.type==='palautus' && e.date===ds);
+      dayPlan = { day: base[i].day, label: base[i].label, date: ds, sessions:['heitto_tek','putti'], icon:'🔄', intensity:'low', note: pEvent.name };
     } else {
       dayPlan = { ...base[i], date: ds };
     }
