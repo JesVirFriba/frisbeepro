@@ -151,11 +151,6 @@ textarea{resize:none;min-height:65px}
 /* CAL */
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:10px}
 .cal-dh{font-size:9px;color:var(--t3);text-align:center;padding:3px 0;font-weight:500}
-.cal-day{min-height:40px;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:5px;cursor:pointer;font-size:13px;font-weight:500;color:var(--t2);position:relative}
-.cal-day.today{color:var(--g);font-weight:700}
-.cal-day.has-event::after,.cal-day.has-comp::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%}
-.cal-day.has-event::after{background:var(--g)}
-.cal-day.has-comp::after{background:#E24B4A}
 .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .cal-nav-btn{background:none;border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;color:var(--text)}
 /* COMP CARDS */
@@ -782,6 +777,14 @@ function setDone(date,val){
   set('done_map',m);
   // Remove old format if exists
   localStorage.removeItem('done_'+date);
+}
+function getPuttiSarjat(date){
+  return (get('putti_sarjat')||{})[date] || [];
+}
+function setPuttiSarjat(date, arr){
+  const all = get('putti_sarjat')||{};
+  all[date] = arr;
+  set('putti_sarjat', all);
 }
 function getKierros(date){
   // Check new format first, fall back to old
@@ -2909,7 +2912,7 @@ function renderPuttiTrain(){
 
   // Sarjakirjaus
   const today2=dateStr(new Date());
-  const sarjatRaw=get('putti_sarjat_'+today2)||[];
+  const sarjatRaw=getPuttiSarjat(today2)||[];
   // Support both old format (numbers) and new format (objects)
   const sarjat=sarjatRaw.map(function(s){return typeof s==='object'?s:{made:s,dist:3,tyyli:'normaali'};});
   const sarjaTehty=sarjat.reduce((a,s)=>a+(s.made||0),0);
@@ -3134,10 +3137,10 @@ function renderPuttiTrain(){
     if(e)e.preventDefault();
     const val=parseInt(sarjaInput?.value);
     if(isNaN(val)||val<0||val>10){alert('Syötä luku 0–10');return;}
-    const s=get('putti_sarjat_'+today3)||[];
+    const s=getPuttiSarjat(today3)||[];
     const etaisyys=get('putti_etaisyys')||3;
     s.push({made:val, dist:etaisyys, tyyli:get('putti_tyyli')||'normaali'});
-    set('putti_sarjat_'+today3,s);
+    setPuttiSarjat(today3,s);
     renderTrain();
   }
   if(sarjaSaveBtn){
@@ -3147,8 +3150,8 @@ function renderPuttiTrain(){
   if(sarjaUndoBtn){
     function undoSarja(e){
       if(e)e.preventDefault();
-      const s=get('putti_sarjat_'+today3)||[];
-      if(s.length){s.pop();set('putti_sarjat_'+today3,s);renderTrain();}
+      const s=getPuttiSarjat(today3)||[];
+      if(s.length){s.pop();setPuttiSarjat(today3,s);renderTrain();}
     }
     sarjaUndoBtn.addEventListener('click',undoSarja);
     sarjaUndoBtn.addEventListener('touchend',undoSarja);
@@ -3156,7 +3159,7 @@ function renderPuttiTrain(){
   if(sarjaSaveSessBtn){
     function saveSessFromSarjat(e){
       if(e)e.preventDefault();
-      const s=get('putti_sarjat_'+today3)||[];
+      const s=getPuttiSarjat(today3)||[];
       if(!s.length)return;
       const sarjatObj=s.map(function(v){return typeof v==='object'?v:{made:v,dist:6,tyyli:'normaali'};});
       const sess={id:Date.now(),date:today3,tyyli:get('putti_tyyli')||'normaali'};
@@ -3164,7 +3167,7 @@ function renderPuttiTrain(){
       const sessions2=get('putti_sessions')||[];
       sessions2.push(sess);
       set('putti_sessions',sessions2);
-      set('putti_sarjat_'+today3,[]);
+      setPuttiSarjat(today3,[]);
       setDone(today3,1);
       renderTrain();
     }
@@ -4062,7 +4065,6 @@ function renderCal(){
     btn.addEventListener('click',()=>delEvent(parseInt(btn.dataset.delEv)));
   });
 }
-function openDayModal(date){setV('ev-date',date);openM('m-event')}
 function calPrev(){calM--;if(calM<0){calM=11;calY--}renderCal()}
 function calNext(){calM++;if(calM>11){calM=0;calY++}renderCal()}
 function saveEvent(){
@@ -5000,6 +5002,27 @@ function syncAllCompsToCalendar(){
   d._subs_migrated=true;
   localStorage.setItem('fp_complete_v1',JSON.stringify(d));
   if(count>0) console.log('Migroitu '+count+' tupla-sessiomerkintää');
+})();
+
+// Migraatio: yhdistä hajallaan olevat putti_sarjat_<pvm> avaimet yhdeksi putti_sarjat-objektiksi
+(function migratePuttiSarjat(){
+  const d=JSON.parse(localStorage.getItem('fp_complete_v1')||'{}');
+  if(d._putti_sarjat_migrated) return;
+  if(!d.putti_sarjat) d.putti_sarjat={};
+  let count=0;
+  Object.keys(d).forEach(function(key){
+    if(key.indexOf('putti_sarjat_')===0){
+      const date=key.slice('putti_sarjat_'.length);
+      if(Array.isArray(d[key]) && d[key].length>0 && d.putti_sarjat[date]===undefined){
+        d.putti_sarjat[date]=d[key];
+        count++;
+      }
+      delete d[key];
+    }
+  });
+  d._putti_sarjat_migrated=true;
+  localStorage.setItem('fp_complete_v1',JSON.stringify(d));
+  if(count>0) console.log('Yhdistetty '+count+' puttaussarjapäivää');
 })();
 
 // Dark mode
