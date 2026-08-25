@@ -1999,6 +1999,16 @@ const WEEK_STRUCTURE = {
     {day:'La', label:'Lauantai',  sessions:['putti','kierros'],    icon:'🎯', intensity:'medium', note:'Putti + kenttäkierros'},
     {day:'Su', label:'Sunnuntai', sessions:['lepo'],               icon:'😴', intensity:'rest',   note:'Lepo – tai viikkokisa'},
   ],
+  // Off-season Vaihe 1 (loka-marras): perusta - voima täysillä, päivittäinen yläselkäliikkuvuus
+  offseason_p1: [
+    {day:'Ma', label:'Maanantai', sessions:['voima_a','mob'],      icon:'💪', intensity:'medium', note:'Voima A + yläselkärutiini'},
+    {day:'Ti', label:'Tiistai',   sessions:['heitto_tek','mob'],   icon:'🥏', intensity:'low',    note:'Tekniikan ylläpito + yläselkärutiini'},
+    {day:'Ke', label:'Keskiviikko',sessions:['voima_b','mob'],     icon:'💪', intensity:'medium', note:'Voima B + yläselkärutiini'},
+    {day:'To', label:'Torstai',  sessions:['putti','mob'],         icon:'🎯', intensity:'low',    note:'Puttaus + yläselkärutiini'},
+    {day:'Pe', label:'Perjantai', sessions:['voima_a','mob'],      icon:'💪', intensity:'medium', note:'Voima A + yläselkärutiini'},
+    {day:'La', label:'Lauantai',  sessions:['heitto_tek','putti','mob'], icon:'🥏', intensity:'medium', note:'Tekniikka + putti + yläselkärutiini'},
+    {day:'Su', label:'Sunnuntai', sessions:['lepo','mob'],         icon:'😴', intensity:'rest',   note:'Lepo + yläselkärutiini'},
+  ],
   // Competition week (before big comp): reduced load
   comp_week: [
     {day:'Ma', label:'Maanantai', sessions:['heitto_tek','putti'], icon:'🥏', intensity:'low',    note:'Kevyt tekniikka + putti – lyhyt'},
@@ -2088,7 +2098,8 @@ function buildWeekPlan(weekDates) {
   // Viikkokisat eivät laukaise comp_week rakennetta
   const pdgaDates = new Set([...compDates].filter(d => !vkDates.has(d)));
   const isCompWeek = pdgaDates.has(satDs) || pdgaDates.has(sunDs);
-  const base = isCompWeek ? WEEK_STRUCTURE.comp_week : WEEK_STRUCTURE.base;
+  const isOffseasonP1 = dateStr(weekDates[0]) >= '2026-10-01' && dateStr(weekDates[0]) <= '2026-11-30';
+  const base = isCompWeek ? WEEK_STRUCTURE.comp_week : (isOffseasonP1 ? WEEK_STRUCTURE.offseason_p1 : WEEK_STRUCTURE.base);
 
   for (let i = 0; i < 7; i++) {
     const ds = dateStr(weekDates[i]);
