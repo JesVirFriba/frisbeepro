@@ -2001,13 +2001,13 @@ const WEEK_STRUCTURE = {
   ],
   // Off-season Vaihe 1 (loka-marras): perusta - voima täysillä, päivittäinen yläselkäliikkuvuus
   offseason_p1: [
-    {day:'Ma', label:'Maanantai', sessions:['voima_a','mob'],      icon:'💪', intensity:'medium', note:'Voima A + yläselkärutiini'},
-    {day:'Ti', label:'Tiistai',   sessions:['heitto_tek','mob'],   icon:'🥏', intensity:'low',    note:'Tekniikan ylläpito + yläselkärutiini'},
-    {day:'Ke', label:'Keskiviikko',sessions:['voima_b','mob'],     icon:'💪', intensity:'medium', note:'Voima B + yläselkärutiini'},
-    {day:'To', label:'Torstai',  sessions:['putti','mob'],         icon:'🎯', intensity:'low',    note:'Puttaus + yläselkärutiini'},
-    {day:'Pe', label:'Perjantai', sessions:['voima_a','mob'],      icon:'💪', intensity:'medium', note:'Voima A + yläselkärutiini'},
-    {day:'La', label:'Lauantai',  sessions:['heitto_tek','putti','mob'], icon:'🥏', intensity:'medium', note:'Tekniikka + putti + yläselkärutiini'},
-    {day:'Su', label:'Sunnuntai', sessions:['lepo','mob'],         icon:'😴', intensity:'rest',   note:'Lepo + yläselkärutiini'},
+    {day:'Ma', label:'Maanantai', sessions:['voima_a','mob_quick'], icon:'💪', intensity:'medium', note:'Voima A + yläselkäpika'},
+    {day:'Ti', label:'Tiistai',   sessions:['heitto_tek','mob'],    icon:'🥏', intensity:'low',    note:'Tekniikan ylläpito + täysi liikkuvuus'},
+    {day:'Ke', label:'Keskiviikko',sessions:['voima_b','mob_quick'],icon:'💪', intensity:'medium', note:'Voima B + yläselkäpika'},
+    {day:'To', label:'Torstai',  sessions:['putti','mob_quick'],    icon:'🎯', intensity:'low',    note:'Puttaus + yläselkäpika'},
+    {day:'Pe', label:'Perjantai', sessions:['voima_a','mob_quick'], icon:'💪', intensity:'medium', note:'Voima A + yläselkäpika'},
+    {day:'La', label:'Lauantai',  sessions:['heitto_tek','putti','mob_quick'], icon:'🥏', intensity:'medium', note:'Tekniikka + putti + yläselkäpika'},
+    {day:'Su', label:'Sunnuntai', sessions:['lepo','mob'],          icon:'😴', intensity:'rest',   note:'Lepo + täysi liikkuvuus'},
   ],
   // Competition week (before big comp): reduced load
   comp_week: [
@@ -2033,6 +2033,7 @@ const SESSION_COLORS = {
   voima_a:    {bg:'#FCEBEB', col:'#791F1F', lbl:'Voima A'},
   voima_b:    {bg:'#FAECE7', col:'#712B13', lbl:'Voima B'},
   voima_c:    {bg:'#FAEEDA', col:'#633806', lbl:'Nivelterveys'},
+  mob_quick:  {bg:'#E8F5E9', col:'#1B5E20', lbl:'Yläselkä'},
   putti:      {bg:'#E1F5EE', col:'#085041', lbl:'Puttausrutiini'},
   mob:        {bg:'#FAEEDA', col:'#633806', lbl:'Liikkuvuus'},
   kierros:    {bg:'#E1F5EE', col:'#085041', lbl:'Kenttäkierros'},
@@ -2350,7 +2351,7 @@ function renderWeekView() {
     const textCol = isToday ? sc.col : 'var(--text)';
     const dayCol = isToday ? sc.col : 'var(--t3)';
     const opacity = isPast && !isToday ? '.55' : '1';
-    const sessionRoute = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',voima_c:'str',putti:'putti',mob:'mob',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros',kisa:'comp_day',lepo:'rest_day'};
+    const sessionRoute = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',voima_c:'str',putti:'putti',mob:'mob',mob_quick:'mob_quick',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros',kisa:'comp_day',lepo:'rest_day'};
     const routableSessions = sessions.filter(s=>sessionRoute[s]);
     // Kisa ja lepo ovat aina klikattavia
     const isCompDay = day.intensity === 'comp' && !vkDates.has(day.date);
@@ -2386,7 +2387,7 @@ function renderWeekView() {
     } else if(isPast && day.intensity !== 'rest' && !isCompDay){
       h += '<div onclick="event.stopPropagation();setDone(\''+day.date+'\',1);renderTrain()" style="font-size:10px;color:var(--t3);cursor:pointer;flex-shrink:0;padding:3px 7px;border:1px solid var(--border);border-radius:20px">Merkitse</div>';
     } else if(clickable && routableSessions.length >= 1 && !isRestDay){
-      const SESSION_SHORT={heitto_tek:'Tekniikka',heitto_nop:'Nopeus',putti:'Putti',mob:'Liikkuvuus',str:'Voima',aktivointi:'Aktivointi',kierros:'Kierros',voima_a:'Voima A',voima_b:'Voima B',voima_c:'Nivelhuolto'};
+      const SESSION_SHORT={heitto_tek:'Tekniikka',heitto_nop:'Nopeus',putti:'Putti',mob:'Liikkuvuus',mob_quick:'Yläselkä',str:'Voima',aktivointi:'Aktivointi',kierros:'Kierros',voima_a:'Voima A',voima_b:'Voima B',voima_c:'Nivelhuolto'};
       const doneSubs=getSubChecks(day.date);
       h += '<div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">';
       routableSessions.forEach(function(s){
@@ -2676,7 +2677,7 @@ function trainTabPick(pickDataStr){
 
 function renderSessionPick(){
   const cont = document.getElementById('train-content');
-  const SESSION_ROUTE = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',voima_c:'str',putti:'putti',mob:'mob',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros'};
+  const SESSION_ROUTE = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',voima_c:'str',putti:'putti',mob:'mob',mob_quick:'mob_quick',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros'};
   const SESSION_NAMES = {
     heitto_tek:'🥏 Tekniikan ylläpito', heitto_nop:'⚡ Nopeusheitto',
     voima_a:'💪 Voima A', voima_b:'💪 Voima B', voima_c:'🧩 Nivelterveys',
@@ -2724,6 +2725,7 @@ function renderTrain(){
   else if(trainTabCur==='str')renderStr();
   else if(trainTabCur==='putti')renderPuttiTrain();
   else if(trainTabCur==='mob')renderMob();
+  else if(trainTabCur==='mob_quick')renderMobQuick();
   else if(trainTabCur==='aktivointi')renderAktivointi();
   else if(trainTabCur==='kierros_vayla')renderKierrosVayla();
   else if(trainTabCur==='kierros')renderKierros();
@@ -3330,6 +3332,62 @@ function renderMob(){
     }
     exList.addEventListener('click',handleMobToggle);
     exList.addEventListener('touchend',handleMobToggle);
+  }
+}
+
+function toggleMob(key){
+  const cur=getSets(key);
+  setSets(key, cur>0 ? 0 : 1);
+  renderTrain();
+}
+
+const MOB_QUICK_DAILY=[
+  {id:'mq1',name:'Rintakehän kierto lattialla',desc:'Kyljelläsi, polvet 90°. Vie käsi auki taaksepäin hitaasti.',reps:'8 toistoa/puoli'},
+  {id:'mq2',name:'Thoracic extension',desc:'Kädet niskan taakse, kyynärpäät taaksepäin – avaa rintakehä.',reps:'8–10 toistoa'},
+  {id:'mq3',name:'Lapapumppaus seisaaltaan',desc:'Kädet eteen – lapaluut loittonee. Vedä takaisin.',reps:'10 toistoa'}
+];
+
+function toggleMobQuick(key){
+  const cur=getSets(key);
+  setSets(key, cur>0 ? 0 : 1);
+  renderTrain();
+}
+
+function renderMobQuick(){
+  const cont=document.getElementById('train-content');
+  const today=dateStr(new Date());
+  const done=MOB_QUICK_DAILY.filter(ex=>getSets('mobq_'+today+'_'+ex.id)>0).length;
+  const total=MOB_QUICK_DAILY.length;
+  const pct=Math.round(done/total*100);
+
+  let h='<div style="background:var(--gl);border-radius:var(--r);padding:12px 14px;margin-bottom:12px">';
+  h+='<div style="font-size:14px;font-weight:700;color:var(--gd)">🧩 Yläselkärutiini – pika</div>';
+  h+='<div style="font-size:11px;color:var(--gd);opacity:.8;margin-top:3px">3 liikettä · ~10 min · Sama joka päivä off-seasonin perusvaiheessa</div>';
+  h+='</div>';
+  h+='<div class="prog-bar" style="margin-bottom:14px"><div class="prog-fill" style="width:'+pct+'%;background:var(--g)"></div></div>';
+  h+='<div class="card card-p" id="mobq-ex-list">';
+  MOB_QUICK_DAILY.forEach(function(ex){
+    const key='mobq_'+today+'_'+ex.id;
+    const ck=getSets(key)>0;
+    h+='<div class="mob-row" data-mobqkey="'+key+'">';
+    h+='<div class="mob-cb'+(ck?' c':'')+'">'+(ck?'✓':'')+'</div>';
+    h+='<div style="flex:1">';
+    h+='<div style="font-size:13px;font-weight:600">'+ex.name+'</div>';
+    h+='<div style="font-size:11px;color:var(--t2);margin-top:1px;line-height:1.4">'+ex.desc+'</div>';
+    h+='<div style="font-size:10px;color:var(--gd);font-weight:500;margin-top:2px">'+ex.reps+'</div>';
+    h+='</div></div>';
+  });
+  h+='</div>';
+  cont.innerHTML=h;
+
+  const exList=cont.querySelector('#mobq-ex-list');
+  if(exList){
+    function handleMobQToggle(e){
+      const row=e.target.closest('[data-mobqkey]');
+      if(row){e.preventDefault();toggleMobQuick(row.dataset.mobqkey);}
+    }
+    exList.addEventListener('click',handleMobQToggle);
+    exList.addEventListener('touchend',handleMobQToggle);
   }
 }
 
