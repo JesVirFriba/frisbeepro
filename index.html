@@ -2595,22 +2595,22 @@ for(let w=5;w<=8;w++){
 }
 
 const STR_DATA=[
-  {id:'strA',name:'Voima A – Alaraaja + rotaatio',exercises:[
-    {id:'sa1',name:'Romanian maastaveto (RDL)',sets:3,reps:'6–8',detail:'Lonkan saranan hallinta',hint:'Selkä neutraalina, lantio taaksepäin',bw:false},
-    {id:'sa2',name:'Bulgarian split-kyykky',sets:3,reps:'8/jalka',detail:'Etujalka edessä, paino kantapäällä',hint:'Takajalka penkin päällä',bw:false},
-    {id:'sa3',name:'Pallonheitto seinään – rotaatio',sets:3,reps:'8/suunta',detail:'Maksimaalinen rotaatiovoima',hint:'3–4 kg medicine ball',bw:false},
-    {id:'sa4',name:'Hip thrust',sets:3,reps:'10–12',detail:'Gluteaalien aktivointi',hint:'Hartiat penkin reunalla',bw:false},
+  {id:'strA',name:'Voima A – Kyykky + rotaatio',exercises:[
+    {id:'sa1',name:'Rinnalleveto',sets:5,reps:'3',detail:'Räjähtävä teho – tehdään tuorein hermosto ensin',hint:'Tekninen liike, ei jäähtynyt vielä',bw:false},
+    {id:'sa2',name:'Takakyykky',blocks:[{reps:'6–8',sets:3,rpe:'RPE 6–7'},{reps:'5–6',sets:4,rpe:'RPE 7–8'},{reps:'3–5',sets:4,rpe:'RPE 8–9'}],detail:'Perusvoima – PAP-pari seuraavaan liikkeeseen',hint:'Löydä ekalla kerralla toimiva paino, nosta progressiivisesti',bw:false},
+    {id:'sa3',name:'Kyykkyhyppy',sets:3,reps:'3',detail:'PAP-pari takakyykylle – räjähtävä heti perään',hint:'Maksimaalinen räjähtävyys, ei väsymykseen asti',bw:true},
+    {id:'sa4',name:'Pallonheitto seinään – rotaatio',sets:4,reps:'6/suunta',detail:'Maksimaalinen rotaatiovoima',hint:'5–6 kg pallo talvikaudella – raskaampi kuin kisakaudella',bw:false},
     {id:'sa5',name:'Lateral band walk',sets:2,reps:'15/suunta',detail:'Lonkan abduktorit',hint:'Vastuskummi polvien yläpuolella',bw:true},
     {id:'sa6',name:'Copenhagen plank',sets:2,reps:'20–30 sek',detail:'Adduktorit + lantio',hint:'Päällimmäinen jalka penkin päällä',bw:true}
   ]},
-  {id:'strB',name:'Voima B – Keskivartalo + yläraaja',exercises:[
-    {id:'sb1',name:'Pallonheitto lattiaan – diagonal',sets:3,reps:'8/suunta',detail:'Koko kehon rotaatio',hint:'4–5 kg pallo',bw:false},
-    {id:'sb2',name:'Paloff press',sets:3,reps:'10/puoli',detail:'Anti-rotaatio',hint:'Kaapeli tai vastuskummi',bw:false},
-    {id:'sb3',name:'Yhden käden soutu',sets:3,reps:'10/käsi',detail:'Scapular retraktio',hint:'Tuki vapaalla kädellä penkille',bw:false},
-    {id:'sb4',name:'External rotation',sets:3,reps:'15/käsi',detail:'Rotator cuff – olkapään terveys',hint:'Kyynärpää kiinni kyljessä',bw:false},
-    {id:'sb5',name:'Dead bug',sets:3,reps:'8/puoli',detail:'Syvä ydinlihaskoordinaatio',hint:'Alaselkä kiinni lattiassa',bw:true},
-    {id:'sb6',name:'Side plank + lonkan abduktio',sets:2,reps:'10/puoli',detail:'Lateraalivakavuus',hint:'Lantio korkealla',bw:true},
-    {id:'sb7',name:'Face pull',sets:3,reps:'15',detail:'Olkapään ennaltaehkäisy',hint:'Kaapeli silmien korkeudella',bw:false}
+  {id:'strB',name:'Voima B – Maastaveto + yksipuolisuus',exercises:[
+    {id:'sb1',name:'Maastaveto',blocks:[{reps:'6–8',sets:3,rpe:'RPE 6–7'},{reps:'5–6',sets:4,rpe:'RPE 7–8'},{reps:'3–5',sets:4,rpe:'RPE 8–9'}],detail:'Perusvoima – PAP-pari seuraavaan liikkeeseen',hint:'Löydä ekalla kerralla toimiva paino, nosta progressiivisesti',bw:false},
+    {id:'sb2',name:'Broad jump / med ball slam',sets:3,reps:'3',detail:'PAP-pari maastavedolle – räjähtävä heti perään',hint:'Täysi palautuminen sarjojen välissä',bw:true},
+    {id:'sb3',name:'Yhden käden KP-punnerrus',sets:4,reps:'6–8/käsi',detail:'Yksipuolinen työntö – ydin vakauttaa epäsymmetrisen kuorman',hint:'Seisten tai askelkyykyssä',bw:false},
+    {id:'sb4',name:'Yhden käden soutu',sets:3,reps:'10/käsi',detail:'Scapular retraktio',hint:'Tuki vapaalla kädellä penkille',bw:false},
+    {id:'sb5',name:'External rotation',sets:3,reps:'15/käsi',detail:'Rotator cuff – olkapään terveys',hint:'Kyynärpää kiinni kyljessä',bw:false},
+    {id:'sb6',name:'Face pull',sets:3,reps:'15',detail:'Olkapään ennaltaehkäisy',hint:'Kaapeli silmien korkeudella',bw:false},
+    {id:'sb7',name:'Dead bug',sets:3,reps:'8/puoli',detail:'Syvä ydinlihaskoordinaatio',hint:'Alaselkä kiinni lattiassa',bw:true}
   ]},
   {id:'strC',name:'Nivelterveys – kisakauden ylläpito',exercises:[
     {id:'nh1',name:'External rotation',sets:2,reps:'15/käsi',detail:'Rotator cuff – olkapään terveys',hint:'Kyynärpää kiinni kyljessä',bw:false},
@@ -2800,10 +2800,13 @@ function toggleCard(key){set('card_'+key,get('card_'+key)===false?true:false);re
 
 function renderStr(){
   const cont=document.getElementById('train-content');
-  const phase=strWk<=4?'Jakso 1':'Jakso 2 – ylläpito';
+  const blockIdx=strWk<=2?0:strWk<=5?1:2;
+  const blockNames=['Totuttelu (Vk 1–2)','Kertymä (Vk 3–5)','Intensifikaatio (Vk 6–8)'];
+  const phase=blockNames[blockIdx];
   let h=`<div class="wk-scroll" id="str-wk"><\/div><div class="sect">${phase} – viikko ${strWk}<\/div>`;
   STR_DATA.forEach(sess=>{
-    const ts=(ex)=>strWk>=5?Math.max(2,ex.sets-1):ex.sets;
+    const cfg=(ex)=>ex.blocks?ex.blocks[blockIdx]:{reps:ex.reps,sets:ex.sets,rpe:null};
+    const ts=(ex)=>cfg(ex).sets;
     const allDone=sess.exercises.every(ex=>getSets('str_'+strWk+'_'+sess.id+'_'+ex.id)>=ts(ex));
     const doneCount=sess.exercises.filter(ex=>getSets('str_'+strWk+'_'+sess.id+'_'+ex.id)>=ts(ex)).length;
     h+=`<div class="str-card">
@@ -2814,19 +2817,20 @@ function renderStr(){
       <\/div>
       <div class="str-body${get('card_str_'+strWk+'_'+sess.id)!==false?' open':''}">`;
     sess.exercises.forEach(ex=>{
+      const c=cfg(ex);
       const ek='str_'+strWk+'_'+sess.id+'_'+ex.id;
-      const t=ts(ex);const done=getSets(ek);const allS=done>=t;
+      const t=c.sets;const done=getSets(ek);const allS=done>=t;
       const wKey='str_w'+strWk+'_'+ex.id;const curW=getW(wKey);
       // Find prev week weight
       let prevW=null;
       for(let w=strWk-1;w>=1;w--){const pw=get('wt_str_w'+w+'_'+ex.id);if(pw){prevW={v:pw,w};break}}
       h+=`<div class="ex-block">
         <div class="ex-name" style="${allS?'color:var(--g)':''}">${ex.name}${allS?' ✓':''}<\/div>
-        <div class="ex-detail">${t} sarjaa × ${ex.reps}<\/div>
+        <div class="ex-detail">${t} sarjaa × ${c.reps}${c.rpe?' · '+c.rpe:''}<\/div>
         <div class="ex-hint">${ex.hint}<\/div>`;
       if(!ex.bw){
         h+=`<div class="weight-row">
-          <span style="font-size:12px;color:var(--t2);flex:1">Paino kg${prevW?` · Vk${prevW.w}: ${prevW.v}`:''}<\/span>
+          <span style="font-size:12px;color:var(--t2);flex:1">Paino kg${prevW?` · Vk${prevW.w}: ${prevW.v}`:' · löydä toimiva paino tänään'}<\/span>
           <input class="weight-in" type="number" min="0" step="0.5" placeholder="0" value="${curW}" onchange="set('wt_${wKey}',this.value)" inputmode="decimal">
           <span style="font-size:12px;color:var(--t3)">kg<\/span>
         <\/div>`;
