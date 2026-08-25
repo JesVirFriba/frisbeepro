@@ -853,7 +853,7 @@ const DEF={name:'Jesse Virtanen',pdga:'252010',rating:919,metrix:939,target:940,
 // ===== NAV =====
 let calY=new Date().getFullYear(),calM=new Date().getMonth();
 let compTab='upcoming',devTabCur='rating',trainTabCur='week',kierrosPvm=null;
-let throwWk=parseInt(localStorage.getItem('fp_throw_wk')||'1')||1,strWk=1,putWk=1,mobWk=1;
+let throwWk=parseInt(localStorage.getItem('fp_throw_wk')||'1')||1,strWk=parseInt(localStorage.getItem('fp_str_wk')||'1')||1,mobWk=parseInt(localStorage.getItem('fp_mob_wk')||'1')||1;
 
 
 // ===== CONSTANTS =====
@@ -2844,8 +2844,8 @@ function renderStr(){
   mkWkTabs('str-wk',strWk,8,'setStrWk');
 }
 function clickStrSet(k,s,t){const c=getSets(k);setSets(k,c>=s?s-1:s);renderStr()}
-function setStrWk(w){strWk=w;renderStr()}
-function setMobWk(w){mobWk=w;renderMob()}
+function setStrWk(w){strWk=w;localStorage.setItem('fp_str_wk',w);renderStr()}
+function setMobWk(w){mobWk=w;localStorage.setItem('fp_mob_wk',w);renderMob()}
 
 function renderPuttiTrain(){
   const cont=document.getElementById('train-content');
