@@ -889,7 +889,8 @@ const PTDISTS=[
 const PUTTI_PHASES=[
   {n:1,title:'Vaihe 1 – Rutiinin oppiminen',short:'Rutiinin oppiminen',weeks:'Vk 1–2',freq:'3x viikossa · 20 min',focus:'Vain 4 metriä · 50 puttia · Rutiini joka putilla · Ei väliä meneekö sisään',col:'var(--gl)',tcol:'var(--gd)'},
   {n:2,title:'Vaihe 2 – Vakiinnus',short:'Vakiinnus',weeks:'Vk 3–4',freq:'3x viikossa · 25 min',focus:'4 m ja 8 m vuorotellen · 60 puttia · Kirjaa C1X% · Tavoite yli 85%',col:'var(--bl)',tcol:'var(--bd)'},
-  {n:3,title:'Vaihe 3 – Kisapaine',short:'Kisapaine',weeks:'Vk 5–6',freq:'2x viikossa · 20 min',focus:'6 m:stä, 5 puttia sisään peräkkäin ennen lopetusta · Jos missaat → aloita alusta',col:'var(--al)',tcol:'var(--ad)'}
+  {n:3,title:'Vaihe 3 – Kisapaine',short:'Kisapaine',weeks:'Vk 5–6',freq:'2x viikossa · 20 min',focus:'6 m:stä, 5 puttia sisään peräkkäin ennen lopetusta · Jos missaat → aloita alusta',col:'var(--al)',tcol:'var(--ad)'},
+  {n:4,title:'Vaihe 4 – Range-laajennus (off-season)',short:'Range-laajennus',weeks:'Off-season',freq:'2–3x viikossa · 25 min',focus:'4/8/12/16 m vuorotellen · C2-etäisyydet mukaan kun ei kisapainetta · Rakentaa pitkän matkan luottamusta kevääksi',col:'var(--rl)',tcol:'var(--rd)'}
 ];
 
 // Migraatio vanhoista avaimista → uudet C1/C2 avaimet
@@ -2062,6 +2063,16 @@ const WEEK_STRUCTURE = {
     {day:'La', label:'Lauantai',  sessions:['heitto_nop','putti','mob_quick'], icon:'⚡', intensity:'high', note:'Nopeusheitto – ali/ylikuormakiekko + putti + yläselkäpika'},
     {day:'Su', label:'Sunnuntai', sessions:['lepo','mob'],          icon:'😴', intensity:'rest',   note:'Lepo + täysi liikkuvuus'},
   ],
+  // Off-season Vaihe 4 (huhtikuu): kisakuntoon - kaikki yhteen, harjoitus-kisa-simulaatio
+  offseason_p4: [
+    {day:'Ma', label:'Maanantai', sessions:['voima_a','mob_quick'], icon:'💪', intensity:'low',    note:'Voima ylläpito (kevyt) + yläselkäpika'},
+    {day:'Ti', label:'Tiistai',   sessions:['heitto_nop','mob_quick'],icon:'⚡', intensity:'high', note:'Nopeusheitto – normaali kiekko (palataan pelivalikoimaan) + yläselkäpika'},
+    {day:'Ke', label:'Keskiviikko',sessions:['mob','putti'],        icon:'🧘', intensity:'low',    note:'Täysi liikkuvuus + putti (Vaihe 4 – range)'},
+    {day:'To', label:'Torstai',  sessions:['heitto_tek','kierros'], icon:'🏃', intensity:'medium', note:'Tekniikka + kierros – PAINE-SIMULAATIO: pelaa kuin kisaa, täysi rutiini, ei uusintoja'},
+    {day:'Pe', label:'Perjantai', sessions:['lepo'],                icon:'😴', intensity:'rest',   note:'Lepo – palautuminen ennen viikonloppua'},
+    {day:'La', label:'Lauantai',  sessions:['heitto_nop','putti','kierros'], icon:'🏃', intensity:'medium', note:'Nopeus + putti + kierros – kisakuntoon'},
+    {day:'Su', label:'Sunnuntai', sessions:['lepo','mob'],          icon:'😴', intensity:'rest',   note:'Lepo + täysi liikkuvuus'},
+  ],
   // Competition week (before big comp): reduced load
   comp_week: [
     {day:'Ma', label:'Maanantai', sessions:['heitto_tek','putti'], icon:'🥏', intensity:'low',    note:'Kevyt tekniikka + putti – lyhyt'},
@@ -2156,7 +2167,8 @@ function buildWeekPlan(weekDates) {
   const isOffseasonP1 = dateStr(weekDates[0]) >= '2026-10-01' && dateStr(weekDates[0]) <= '2026-11-30';
   const isOffseasonP2 = dateStr(weekDates[0]) >= '2026-12-01' && dateStr(weekDates[0]) <= '2027-01-31';
   const isOffseasonP3 = dateStr(weekDates[0]) >= '2027-02-01' && dateStr(weekDates[0]) <= '2027-03-31';
-  const base = isCompWeek ? WEEK_STRUCTURE.comp_week : (isOffseasonP1 ? WEEK_STRUCTURE.offseason_p1 : isOffseasonP2 ? WEEK_STRUCTURE.offseason_p2 : isOffseasonP3 ? WEEK_STRUCTURE.offseason_p3 : WEEK_STRUCTURE.base);
+  const isOffseasonP4 = dateStr(weekDates[0]) >= '2027-04-01' && dateStr(weekDates[0]) <= '2027-04-30';
+  const base = isCompWeek ? WEEK_STRUCTURE.comp_week : (isOffseasonP1 ? WEEK_STRUCTURE.offseason_p1 : isOffseasonP2 ? WEEK_STRUCTURE.offseason_p2 : isOffseasonP3 ? WEEK_STRUCTURE.offseason_p3 : isOffseasonP4 ? WEEK_STRUCTURE.offseason_p4 : WEEK_STRUCTURE.base);
 
   for (let i = 0; i < 7; i++) {
     const ds = dateStr(weekDates[i]);
@@ -2935,7 +2947,7 @@ function renderPuttiTrain(){
   const viewPhase=window.puttiPreviewPhase;
   const todayKey='putti_today_'+dateStr(new Date());
   const todayDone=get(todayKey)||0;
-  const todayTarget=puttiPhase===1?50:puttiPhase===2?60:30;
+  const todayTarget=puttiPhase===1?50:puttiPhase===2?60:puttiPhase===4?60:30;
   const pct_today=Math.min(100,Math.round(todayDone/todayTarget*100));
 
   const steps=[['ASETU','Takajalka linjaan kohteeseen'],['KATSO','Ketjun alareuna – ei koko koria'],['HENGITÄ','Yksi syvä hengitys ulos ennen liikettä'],['RYTMI','Vakio tahti – ei liian hidas eikä nopea'],['SEURAA LÄPI','Käsi jatkuu kohti ketjua irrotuksen jälkeen']];
