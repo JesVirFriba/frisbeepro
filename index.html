@@ -2857,6 +2857,7 @@ function renderStr(){
       for(let w=strWk-1;w>=1;w--){const pw=get('wt_str_w'+w+'_'+ex.id);if(pw){prevW={v:pw,w};break}}
       h+=`<div class="ex-block">
         <div class="ex-name" style="${allS?'color:var(--g)':''}">${ex.name}${allS?' ✓':''}<\/div>
+        <div style="font-size:11px;color:var(--t3);margin-bottom:2px">${ex.detail}<\/div>
         <div class="ex-detail">${t} sarjaa × ${c.reps}${c.rpe?' · '+c.rpe:''}<\/div>
         <div class="ex-hint">${ex.hint}<\/div>`;
       if(!ex.bw){
