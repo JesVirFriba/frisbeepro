@@ -2627,16 +2627,16 @@ for(let w=5;w<=8;w++){
 const STR_DATA=[
   {id:'strA',name:'Voima A – Kyykky + rotaatio',exercises:[
     {id:'sa1',name:'Rinnalleveto',sets:5,reps:'3',detail:'Räjähtävä teho – tehdään tuorein hermosto ensin',hint:'Tekninen liike, ei jäähtynyt vielä',bw:false},
-    {id:'sa2',name:'Takakyykky',blocks:[{reps:'6–8',sets:3,rpe:'RPE 6–7'},{reps:'5–6',sets:4,rpe:'RPE 7–8'},{reps:'3–5',sets:4,rpe:'RPE 8–9'}],detail:'Perusvoima – PAP-pari seuraavaan liikkeeseen',hint:'Löydä ekalla kerralla toimiva paino, nosta progressiivisesti',bw:false},
-    {id:'sa3',name:'Kyykkyhyppy',sets:3,reps:'3',detail:'PAP-pari takakyykylle – räjähtävä heti perään',hint:'Maksimaalinen räjähtävyys, ei väsymykseen asti',bw:true},
+    {id:'sa2',name:'Takakyykky',blocks:[{reps:'6–8',sets:3,rpe:'RPE 6–7'},{reps:'5–6',sets:4,rpe:'RPE 7–8'},{reps:'3–5',sets:4,rpe:'RPE 8–9'},{reps:'2–3',sets:2,rpe:'RPE 8–9 (peikkaus)'}],detail:'Perusvoima – PAP-pari seuraavaan liikkeeseen',hint:'Löydä ekalla kerralla toimiva paino, nosta progressiivisesti',bw:false},
+    {id:'sa3',name:'Kyykkyhyppy',sets:3,reps:'3',detail:'PAP-pari takakyykylle – lepää 3–8 min ennen tätä, EI heti perään',hint:'Tutkimus: alle 3 min ei riitä potentioitumiseen, yli 8 min hyöty häviää',bw:true},
     {id:'sa4',name:'Pallonheitto seinään – rotaatio',sets:4,reps:'6/suunta',detail:'Maksimaalinen rotaatiovoima',hint:'5–6 kg pallo talvikaudella – raskaampi kuin kisakaudella',bw:false},
     {id:'sa5',name:'Lateral band walk',sets:2,reps:'15/suunta',detail:'Lonkan abduktorit',hint:'Vastuskummi polvien yläpuolella',bw:true},
     {id:'sa6',name:'Copenhagen plank',sets:2,reps:'20–30 sek',detail:'Adduktorit + lantio',hint:'Päällimmäinen jalka penkin päällä',bw:true}
   ]},
   {id:'strB',name:'Voima B – Maastaveto + yksipuolisuus',exercises:[
-    {id:'sb1',name:'Maastaveto',blocks:[{reps:'6–8',sets:3,rpe:'RPE 6–7'},{reps:'5–6',sets:4,rpe:'RPE 7–8'},{reps:'3–5',sets:4,rpe:'RPE 8–9'}],detail:'Perusvoima – PAP-pari seuraavaan liikkeeseen',hint:'Löydä ekalla kerralla toimiva paino, nosta progressiivisesti',bw:false},
-    {id:'sb2',name:'Broad jump / med ball slam',sets:3,reps:'3',detail:'PAP-pari maastavedolle – räjähtävä heti perään',hint:'Täysi palautuminen sarjojen välissä',bw:true},
-    {id:'sb3',name:'Leuanveto',blocks:[{reps:'6–8',sets:3,rpe:'RPE 6–7'},{reps:'5–6',sets:4,rpe:'RPE 7–8'},{reps:'3–5',sets:4,rpe:'RPE 8–9'}],detail:'Vertikaalinen veto – täydentää vaakavetoa/työntöä',hint:'Lisää paino vyöllä kun kehon paino kevyt, muuten kehon paino',bw:false},
+    {id:'sb1',name:'Maastaveto',blocks:[{reps:'6–8',sets:3,rpe:'RPE 6–7'},{reps:'5–6',sets:4,rpe:'RPE 7–8'},{reps:'3–5',sets:4,rpe:'RPE 8–9'},{reps:'2–3',sets:2,rpe:'RPE 8–9 (peikkaus)'}],detail:'Perusvoima – PAP-pari seuraavaan liikkeeseen',hint:'Löydä ekalla kerralla toimiva paino, nosta progressiivisesti',bw:false},
+    {id:'sb2',name:'Broad jump / med ball slam',sets:3,reps:'3',detail:'PAP-pari maastavedolle – lepää 3–8 min ennen tätä, EI heti perään',hint:'Tutkimus: alle 3 min ei riitä potentioitumiseen, yli 8 min hyöty häviää',bw:true},
+    {id:'sb3',name:'Leuanveto',blocks:[{reps:'6–8',sets:3,rpe:'RPE 6–7'},{reps:'5–6',sets:4,rpe:'RPE 7–8'},{reps:'3–5',sets:4,rpe:'RPE 8–9'},{reps:'2–3',sets:2,rpe:'RPE 8–9 (peikkaus)'}],detail:'Vertikaalinen veto – täydentää vaakavetoa/työntöä',hint:'Lisää paino vyöllä kun kehon paino kevyt, muuten kehon paino',bw:false},
     {id:'sb4',name:'Yhden käden KP-punnerrus',sets:4,reps:'6–8/käsi',detail:'Yksipuolinen työntö – ydin vakauttaa epäsymmetrisen kuorman',hint:'Seisten tai askelkyykyssä',bw:false},
     {id:'sb5',name:'Yhden käden soutu',sets:3,reps:'10/käsi',detail:'Scapular retraktio',hint:'Tuki vapaalla kädellä penkille',bw:false},
     {id:'sb6',name:'External rotation',sets:3,reps:'15/käsi',detail:'Rotator cuff – olkapään terveys',hint:'Kyynärpää kiinni kyljessä',bw:false},
@@ -2831,8 +2831,8 @@ function toggleCard(key){set('card_'+key,get('card_'+key)===false?true:false);re
 
 function renderStr(){
   const cont=document.getElementById('train-content');
-  const blockIdx=strWk<=2?0:strWk<=5?1:2;
-  const blockNames=['Totuttelu (Vk 1–2)','Kertymä (Vk 3–5)','Intensifikaatio (Vk 6–8)'];
+  const blockIdx=strWk<=2?0:strWk<=5?1:strWk<=7?2:3;
+  const blockNames=['Totuttelu (Vk 1–2)','Kertymä (Vk 3–5)','Intensifikaatio (Vk 6–7)','Peikkaus (Vk 8 – ennen testiä)'];
   const phase=blockNames[blockIdx];
   let h=`<div class="wk-scroll" id="str-wk"><\/div><div class="sect">${phase} – viikko ${strWk}<\/div>`;
   STR_DATA.forEach(sess=>{
