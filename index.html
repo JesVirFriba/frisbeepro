@@ -673,6 +673,24 @@ async function gistInit(){
   return null;
 }
 
+const ARRAY_MERGE_KEYS=['comps','events','goals'];
+function mergeFpData(remote, local, preferLocal){
+  const merged = preferLocal ? {...remote, ...local} : {...local, ...remote};
+  ARRAY_MERGE_KEYS.forEach(function(key){
+    const rArr = Array.isArray(remote[key]) ? remote[key] : [];
+    const lArr = Array.isArray(local[key]) ? local[key] : [];
+    if(rArr.length===0 && lArr.length===0) return;
+    const byId = {};
+    const noId = [];
+    const first = preferLocal ? rArr : lArr;
+    const second = preferLocal ? lArr : rArr; // second wins on id collision
+    first.forEach(function(item){ if(item && item.id!=null) byId[item.id]=item; else noId.push(item); });
+    second.forEach(function(item){ if(item && item.id!=null) byId[item.id]=item; else noId.push(item); });
+    merged[key] = Object.values(byId).concat(noId);
+  });
+  return merged;
+}
+
 async function gistSave(){
   const token=getGistToken();
   if(!token){gistUpdateStatus('idle','Ei tokenia');return;}
@@ -693,7 +711,7 @@ async function gistSave(){
         if(raw){
           const parsed=JSON.parse(raw);
           if(parsed&&parsed.data){
-            localData={...parsed.data,...localData};
+            localData=mergeFpData(parsed.data, localData, true);
             sv(localData);
           }
         }
@@ -732,7 +750,7 @@ async function gistLoad(){
     const local=ld();
     const localUpdated=local._updated||'1970-01-01';
     const remoteNewer=parsed.updated>localUpdated;
-    const merged=remoteNewer ? {...local,...parsed.data} : {...parsed.data,...local};
+    const merged=mergeFpData(parsed.data, local, !remoteNewer);
     merged._updated=remoteNewer?parsed.updated:localUpdated;
     const changed=JSON.stringify(merged)!==JSON.stringify(local);
     if(changed){
