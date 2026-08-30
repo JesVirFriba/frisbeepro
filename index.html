@@ -2904,6 +2904,8 @@ function renderPuttiTrain(){
   });
 
   const puttiPhase=get('putti_phase')||1;
+  if(typeof puttiPreviewPhase==='undefined'||puttiPreviewPhase===null) window.puttiPreviewPhase=puttiPhase;
+  const viewPhase=window.puttiPreviewPhase;
   const todayKey='putti_today_'+dateStr(new Date());
   const todayDone=get(todayKey)||0;
   const todayTarget=puttiPhase===1?50:puttiPhase===2?60:30;
@@ -2911,7 +2913,7 @@ function renderPuttiTrain(){
 
   const steps=[['ASETU','Takajalka linjaan kohteeseen'],['KATSO','Ketjun alareuna – ei koko koria'],['HENGITÄ','Yksi syvä hengitys ulos ennen liikettä'],['RYTMI','Vakio tahti – ei liian hidas eikä nopea'],['SEURAA LÄPI','Käsi jatkuu kohti ketjua irrotuksen jälkeen']];
   const phases=PUTTI_PHASES;
-  const ph=phases[puttiPhase-1];
+  const ph=phases[viewPhase-1];
 
   const div=document.createElement('div');
   let h='';
@@ -2931,14 +2933,21 @@ function renderPuttiTrain(){
   });
   h+='</div></div>';
 
-  // Vaihevalinnat (käytetään data-attr onclickiä)
+  // Vaihevalinnat (esikatselu - ei tallennu ennen vahvistusta)
   h+='<div class=\"sect\">Treeniohjelma – 6 viikon protokolla</div>';
   h+='<div style=\"display:flex;gap:5px;margin-bottom:10px\">';
   phases.forEach(p=>{
-    const sel=p.n===puttiPhase;
-    h+='<button data-phase=\"'+p.n+'\" class=\"putti-phase-btn\" style=\"flex:1;padding:7px 4px;border-radius:var(--rs);border:1.5px solid '+(sel?p.tcol:'var(--border)')+';background:'+(sel?p.col:'none')+';color:'+(sel?p.tcol:'var(--t2)')+';font-size:11px;font-weight:600;cursor:pointer\">Vaihe '+p.n+'</button>';
+    const sel=p.n===viewPhase;
+    const active=p.n===puttiPhase;
+    h+='<button data-phase=\"'+p.n+'\" class=\"putti-phase-btn\" style=\"flex:1;padding:7px 4px;border-radius:var(--rs);border:1.5px solid '+(sel?p.tcol:'var(--border)')+';background:'+(sel?p.col:'none')+';color:'+(sel?p.tcol:'var(--t2)')+';font-size:11px;font-weight:600;cursor:pointer;position:relative\">Vaihe '+p.n+(active?' ✓':'')+'</button>';
   });
   h+='</div>';
+  if(viewPhase!==puttiPhase){
+    h+='<div style=\"display:flex;align-items:center;gap:8px;background:var(--al);border-radius:var(--rs);padding:8px 10px;margin-bottom:10px\">';
+    h+='<span style=\"font-size:11px;color:var(--ad);flex:1\">Katselet Vaihe '+viewPhase+':a – aktiivinen vaihe on yhä Vaihe '+puttiPhase+'</span>';
+    h+='<button id=\"putti-activate-btn\" style=\"background:var(--ad);color:#fff;border:none;border-radius:var(--rs);padding:6px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap\">Aktivoi Vaihe '+viewPhase+'</button>';
+    h+='</div>';
+  }
 
   h+='<div style=\"background:'+ph.col+';border-radius:var(--r);padding:13px 14px;margin-bottom:12px\">';
   h+='<div style=\"font-size:13px;font-weight:700;color:'+ph.tcol+';margin-bottom:2px\">'+ph.title+'</div>';
@@ -3123,10 +3132,17 @@ function renderPuttiTrain(){
   cont.innerHTML='';
   cont.appendChild(div);
 
-  // Phase buttons
+  // Phase buttons (esikatselu, ei tallennu)
   cont.querySelectorAll('.putti-phase-btn').forEach(btn=>{
-    btn.addEventListener('click',()=>{set('putti_phase',parseInt(btn.dataset.phase));renderTrain();});
+    btn.addEventListener('click',()=>{window.puttiPreviewPhase=parseInt(btn.dataset.phase);renderTrain();});
   });
+  const activateBtn=cont.querySelector('#putti-activate-btn');
+  if(activateBtn){
+    activateBtn.addEventListener('click',()=>{
+      set('putti_phase',window.puttiPreviewPhase);
+      renderTrain();
+    });
+  }
 
   // Tilasto-tyyli napit
   cont.querySelectorAll('.putti-tilasto-btn').forEach(function(btn){
