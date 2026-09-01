@@ -2105,7 +2105,7 @@ const WEEK_STRUCTURE = {
     {day:'La', label:'Lauantai',  sessions:['heitto_nop','putti','mob_quick'], icon:'⚡', intensity:'high', note:'Nopeusheitto – ali/ylikuormakiekko + putti + yläselkäpika'},
     {day:'Su', label:'Sunnuntai', sessions:['lepo','mob'],          icon:'😴', intensity:'rest',   note:'Lepo + täysi liikkuvuus'},
   ],
-  // Off-season Vaihe 4 (huhtikuu): kisakuntoon - kaikki yhteen, harjoitus-kisa-simulaatio
+  // Off-season Vaihe 4 (touko alku, 1.-8.5.): kisakuntoon - kaikki yhteen, harjoitus-kisa-simulaatio
   offseason_p4: [
     {day:'Ma', label:'Maanantai', sessions:['voima_a','mob_quick'], icon:'💪', intensity:'low',    note:'Voima ylläpito (kevyt) + yläselkäpika'},
     {day:'Ti', label:'Tiistai',   sessions:['heitto_nop','mob_quick'],icon:'⚡', intensity:'high', note:'Nopeusheitto – normaali kiekko (palataan pelivalikoimaan) + yläselkäpika'},
@@ -2243,8 +2243,8 @@ function buildWeekPlan(weekDates) {
   const isCompWeek = pdgaDates.has(satDs) || pdgaDates.has(sunDs);
   const isOffseasonP1 = dateStr(weekDates[0]) >= '2026-10-01' && dateStr(weekDates[0]) <= '2026-11-30';
   const isOffseasonP2 = dateStr(weekDates[0]) >= '2026-12-01' && dateStr(weekDates[0]) <= '2027-01-31';
-  const isOffseasonP3 = dateStr(weekDates[0]) >= '2027-02-01' && dateStr(weekDates[0]) <= '2027-03-31';
-  const isOffseasonP4 = dateStr(weekDates[0]) >= '2027-04-01' && dateStr(weekDates[0]) <= '2027-04-30';
+  const isOffseasonP3 = dateStr(weekDates[0]) >= '2027-02-01' && dateStr(weekDates[0]) <= '2027-04-30';
+  const isOffseasonP4 = dateStr(weekDates[0]) >= '2027-05-01' && dateStr(weekDates[0]) <= '2027-05-08';
   const base = isCompWeek ? WEEK_STRUCTURE.comp_week : (isOffseasonP1 ? WEEK_STRUCTURE.offseason_p1 : isOffseasonP2 ? WEEK_STRUCTURE.offseason_p2 : isOffseasonP3 ? WEEK_STRUCTURE.offseason_p3 : isOffseasonP4 ? WEEK_STRUCTURE.offseason_p4 : WEEK_STRUCTURE.base);
 
   for (let i = 0; i < 7; i++) {
