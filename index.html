@@ -911,23 +911,27 @@ const PUTTI_PHASES=[
   {n:1,title:'Vaihe 1 – Rutiinin oppiminen',short:'Rutiinin oppiminen',weeks:'Vk 1–2',freq:'3x viikossa · 20 min',focus:'Vain 4 metriä · 50 puttia · Rutiini joka putilla · Ei väliä meneekö sisään',col:'var(--gl)',tcol:'var(--gd)'},
   {n:2,title:'Vaihe 2 – Vakiinnus',short:'Vakiinnus',weeks:'Vk 3–4',freq:'3x viikossa · 25 min',focus:'4 m ja 8 m vuorotellen · 60 puttia · Kirjaa C1X% · Tavoite yli 85%',col:'var(--bl)',tcol:'var(--bd)'},
   {n:3,title:'Vaihe 3 – Kisapaine',short:'Kisapaine',weeks:'Vk 5–6',freq:'2x viikossa · 20 min',focus:'6 m:stä, 5 puttia sisään peräkkäin ennen lopetusta · Jos missaat → aloita alusta',col:'var(--al)',tcol:'var(--ad)'},
-  {n:4,title:'Vaihe 4 – Range-laajennus (off-season)',short:'Range-laajennus',weeks:'Off-season, 8 vk progressio',freq:'2–3x viikossa · 25–35 min',focus:'Progressiivinen 8 viikon ohjelma – katso viikkotavoite alta',col:'var(--rl)',tcol:'var(--rd)'}
+  {n:4,title:'Vaihe 4 – Range-laajennus (off-season)',short:'Range-laajennus',weeks:'Off-season, 12 vk progressio',freq:'3–5x viikossa · 20–35 min',focus:'Progressiivinen 12 viikon ohjelma – katso viikkotavoite alta',col:'var(--rl)',tcol:'var(--rd)'}
 ];
 
-// Vaihe 4 (off-season) viikkokohtainen progressio, samalla Jakso1/Jakso2-periaatteella kuin Voima/Heitto:
-// Jakso 1 (Vk1-4): volyymipainotus, painotus lähietäisyyksillä. Jakso 2 (Vk5-8): etäisyyspainotus, pidemmät matkat mukaan.
+// Vaihe 4 (off-season) viikkokohtainen progressio, 12 viikkoa 2x6vk-lohkoina (samalla periaatteella kuin Merelän tuotteissa):
+// Jakso 1 (Vk1-6): volyymipainotus, painotus lähietäisyyksillä. Jakso 2 (Vk7-12): etäisyyspainotus, pidemmät matkat mukaan.
 const PUTTI_P4_WEEKS=[
-  {jakso:'Jakso 1 – volyymipainotus', mix:{4:16,8:16,12:6,16:2}},   // Vk1: 40
-  {jakso:'Jakso 1 – volyymipainotus', mix:{4:16,8:16,12:8,16:4}},   // Vk2: 44
-  {jakso:'Jakso 1 – volyymipainotus', mix:{4:16,8:16,12:10,16:6}},  // Vk3: 48
-  {jakso:'Jakso 1 – volyymipainotus', mix:{4:16,8:16,12:12,16:8}},  // Vk4: 52
-  {jakso:'Jakso 2 – etäisyyspainotus', mix:{4:12,8:14,12:16,16:14}},// Vk5: 56
-  {jakso:'Jakso 2 – etäisyyspainotus', mix:{4:12,8:14,12:16,16:18}},// Vk6: 60
-  {jakso:'Jakso 2 – etäisyyspainotus', mix:{4:10,8:14,12:18,16:18}},// Vk7: 60
-  {jakso:'Jakso 2 – etäisyyspainotus', mix:{4:10,8:12,12:20,16:22}} // Vk8: 64
+  {jakso:'Jakso 1 – volyymipainotus', mix:{4:16,8:16,12:4,16:0}},   // Vk1: 36
+  {jakso:'Jakso 1 – volyymipainotus', mix:{4:16,8:16,12:6,16:2}},   // Vk2: 40
+  {jakso:'Jakso 1 – volyymipainotus', mix:{4:16,8:16,12:8,16:4}},   // Vk3: 44
+  {jakso:'Jakso 1 – volyymipainotus', mix:{4:16,8:16,12:8,16:6}},   // Vk4: 46
+  {jakso:'Jakso 1 – volyymipainotus', mix:{4:16,8:16,12:10,16:6}},  // Vk5: 48
+  {jakso:'Jakso 1 – volyymipainotus', mix:{4:16,8:16,12:10,16:8}},  // Vk6: 50
+  {jakso:'Jakso 2 – etäisyyspainotus', mix:{4:14,8:14,12:14,16:10}},// Vk7: 52
+  {jakso:'Jakso 2 – etäisyyspainotus', mix:{4:12,8:14,12:14,16:14}},// Vk8: 54
+  {jakso:'Jakso 2 – etäisyyspainotus', mix:{4:12,8:14,12:16,16:14}},// Vk9: 56
+  {jakso:'Jakso 2 – etäisyyspainotus', mix:{4:10,8:14,12:16,16:16}},// Vk10: 56
+  {jakso:'Jakso 2 – etäisyyspainotus', mix:{4:10,8:12,12:18,16:18}},// Vk11: 58
+  {jakso:'Jakso 2 – etäisyyspainotus', mix:{4:10,8:12,12:18,16:20}} // Vk12: 60
 ];
 function puttP4WeekTotal(wk){
-  const m=PUTTI_P4_WEEKS[Math.min(wk,8)-1].mix;
+  const m=PUTTI_P4_WEEKS[Math.min(wk,12)-1].mix;
   return Object.values(m).reduce((a,b)=>a+b,0);
 }
 
@@ -3371,7 +3375,7 @@ function renderPuttiTrain(){
   });
 
   if(viewPhase===4){
-    mkWkTabs('putti-p4-wk',putWk,8,'setPutWk');
+    mkWkTabs('putti-p4-wk',putWk,12,'setPutWk');
   }
 }
 function renderPuttiInputs(){
