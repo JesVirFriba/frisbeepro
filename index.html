@@ -682,11 +682,19 @@ function mergeFpData(remote, local, preferLocal){
     const lArr = Array.isArray(local[key]) ? local[key] : [];
     if(rArr.length===0 && lArr.length===0) return;
     const byId = {};
+    const noIdSeen = {};
     const noId = [];
     const first = preferLocal ? rArr : lArr;
     const second = preferLocal ? lArr : rArr; // second wins on id collision
-    first.forEach(function(item){ if(item && item.id!=null) byId[item.id]=item; else noId.push(item); });
-    second.forEach(function(item){ if(item && item.id!=null) byId[item.id]=item; else noId.push(item); });
+    function take(item){
+      if(!item) return;
+      if(item.id!=null){ byId[item.id]=item; return; }
+      // Legacy items without an id: dedupe by content so they can never multiply across merges.
+      const sig = JSON.stringify(item);
+      if(!noIdSeen[sig]){ noIdSeen[sig]=true; noId.push(item); }
+    }
+    first.forEach(take);
+    second.forEach(take);
     merged[key] = Object.values(byId).concat(noId);
   });
   return merged;
@@ -708,7 +716,13 @@ async function gistSave(){
         {headers:{Authorization:`token ${token}`,'User-Agent':'frisbeepro'}});
       if(rFetch.ok){
         const gist=await rFetch.json();
-        const raw=gist.files[GIST_FILENAME]?.content;
+        let raw=gist.files[GIST_FILENAME]?.content;
+        if(gist.files[GIST_FILENAME]?.truncated && gist.files[GIST_FILENAME]?.raw_url){
+          try{
+            const rRaw=await fetch(gist.files[GIST_FILENAME].raw_url);
+            if(rRaw.ok) raw=await rRaw.text();
+          }catch(e){/* jos raw-haku epäonnistuu, jatketaan alla olevalla suojauksella */}
+        }
         if(raw){
           const parsed=JSON.parse(raw);
           if(parsed&&parsed.data){
@@ -741,7 +755,13 @@ async function gistLoad(){
       {headers:{Authorization:`token ${token}`,'User-Agent':'frisbeepro'}});
     if(!r.ok)return false;
     const gist=await r.json();
-    const raw=gist.files[GIST_FILENAME]?.content;
+    let raw=gist.files[GIST_FILENAME]?.content;
+    if(gist.files[GIST_FILENAME]?.truncated && gist.files[GIST_FILENAME]?.raw_url){
+      try{
+        const rRaw=await fetch(gist.files[GIST_FILENAME].raw_url);
+        if(rRaw.ok) raw=await rRaw.text();
+      }catch(e){/* jos raw-haku epäonnistuu, jatketaan katkaistulla sisällöllä alla olevalla suojauksella */}
+    }
     if(!raw)return false;
     const parsed=JSON.parse(raw);
     if(!parsed.data||!parsed.updated)return false;
