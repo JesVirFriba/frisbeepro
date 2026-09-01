@@ -2143,6 +2143,41 @@ function getWeekDates(offsetWeeks) {
   return dates;
 }
 
+// ===== AC-RATIO (Akuutti:Krooninen kuormitussuhde, Gabbet 2016) =====
+// Akuutti = tämän viikon heittomäärä. Krooninen = edeltävien (enintään 4) viikon keskiarvo.
+// Turvallinen alue 0.8-1.3. Yli 1.5 = vammariski voi kaksinkertaistua. Yli 50% nousu = riski nelinkertaistuu.
+function getThrowVolume(date){
+  return (get('throw_volume')||{})[date] || 0;
+}
+function setThrowVolume(date, count){
+  const all = get('throw_volume')||{};
+  all[date] = count;
+  set('throw_volume', all);
+}
+function getWeekThrowTotal(offsetWeeks){
+  const dates = getWeekDates(offsetWeeks);
+  return dates.reduce((sum,d)=>sum+getThrowVolume(dateStr(d)),0);
+}
+function computeACRatio(){
+  const acute = getWeekThrowTotal(0);
+  const priorWeeks = [];
+  for(let w=1; w<=4; w++){
+    const t = getWeekThrowTotal(-w);
+    if(t>0) priorWeeks.push(t);
+  }
+  if(priorWeeks.length===0) return {acute, chronic:acute, ratio:acute>0?1:null};
+  const chronic = priorWeeks.reduce((a,b)=>a+b,0)/priorWeeks.length;
+  const ratio = chronic>0 ? acute/chronic : null;
+  return {acute, chronic, ratio};
+}
+function acRatioStatus(ratio){
+  if(ratio==null) return {label:'Ei vielä dataa', col:'var(--t3)', bg:'var(--bg)'};
+  if(ratio>1.5) return {label:'Vaararaja – riski 2x', col:'var(--rd)', bg:'var(--rl)'};
+  if(ratio>1.3) return {label:'Koholla – tarkkaile', col:'var(--ad)', bg:'var(--al)'};
+  if(ratio>=0.8) return {label:'Sweet spot', col:'var(--gd)', bg:'var(--gl)'};
+  return {label:'Matala – voisi nostaa', col:'var(--bd)', bg:'var(--bl)'};
+}
+
 function dateStr(d) {
   const y = d.getFullYear();
   const m = String(d.getMonth()+1).padStart(2,'0');
@@ -2846,6 +2881,21 @@ function renderThrow(){
       <div style="font-size:12px;color:var(--ad);margin-top:2px">${devFocus.text}</div>
     </div>`;
   }
+  const todayDs=dateStr(new Date());
+  const acr=computeACRatio();
+  const acrStatus=acRatioStatus(acr.ratio);
+  h+=`<div style="background:${acrStatus.bg};border-radius:var(--r);padding:10px 12px;margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <div style="font-size:11px;font-weight:700;color:${acrStatus.col}">📊 AC-Ratio – ${acrStatus.label}</div>
+      <div style="font-size:12px;font-weight:700;color:${acrStatus.col}">${acr.ratio!=null?acr.ratio.toFixed(2):'–'}</div>
+    </div>
+    <div style="font-size:10px;color:${acrStatus.col};opacity:.85;margin-bottom:6px">Tämä viikko: ${acr.acute} heittoa · Krooninen ka: ${Math.round(acr.chronic)} · Sweet spot 0.8–1.3</div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <span style="font-size:11px;color:${acrStatus.col}">Tänään (${todayDs}):</span>
+      <input type="number" min="0" step="1" value="${getThrowVolume(todayDs)||''}" placeholder="0" style="width:60px;padding:4px 6px;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg);color:var(--text)" onchange="setThrowVolume('${todayDs}',parseInt(this.value)||0);renderTrain()">
+      <span style="font-size:11px;color:${acrStatus.col}">heittoa</span>
+    </div>
+  </div>`;
   h+=`<div class="wk-scroll" id="throw-wk"></div><div class="sect">${phase} – viikko ${throwWk}</div>`
   sessions.forEach(sess=>{
     const allDone=sess.exercises.every(e=>getSets('th_'+throwWk+'_'+sess.id+'_'+e.id)>=e.totalSets);
