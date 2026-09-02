@@ -2960,6 +2960,21 @@ function resetSets(k,pg){setSets(k,0);if(pg==='throw')renderThrow();else if(pg==
 function setThrowWk(w){throwWk=w;localStorage.setItem('fp_throw_wk',w);renderThrow()}
 function toggleCard(key){set('card_'+key,get('card_'+key)===false?true:false);renderTrain()}
 
+function strFeelMult(feel){
+  if(feel==='kevyt') return 1.05;
+  if(feel==='sopiva') return 1.025;
+  if(feel==='raskas') return 1.0;
+  return null;
+}
+function suggestedStrWeight(prevWeight, feel){
+  const mult=strFeelMult(feel);
+  if(mult==null||!prevWeight) return null;
+  const raw=parseFloat(prevWeight)*mult;
+  if(isNaN(raw)) return null;
+  return Math.round(raw*2)/2; // pyöristys lähimpään 0.5kg
+}
+function setStrFeel(key,feel){set(key,feel);renderStr()}
+
 function renderStr(){
   const cont=document.getElementById('train-content');
   const blockIdx=strWk<=2?0:strWk<=5?1:strWk<=7?2:3;
@@ -2983,25 +2998,42 @@ function renderStr(){
       const ek='str_'+strWk+'_'+sess.id+'_'+ex.id;
       const t=c.sets;const done=getSets(ek);const allS=done>=t;
       const wKey='str_w'+strWk+'_'+ex.id;const curW=getW(wKey);
-      // Find prev week weight
-      let prevW=null;
-      for(let w=strWk-1;w>=1;w--){const pw=get('wt_str_w'+w+'_'+ex.id);if(pw){prevW={v:pw,w};break}}
+      const feelKey='str_feel_w'+strWk+'_'+ex.id;const curFeel=get(feelKey);
+      // Find prev week weight + feedback, compute suggestion
+      let prevW=null,prevFeel=null,suggestion=null;
+      for(let w=strWk-1;w>=1;w--){const pw=get('wt_str_w'+w+'_'+ex.id);if(pw){prevW={v:pw,w};prevFeel=get('str_feel_w'+w+'_'+ex.id);break}}
+      if(prevW && prevFeel) suggestion=suggestedStrWeight(prevW.v,prevFeel);
       h+=`<div class="ex-block">
         <div class="ex-name" style="${allS?'color:var(--g)':''}">${ex.name}${allS?' ✓':''}<\/div>
         <div style="font-size:11px;color:var(--t3);margin-bottom:2px">${ex.detail}<\/div>
         <div class="ex-detail">${t} sarjaa × ${c.reps}${c.rpe?' · '+c.rpe:''}<\/div>
         <div class="ex-hint">${ex.hint}<\/div>`;
       if(!ex.bw){
+        const refText=prevW?`Vk${prevW.w}: ${prevW.v}kg${prevFeel?' ('+prevFeel+')':''}`:'löydä toimiva paino tänään';
         h+=`<div class="weight-row">
-          <span style="font-size:12px;color:var(--t2);flex:1">Paino kg${prevW?` · Vk${prevW.w}: ${prevW.v}`:' · löydä toimiva paino tänään'}<\/span>
+          <span style="font-size:12px;color:var(--t2);flex:1">Paino kg · ${refText}<\/span>
           <input class="weight-in" type="number" min="0" step="0.5" placeholder="0" value="${curW}" onchange="set('wt_${wKey}',this.value)" inputmode="decimal">
           <span style="font-size:12px;color:var(--t3)">kg<\/span>
         <\/div>`;
+        if(suggestion!=null){
+          h+=`<div style="font-size:11px;color:var(--gd);background:var(--gl);border-radius:var(--rs);padding:5px 8px;margin-bottom:7px">💡 Ehdotus tälle viikolle: <b>${suggestion}kg</b> (edellisen viikon palautteen perusteella)<\/div>`;
+        }
       }else{h+=`<div style="font-size:11px;color:var(--t3);margin-bottom:7px;font-style:italic">Kehon paino<\/div>`}
       h+=`<div style="font-size:11px;color:var(--t2);margin-bottom:6px">Sarjat: ${done}/${t}<\/div>
         <div class="sets-row">`;
       for(let s=1;s<=t;s++){const d=done>=s;h+=`<button class="set-btn${d?' done':''}" onclick="clickStrSet('${ek}',${s},${t})"><span class="set-sn">S${s}<\/span><span class="set-tick">${d?'✓':'·'}<\/span><\/button>`}
-      h+=`<\/div><button class="reset-btn" onclick="resetSets('${ek}','str')">↺ Nollaa<\/button><\/div>`;
+      h+=`<\/div><button class="reset-btn" onclick="resetSets('${ek}','str')">↺ Nollaa<\/button>`;
+      if(allS && !ex.bw){
+        h+=`<div style="margin-top:8px">
+          <div style="font-size:11px;color:var(--t2);margin-bottom:4px">Miltä paino tuntui tavoite-RPE:hen nähden?</div>
+          <div style="display:flex;gap:5px">
+            <button style="flex:1;padding:6px;border-radius:var(--rs);border:1.5px solid ${curFeel==='kevyt'?'var(--bd)':'var(--border)'};background:${curFeel==='kevyt'?'var(--bl)':'none'};color:${curFeel==='kevyt'?'var(--bd)':'var(--t2)'};font-size:11px;font-weight:600" onclick="setStrFeel('${feelKey}','kevyt')">Liian kevyt</button>
+            <button style="flex:1;padding:6px;border-radius:var(--rs);border:1.5px solid ${curFeel==='sopiva'?'var(--gd)':'var(--border)'};background:${curFeel==='sopiva'?'var(--gl)':'none'};color:${curFeel==='sopiva'?'var(--gd)':'var(--t2)'};font-size:11px;font-weight:600" onclick="setStrFeel('${feelKey}','sopiva')">Sopiva</button>
+            <button style="flex:1;padding:6px;border-radius:var(--rs);border:1.5px solid ${curFeel==='raskas'?'var(--rd)':'var(--border)'};background:${curFeel==='raskas'?'var(--rl)':'none'};color:${curFeel==='raskas'?'var(--rd)':'var(--t2)'};font-size:11px;font-weight:600" onclick="setStrFeel('${feelKey}','raskas')">Liian raskas</button>
+          </div>
+        </div>`;
+      }
+      h+=`</div>`;
     });
     const nk='str_notes_'+strWk+'_'+sess.id;
     h+=`<textarea style="width:100%;min-height:50px;font-size:12px;padding:7px;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg);color:var(--text);resize:none;margin-top:6px;font-family:inherit" placeholder="Painot, tuntemukset..." id="strn_${sess.id}" onchange="set('${nk}',this.value)">${get(nk)||''}<\/textarea>
