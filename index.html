@@ -2712,7 +2712,8 @@ const THROW_SESSIONS={
     ]}
   ]
 };
-for(let w=2;w<=4;w++)THROW_SESSIONS[w]=THROW_SESSIONS[1].map(s=>({...s,id:s.id+'w'+w,exercises:s.exercises.map(e=>({...e,id:e.id+'w'+w}))}));
+const THROW_WK1_4_MULT={1:1,2:1.15,3:1.3,4:1.45}; // Vastaa Merelän oikean ohjelman n. 15-45% volyymikasvua Vk1-4
+for(let w=2;w<=4;w++)THROW_SESSIONS[w]=THROW_SESSIONS[1].map(s=>({...s,id:s.id+'w'+w,exercises:s.exercises.map(e=>({...e,id:e.id+'w'+w,totalSets:Math.round(e.totalSets*THROW_WK1_4_MULT[w])}))}));
 for(let w=5;w<=8;w++){
   const ns=w<=6?3:w===7?4:5;
   THROW_SESSIONS[w]=[
@@ -3546,7 +3547,8 @@ function toggleMob(key){
 const MOB_QUICK_DAILY=[
   {id:'mq1',name:'Rintakehän kierto lattialla',desc:'Kyljelläsi, polvet 90°. Vie käsi auki taaksepäin hitaasti.',reps:'8 toistoa/puoli'},
   {id:'mq2',name:'Thoracic extension',desc:'Kädet niskan taakse, kyynärpäät taaksepäin – avaa rintakehä.',reps:'8–10 toistoa'},
-  {id:'mq3',name:'Lapapumppaus seisaaltaan',desc:'Kädet eteen – lapaluut loittonee. Vedä takaisin.',reps:'10 toistoa'}
+  {id:'mq3',name:'Lapapumppaus seisaaltaan',desc:'Kädet eteen – lapaluut loittonee. Vedä takaisin.',reps:'10 toistoa'},
+  {id:'mq4',name:'Avoin kirja – staattinen pito',desc:'Kyljelläsi, polvet koukussa. Kierrä yläkeho auki ja PIDÄ ääriasennossa – tutkitusti staattinen pito kasvattaa pysyvää liikelaajuutta paremmin kuin pelkkä dynaaminen liike.',reps:'30–45 sek/puoli'}
 ];
 
 function toggleMobQuick(key){
