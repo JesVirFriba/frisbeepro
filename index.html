@@ -2077,13 +2077,13 @@ const WEEK_STRUCTURE = {
   ],
   // Off-season Vaihe 1 (loka-marras): perusta - voima täysillä, päivittäinen yläselkäliikkuvuus
   offseason_p1: [
-    {day:'Ma', label:'Maanantai', sessions:['voima_a','mob_quick'], icon:'💪', intensity:'medium', note:'Voima A + yläselkäpika'},
-    {day:'Ti', label:'Tiistai',   sessions:['heitto_tek','mob'],    icon:'🥏', intensity:'low',    note:'Tekniikan ylläpito + täysi liikkuvuus'},
-    {day:'Ke', label:'Keskiviikko',sessions:['voima_b','mob_quick'],icon:'💪', intensity:'medium', note:'Voima B + yläselkäpika'},
-    {day:'To', label:'Torstai',  sessions:['putti','mob_quick'],    icon:'🎯', intensity:'low',    note:'Puttaus + yläselkäpika'},
-    {day:'Pe', label:'Perjantai', sessions:['voima_a','mob_quick'], icon:'💪', intensity:'medium', note:'Voima A + yläselkäpika'},
-    {day:'La', label:'Lauantai',  sessions:['heitto_tek','putti','mob_quick'], icon:'🥏', intensity:'medium', note:'Tekniikka + putti + yläselkäpika'},
-    {day:'Su', label:'Sunnuntai', sessions:['lepo','mob'],          icon:'😴', intensity:'rest',   note:'Lepo + täysi liikkuvuus'},
+    {day:'Ma', label:'Maanantai', sessions:['voima_a','mob_quick','hermosto'], icon:'💪', intensity:'medium', note:'Voima A + yläselkäpika + hermosto'},
+    {day:'Ti', label:'Tiistai',   sessions:['heitto_tek','mob','hermosto'],    icon:'🥏', intensity:'low',    note:'Tekniikan ylläpito + täysi liikkuvuus + hermosto'},
+    {day:'Ke', label:'Keskiviikko',sessions:['voima_b','mob_quick','hermosto'],icon:'💪', intensity:'medium', note:'Voima B + yläselkäpika + hermosto'},
+    {day:'To', label:'Torstai',  sessions:['putti','mob_quick','hermosto'],    icon:'🎯', intensity:'low',    note:'Puttaus + yläselkäpika + hermosto'},
+    {day:'Pe', label:'Perjantai', sessions:['voima_a','mob_quick','hermosto'], icon:'💪', intensity:'medium', note:'Voima A + yläselkäpika + hermosto'},
+    {day:'La', label:'Lauantai',  sessions:['heitto_tek','putti','mob_quick','hermosto'], icon:'🥏', intensity:'medium', note:'Tekniikka + putti + yläselkäpika + hermosto'},
+    {day:'Su', label:'Sunnuntai', sessions:['lepo','mob','hermosto'],          icon:'😴', intensity:'rest',   note:'Lepo + täysi liikkuvuus + hermosto'},
   ],
   // Off-season Vaihe 2 (joulu-tammi): voima->teho-silta - vähemmän voimaa, teho/plyo mukaan, kasvava heittovolyymi
   offseason_p2: [
@@ -2141,6 +2141,7 @@ const SESSION_COLORS = {
   voima_c:    {bg:'#FAEEDA', col:'#633806', lbl:'Nivelterveys'},
   mob_quick:  {bg:'#E8F5E9', col:'#1B5E20', lbl:'Yläselkä'},
   teho:       {bg:'#FFF3E0', col:'#E65100', lbl:'Teho'},
+  hermosto:   {bg:'#E1F5EE', col:'#085041', lbl:'Hermosto'},
   putti:      {bg:'#E1F5EE', col:'#085041', lbl:'Puttausrutiini'},
   mob:        {bg:'#FAEEDA', col:'#633806', lbl:'Liikkuvuus'},
   kierros:    {bg:'#E1F5EE', col:'#085041', lbl:'Kenttäkierros'},
@@ -2496,7 +2497,7 @@ function renderWeekView() {
     const textCol = isToday ? sc.col : 'var(--text)';
     const dayCol = isToday ? sc.col : 'var(--t3)';
     const opacity = isPast && !isToday ? '.55' : '1';
-    const sessionRoute = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',voima_c:'str',putti:'putti',mob:'mob',mob_quick:'mob_quick',teho:'teho',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros',kisa:'comp_day',lepo:'rest_day'};
+    const sessionRoute = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',voima_c:'str',putti:'putti',mob:'mob',mob_quick:'mob_quick',teho:'teho',hermosto:'hermosto',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros',kisa:'comp_day',lepo:'rest_day'};
     const routableSessions = sessions.filter(s=>sessionRoute[s]);
     // Kisa ja lepo ovat aina klikattavia
     const isCompDay = day.intensity === 'comp' && !vkDates.has(day.date);
@@ -2532,7 +2533,7 @@ function renderWeekView() {
     } else if(isPast && day.intensity !== 'rest' && !isCompDay){
       h += '<div onclick="event.stopPropagation();setDone(\''+day.date+'\',1);renderTrain()" style="font-size:10px;color:var(--t3);cursor:pointer;flex-shrink:0;padding:3px 7px;border:1px solid var(--border);border-radius:20px">Merkitse</div>';
     } else if(clickable && routableSessions.length >= 1 && !isRestDay){
-      const SESSION_SHORT={heitto_tek:'Tekniikka',heitto_nop:'Nopeus',putti:'Putti',mob:'Liikkuvuus',mob_quick:'Yläselkä',teho:'Teho',str:'Voima',aktivointi:'Aktivointi',kierros:'Kierros',voima_a:'Voima A',voima_b:'Voima B',voima_c:'Nivelhuolto'};
+      const SESSION_SHORT={heitto_tek:'Tekniikka',heitto_nop:'Nopeus',putti:'Putti',mob:'Liikkuvuus',mob_quick:'Yläselkä',teho:'Teho',hermosto:'Hermosto',str:'Voima',aktivointi:'Aktivointi',kierros:'Kierros',voima_a:'Voima A',voima_b:'Voima B',voima_c:'Nivelhuolto'};
       const doneSubs=getSubChecks(day.date);
       h += '<div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">';
       routableSessions.forEach(function(s){
@@ -2825,10 +2826,10 @@ function trainTabPick(pickDataStr){
 
 function renderSessionPick(){
   const cont = document.getElementById('train-content');
-  const SESSION_ROUTE = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',voima_c:'str',putti:'putti',mob:'mob',mob_quick:'mob_quick',teho:'teho',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros'};
+  const SESSION_ROUTE = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',voima_c:'str',putti:'putti',mob:'mob',mob_quick:'mob_quick',teho:'teho',hermosto:'hermosto',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros'};
   const SESSION_NAMES = {
     heitto_tek:'🥏 Tekniikan ylläpito', heitto_nop:'⚡ Nopeusheitto',
-    voima_a:'💪 Voima A', voima_b:'💪 Voima B', voima_c:'🧩 Nivelterveys', teho:'⚡ Teho',
+    voima_a:'💪 Voima A', voima_b:'💪 Voima B', voima_c:'🧩 Nivelterveys', teho:'⚡ Teho', hermosto:'🧘 Hermosto',
     putti:'🎯 Puttausrutiini', mob:'🧘 Liikkuvuus', mob_quick:'🧩 Yläselkäpika',
     aktivointi:'⚡ Aktivointi', comp_day:'🏆 Kisapäivä',
     kierros:'🏃 Kenttäkierros'
@@ -2838,6 +2839,7 @@ function renderSessionPick(){
     heitto_nop:'RPE 10 · Maksiminopeus · ~1h',
     voima_c:'2 sarjaa/liike · ~15 min · Olkapää + lonkka',
     teho:'Plyo + med ball · ~25 min · Räjähtävyys',
+    hermosto:'Box breathing aamu+ilta · 4-6 vk automatisoituu',
     putti:'C1-rutiini · Joka putilla samat 5 vaihetta',
     mob:'Liikkuvuus + palauttelu',
     mob_quick:'3 liikettä · ~10 min · Yläselkä/rintaranka',
@@ -2877,6 +2879,7 @@ function renderTrain(){
   else if(trainTabCur==='mob')renderMob();
   else if(trainTabCur==='mob_quick')renderMobQuick();
   else if(trainTabCur==='teho')renderTeho();
+  else if(trainTabCur==='hermosto')renderHermosto();
   else if(trainTabCur==='aktivointi')renderAktivointi();
   else if(trainTabCur==='kierros_vayla')renderKierrosVayla();
   else if(trainTabCur==='kierros')renderKierros();
@@ -3075,7 +3078,7 @@ function renderPuttiTrain(){
   const todayTarget=puttiPhase===1?50:puttiPhase===2?60:puttiPhase===4?puttP4WeekTotal(putWk):30;
   const pct_today=Math.min(100,Math.round(todayDone/todayTarget*100));
 
-  const steps=[['ASETU','Takajalka linjaan kohteeseen'],['KATSO','Ketjun alareuna – ei koko koria'],['HENGITÄ','Yksi syvä hengitys ulos ennen liikettä'],['RYTMI','Vakio tahti – ei liian hidas eikä nopea'],['SEURAA LÄPI','Käsi jatkuu kohti ketjua irrotuksen jälkeen']];
+  const steps=[['ASETU','Takajalka linjaan kohteeseen'],['KATSO','Ketjun alareuna – ei koko koria'],['HENGITÄ','Sisään 4s, ULOS 6-8s (pidempi uloshengitys aktivoi rauhoittavan hermoston)'],['RYTMI','Vakio tahti – ei liian hidas eikä nopea'],['SEURAA LÄPI','Käsi jatkuu kohti ketjua irrotuksen jälkeen']];
   const phases=PUTTI_PHASES;
   const ph=phases[viewPhase-1];
 
@@ -3624,6 +3627,55 @@ function renderMobQuick(){
     }
     exList.addEventListener('click',handleMobQToggle);
     exList.addEventListener('touchend',handleMobQToggle);
+  }
+}
+
+const HERMOSTO_DAILY=[
+  {id:'hs1',name:'Box breathing – aamu',desc:'4s sisään – 4s pidätys – 6-8s ulos (uloshengitys pidempi = vagushermo aktivoituu)',reps:'5 sykliä'},
+  {id:'hs2',name:'Box breathing – ilta',desc:'Sama rytmi ennen nukkumaanmenoa',reps:'5 sykliä'}
+];
+
+function toggleHermosto(key){
+  const cur=getSets(key);
+  setSets(key, cur>0 ? 0 : 1);
+  renderTrain();
+}
+
+function renderHermosto(){
+  const cont=document.getElementById('train-content');
+  const today=dateStr(new Date());
+  const done=HERMOSTO_DAILY.filter(ex=>getSets('hermosto_'+today+'_'+ex.id)>0).length;
+  const total=HERMOSTO_DAILY.length;
+  const pct=Math.round(done/total*100);
+
+  let h='<div style="background:var(--gl);border-radius:var(--r);padding:12px 14px;margin-bottom:12px">';
+  h+='<div style="font-size:14px;font-weight:700;color:var(--gd)">🧘 Hermosto – päivittäinen box breathing</div>';
+  h+='<div style="font-size:11px;color:var(--gd);opacity:.8;margin-top:3px">Rakentaa automaattisen rauhoittumiskyvyn ennen kautta (tutkitusti 4-6 vk päivittäistä harjoittelua)</div>';
+  h+='</div>';
+  h+='<div class="prog-bar" style="margin-bottom:14px"><div class="prog-fill" style="width:'+pct+'%;background:var(--g)"></div></div>';
+  h+='<div class="card card-p" id="hermosto-ex-list">';
+  HERMOSTO_DAILY.forEach(function(ex){
+    const key='hermosto_'+today+'_'+ex.id;
+    const ck=getSets(key)>0;
+    h+='<div class="mob-row" data-hermostokey="'+key+'">';
+    h+='<div class="mob-cb'+(ck?' c':'')+'">'+(ck?'✓':'')+'</div>';
+    h+='<div style="flex:1">';
+    h+='<div style="font-size:13px;font-weight:600">'+ex.name+'</div>';
+    h+='<div style="font-size:11px;color:var(--t2);margin-top:1px;line-height:1.4">'+ex.desc+'</div>';
+    h+='<div style="font-size:10px;color:var(--gd);font-weight:500;margin-top:2px">'+ex.reps+'</div>';
+    h+='</div></div>';
+  });
+  h+='</div>';
+  cont.innerHTML=h;
+
+  const exList=cont.querySelector('#hermosto-ex-list');
+  if(exList){
+    function handleHermostoToggle(e){
+      const row=e.target.closest('[data-hermostokey]');
+      if(row){e.preventDefault();toggleHermosto(row.dataset.hermostokey);}
+    }
+    exList.addEventListener('click',handleHermostoToggle);
+    exList.addEventListener('touchend',handleHermostoToggle);
   }
 }
 
