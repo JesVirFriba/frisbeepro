@@ -2148,6 +2148,7 @@ const SESSION_COLORS = {
   mob_quick:  {bg:'#E8F5E9', col:'#1B5E20', lbl:'Yläselkä'},
   teho:       {bg:'#FFF3E0', col:'#E65100', lbl:'Teho'},
   hermosto:   {bg:'#E1F5EE', col:'#085041', lbl:'Hermosto'},
+  peruskunto: {bg:'#E3F2FD', col:'#0D47A1', lbl:'Peruskunto'},
   putti:      {bg:'#E1F5EE', col:'#085041', lbl:'Puttausrutiini'},
   mob:        {bg:'#FAEEDA', col:'#633806', lbl:'Liikkuvuus'},
   kierros:    {bg:'#E1F5EE', col:'#085041', lbl:'Kenttäkierros'},
@@ -2293,6 +2294,16 @@ function buildWeekPlan(weekDates) {
       dayPlan = { day: base[i].day, label: base[i].label, date: ds, sessions:['heitto_tek','putti'], icon:'🔄', intensity:'low', note: pEvent.name };
     } else {
       dayPlan = { ...base[i], date: ds };
+      // Peruskunto (matala-tehoinen aerobinen pohja): to + su vaiheissa 1-2, vain su vaiheessa 3; ei testipäivänä eikä sitä edeltävänä päivänä
+      const pkPhase = isOffseasonP1 || isOffseasonP2 || isOffseasonP3;
+      const pkDay = (i===6) || (i===3 && !isOffseasonP3);
+      if(pkPhase && pkDay && dateStr(weekDates[0])>=pkStart()){
+        const nd = new Date(weekDates[i]); nd.setDate(nd.getDate()+1);
+        const testNear = (get('events')||[]).some(e => e.type==='testi' && (e.date===ds || e.date===dateStr(nd)));
+        if(!testNear){
+          dayPlan = { ...dayPlan, sessions:[...dayPlan.sessions,'peruskunto'], note: dayPlan.note+' + peruskunto '+pkTargetMin(ds)+' min' };
+        }
+      }
     }
     plan.push(dayPlan);
   }
@@ -2503,7 +2514,7 @@ function renderWeekView() {
     const textCol = isToday ? sc.col : 'var(--text)';
     const dayCol = isToday ? sc.col : 'var(--t3)';
     const opacity = isPast && !isToday ? '.55' : '1';
-    const sessionRoute = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',voima_c:'str',putti:'putti',mob:'mob',mob_quick:'mob_quick',teho:'teho',hermosto:'hermosto',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros',kisa:'comp_day',lepo:'rest_day'};
+    const sessionRoute = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',voima_c:'str',putti:'putti',mob:'mob',mob_quick:'mob_quick',teho:'teho',hermosto:'hermosto',peruskunto:'peruskunto',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros',kisa:'comp_day',lepo:'rest_day'};
     const routableSessions = sessions.filter(s=>sessionRoute[s]);
     // Kisa ja lepo ovat aina klikattavia
     const isCompDay = day.intensity === 'comp' && !vkDates.has(day.date);
@@ -2539,7 +2550,7 @@ function renderWeekView() {
     } else if(isPast && day.intensity !== 'rest' && !isCompDay){
       h += '<div onclick="event.stopPropagation();setDone(\''+day.date+'\',1);renderTrain()" style="font-size:10px;color:var(--t3);cursor:pointer;flex-shrink:0;padding:3px 7px;border:1px solid var(--border);border-radius:20px">Merkitse</div>';
     } else if(clickable && routableSessions.length >= 1 && !isRestDay){
-      const SESSION_SHORT={heitto_tek:'Tekniikka',heitto_nop:'Nopeus',putti:'Putti',mob:'Liikkuvuus',mob_quick:'Yläselkä',teho:'Teho',hermosto:'Hermosto',str:'Voima',aktivointi:'Aktivointi',kierros:'Kierros',voima_a:'Voima A',voima_b:'Voima B',voima_c:'Nivelhuolto'};
+      const SESSION_SHORT={heitto_tek:'Tekniikka',heitto_nop:'Nopeus',putti:'Putti',mob:'Liikkuvuus',mob_quick:'Yläselkä',teho:'Teho',hermosto:'Hermosto',peruskunto:'Peruskunto',str:'Voima',aktivointi:'Aktivointi',kierros:'Kierros',voima_a:'Voima A',voima_b:'Voima B',voima_c:'Nivelhuolto'};
       const doneSubs=getSubChecks(day.date);
       h += '<div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">';
       routableSessions.forEach(function(s){
@@ -2832,10 +2843,10 @@ function trainTabPick(pickDataStr){
 
 function renderSessionPick(){
   const cont = document.getElementById('train-content');
-  const SESSION_ROUTE = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',voima_c:'str',putti:'putti',mob:'mob',mob_quick:'mob_quick',teho:'teho',hermosto:'hermosto',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros'};
+  const SESSION_ROUTE = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',voima_c:'str',putti:'putti',mob:'mob',mob_quick:'mob_quick',teho:'teho',hermosto:'hermosto',peruskunto:'peruskunto',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros'};
   const SESSION_NAMES = {
     heitto_tek:'🥏 Tekniikan ylläpito', heitto_nop:'⚡ Nopeusheitto',
-    voima_a:'💪 Voima A', voima_b:'💪 Voima B', voima_c:'🧩 Nivelterveys', teho:'⚡ Teho', hermosto:'🧘 Hermosto',
+    voima_a:'💪 Voima A', voima_b:'💪 Voima B', voima_c:'🧩 Nivelterveys', teho:'⚡ Teho', hermosto:'🧘 Hermosto', peruskunto:'🚶 Peruskunto',
     putti:'🎯 Puttausrutiini', mob:'🧘 Liikkuvuus', mob_quick:'🧩 Yläselkäpika',
     aktivointi:'⚡ Aktivointi', comp_day:'🏆 Kisapäivä',
     kierros:'🏃 Kenttäkierros'
@@ -2846,6 +2857,7 @@ function renderSessionPick(){
     voima_c:'2 sarjaa/liike · ~15 min · Olkapää + lonkka',
     teho:'Plyo + med ball · ~25 min · Räjähtävyys',
     hermosto:'Box breathing aamu+ilta · 4-6 vk automatisoituu',
+    peruskunto:'Matala teho · 30–45 min · kävely tai pyöräily',
     putti:'C1-rutiini · Joka putilla samat 5 vaihetta',
     mob:'Liikkuvuus + palauttelu',
     mob_quick:'3 liikettä · ~10 min · Yläselkä/rintaranka',
@@ -2886,6 +2898,7 @@ function renderTrain(){
   else if(trainTabCur==='mob_quick')renderMobQuick();
   else if(trainTabCur==='teho')renderTeho();
   else if(trainTabCur==='hermosto')renderHermosto();
+  else if(trainTabCur==='peruskunto')renderPeruskunto();
   else if(trainTabCur==='aktivointi')renderAktivointi();
   else if(trainTabCur==='kierros_vayla')renderKierrosVayla();
   else if(trainTabCur==='kierros')renderKierros();
@@ -3641,6 +3654,51 @@ function renderMobQuick(){
     exList.addEventListener('click',handleMobQToggle);
     exList.addEventListener('touchend',handleMobQToggle);
   }
+}
+
+// ===== PERUSKUNTO (matala-tehoinen aerobinen pohja) =====
+function pkStart(){return '2026-10-26';}
+function pkTargetMin(ds){
+  const days=Math.round((new Date(ds+'T00:00:00')-new Date(pkStart()+'T00:00:00'))/86400000);
+  const wk=Math.max(0,Math.floor(days/7));
+  return Math.min(45,30+5*wk);
+}
+function getPeruskunto(ds){return get('peruskunto_'+ds)||0;}
+function setPeruskunto(ds,v){const m=parseInt(v);set('peruskunto_'+ds,(isNaN(m)||m<0)?0:m);renderTrain();}
+function setPkType(ds,t){set('pk_tyyppi_'+ds,get('pk_tyyppi_'+ds)===t?'':t);renderTrain();}
+function renderPeruskunto(){
+  const cont=document.getElementById('train-content');
+  const today=dateStr(new Date());
+  const target=pkTargetMin(today);
+  const mins=getPeruskunto(today);
+  const type=get('pk_tyyppi_'+today)||'';
+  const pct=Math.min(100,Math.round(mins/target*100));
+  // viikon yhteenveto: suunnitellut peruskuntopäivät vs tehdyt minuutit
+  const wkDates=getWeekDates(0);
+  const wkPlan=buildWeekPlan(wkDates);
+  let wkTarget=0,wkDone=0,wkDays=0;
+  wkPlan.forEach(function(d){if(d.sessions.includes('peruskunto')){wkDays++;wkTarget+=pkTargetMin(d.date);wkDone+=getPeruskunto(d.date);}});
+  let h='<div style="background:#E3F2FD;border-radius:var(--r);padding:12px 14px;margin-bottom:12px">';
+  h+='<div style="font-size:14px;font-weight:700;color:#0D47A1">🚶 Peruskunto – matala teho</div>';
+  h+='<div style="font-size:11px;color:#0D47A1;opacity:.85;margin-top:3px;line-height:1.5">Keskusteluvauhti, n. 60–70 % maksimisykkeestä. Reipas kävely tai pyöräily – ei juoksua Vaihe 1:ssä. Ei samana päivänä raskaan voima- tai nopeustreenin kanssa. Jos olet väsynyt, karsi tämä ensimmäisenä.</div>';
+  h+='</div>';
+  h+='<div class="card card-p" style="margin-bottom:10px">';
+  h+='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px"><div style="font-size:13px;font-weight:600">Tänään ('+today+')</div><div style="font-size:12px;color:var(--t2)">tavoite <b>'+target+' min</b></div></div>';
+  h+='<div class="prog-bar" style="margin-bottom:10px"><div class="prog-fill" style="width:'+pct+'%;background:var(--g)"></div></div>';
+  h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><input id="pk-min" type="number" min="0" step="5" inputmode="numeric" value="'+(mins||'')+'" placeholder="0" style="width:90px;padding:8px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:18px;font-weight:700;text-align:center;background:var(--bg);color:var(--text)" onchange="setPeruskunto(\''+today+'\',this.value)"><span style="font-size:13px;color:var(--t2)">min tehty'+(mins>=target?' ✓':'')+'</span></div>';
+  h+='<div style="display:flex;gap:6px;flex-wrap:wrap">';
+  [['kavely','🚶 Kävely'],['pyora','🚴 Pyöräily'],['muu','Muu matala teho']].forEach(function(t){
+    const sel=type===t[0];
+    h+='<button style="padding:6px 10px;border-radius:20px;border:1.5px solid '+(sel?'var(--bd)':'var(--border)')+';background:'+(sel?'var(--bl)':'transparent')+';color:'+(sel?'var(--bd)':'var(--t2)')+';font-size:11px;cursor:pointer" onclick="setPkType(\''+today+'\',\''+t[0]+'\')">'+t[1]+'</button>';
+  });
+  h+='</div></div>';
+  h+='<div class="card card-p"><div style="font-size:13px;font-weight:600;margin-bottom:4px">Tämä viikko</div>';
+  h+=wkDays>0
+    ? '<div style="font-size:12px;color:var(--t2)">'+wkDone+' / '+wkTarget+' min · '+wkDays+' suunniteltua kertaa</div>'
+    : '<div style="font-size:12px;color:var(--t2)">Tälle viikolle ei ole suunniteltu peruskuntoa (alkaa 26.10.)</div>';
+  h+='<div style="font-size:11px;color:var(--t3);margin-top:6px">Progressio: 30 → 35 → 40 → 45 min (+5 min/vk), sen jälkeen 45 min. Vaihe 3:ssa vain sunnuntaisin ylläpitona.</div></div>';
+  h+='<div class="page-spacer"></div>';
+  cont.innerHTML=h;
 }
 
 const HERMOSTO_DAILY=[
