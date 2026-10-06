@@ -3009,9 +3009,13 @@ function renderStr(){
       const wKey='str_w'+strWk+'_'+ex.id;const curW=getW(wKey);
       const feelKey='str_feel_w'+strWk+'_'+ex.id;const curFeel=get(feelKey);
       // Find prev week weight + feedback, compute suggestion
-      let prevW=null,prevFeel=null,suggestion=null;
+      let prevW=null,prevFeel=null,suggestion=null,suggestionNote=null;
       for(let w=strWk-1;w>=1;w--){const pw=get('wt_str_w'+w+'_'+ex.id);if(pw){prevW={v:pw,w};prevFeel=get('str_feel_w'+w+'_'+ex.id);break}}
-      if(prevW && prevFeel) suggestion=suggestedStrWeight(prevW.v,prevFeel);
+      if(prevW && prevFeel){
+        const prevNum=parseFloat(prevW.v);
+        if(prevNum>0) suggestion=suggestedStrWeight(prevW.v,prevFeel);
+        else if(prevNum===0) suggestionNote=(prevFeel==='raskas')?'Pysy kehonpainossa tällä viikolla':'Kehonpaino toimi – kokeile +1,25–2,5 kg lisäpainoa tai lisää toistoja';
+      }
       h+=`<div class="ex-block">
         <div class="ex-name" style="${allS?'color:var(--g)':''}">${ex.name}${allS?' ✓':''}<\/div>
         <div style="font-size:11px;color:var(--t3);margin-bottom:2px">${ex.detail}<\/div>
@@ -3026,6 +3030,9 @@ function renderStr(){
         <\/div>`;
         if(suggestion!=null){
           h+=`<div style="font-size:11px;color:var(--gd);background:var(--gl);border-radius:var(--rs);padding:5px 8px;margin-bottom:7px">💡 Ehdotus tälle viikolle: <b>${suggestion}kg</b> (edellisen viikon palautteen perusteella)<\/div>`;
+        }
+        else if(suggestionNote){
+          h+=`<div style="font-size:11px;color:var(--gd);background:var(--gl);border-radius:var(--rs);padding:5px 8px;margin-bottom:7px">💡 ${suggestionNote}<\/div>`;
         }
       }else{h+=`<div style="font-size:11px;color:var(--t3);margin-bottom:7px;font-style:italic">Kehon paino<\/div>`}
       h+=`<div style="font-size:11px;color:var(--t2);margin-bottom:6px">Sarjat: ${done}/${t}<\/div>
@@ -3107,7 +3114,7 @@ function renderPuttiTrain(){
   h+='</div></div>';
 
   // Vaihevalinnat (esikatselu - ei tallennu ennen vahvistusta)
-  h+='<div class=\"sect\">Treeniohjelma – 6 viikon protokolla</div>';
+  h+='<div class=\"sect\">Treeniohjelma – '+(viewPhase===4?'12 viikon off-season-progressio':'6 viikon protokolla')+'</div>';
   h+='<div style=\"display:flex;gap:5px;margin-bottom:10px\">';
   phases.forEach(p=>{
     const sel=p.n===viewPhase;
