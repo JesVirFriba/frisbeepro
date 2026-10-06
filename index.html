@@ -695,7 +695,13 @@ function mergeFpData(remote, local, preferLocal){
     }
     first.forEach(take);
     second.forEach(take);
-    merged[key] = Object.values(byId).concat(noId);
+    // Vanha id:tön rivi pudotetaan jos samalla päivällä+nimellä on jo id:llinen versio (estää toistuvat duplikaatit eri laitteilta)
+    const idItems = Object.values(byId);
+    const keyOf = function(it){return (it.date||'')+'|'+(it.name||'');};
+    const idKeys = {};
+    idItems.forEach(function(it){ if(it.date && it.name) idKeys[keyOf(it)]=true; });
+    const noIdFiltered = noId.filter(function(it){ return !(it && it.date && it.name && idKeys[keyOf(it)]); });
+    merged[key] = idItems.concat(noIdFiltered);
   });
   return merged;
 }
@@ -3997,6 +4003,24 @@ function renderKierrosVayla() {
   cont.innerHTML = html;
 }
 
+function computeKierrosSummary(n){
+  const km=get('kierros_map')||{};
+  const hasRealData=(kd)=>!!(kd.result || (kd.vaylaData && Object.keys(kd.vaylaData).length>0) || (kd.holes && kd.holes.some(Boolean)));
+  const dates=Object.keys(km).filter(d=>hasRealData(km[d])).sort().reverse().slice(0,n);
+  const diffs=[],c1pcts=[],ratings=[];
+  dates.forEach(function(d){
+    const kd=km[d];
+    const course=getCourseById(kd.courseId||'');
+    const totalPar=course?course.par:(kd.holePars?kd.holePars.reduce(function(a,b){return a+b},0):null);
+    const result=kd.result!=null?parseInt(kd.result):null;
+    if(result!=null && totalPar!=null && !isNaN(result)) diffs.push(result-totalPar);
+    if(kd.c1_made!=null && kd.c1_att) c1pcts.push(kd.c1_made/kd.c1_att*100);
+    if(kd.calcRating!=null) ratings.push(kd.calcRating);
+  });
+  const avg=function(arr){return arr.length?arr.reduce(function(a,b){return a+b},0)/arr.length:null};
+  return {count:dates.length,avgDiff:avg(diffs),avgC1:avg(c1pcts),avgRating:avg(ratings)};
+}
+
 function renderKierros(){
   const cont=document.getElementById('train-content');
   const today=kierrosPvm||dateStr(new Date());
@@ -4021,6 +4045,17 @@ function renderKierros(){
   h+='<div style="font-size:20px;font-weight:700;margin-top:2px">'+today+'</div>';
   h+='<div style="font-size:12px;opacity:.85;margin-top:4px">'+(selectedCourse?selectedCourse.name+' – '+selectedCourse.layout:'Valitse rata alta')+'</div>';
   h+='</div>';
+  // Usean kierroksen yhteenveto
+  const kSum=computeKierrosSummary(5);
+  if(kSum.count>0){
+    h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:8px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
+    h+='<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">📈 Viimeiset '+kSum.count+' harjoituskierrosta</div>';
+    h+='<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--t2)">';
+    if(kSum.avgDiff!=null)h+='<span>Ero ka: <b style="color:'+(kSum.avgDiff<=0?'var(--gd)':'var(--rd)')+'">'+(kSum.avgDiff>0?'+':'')+kSum.avgDiff.toFixed(1)+'</b></span>';
+    if(kSum.avgC1!=null)h+='<span>C1 ka: <b style="color:var(--text)">'+Math.round(kSum.avgC1)+'%</b></span>';
+    if(kSum.avgRating!=null)h+='<span>Rating ka: <b style="color:var(--text)">'+Math.round(kSum.avgRating)+'</b></span>';
+    h+='</div></div>';
+  }
   // Rata-valinta
   h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:8px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
   h+='<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">🏟️ Valitse rata</div>';
@@ -4032,24 +4067,7 @@ function renderKierros(){
   h+='</div>';
   if(selectedCourse)h+='<div style="margin-top:8px;font-size:11px;color:var(--t2);background:var(--bg);border-radius:var(--rs);padding:6px 10px">Par <b>'+selectedCourse.par+'</b> · Rating <b>'+selectedCourse.rating+'</b> · '+selectedCourse.holes.length+' väylää</div>';
   h+='</div>';
-  // Ennen kierrosta
-  h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
-  h+='<div style="background:var(--gl);padding:10px 14px;display:flex;align-items:center;justify-content:space-between"><div style="font-size:13px;font-weight:700;color:var(--gd)">✅ Ennen kierrosta</div><span style="font-size:11px;padding:2px 9px;border-radius:20px;background:var(--gd);color:#fff;font-weight:600">'+donePre+'/'+CHECKLIST.length+'</span></div>';
-  h+='<div style="padding:4px 14px 10px" id="kierros-checks">';
-  CHECKLIST.forEach(function(item){
-    const ck=checks[item.id];
-    h+='<div class="kierros-check" data-id="'+item.id+'" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:.5px solid var(--border);cursor:pointer"><div style="width:22px;height:22px;border-radius:50%;border:2px solid '+(ck?'var(--g)':'var(--border)')+';background:'+(ck?'var(--g)':'transparent')+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'+(ck?'<span style="color:#fff;font-size:12px">✓</span>':'')+'</div><div style="font-size:13px;color:'+(ck?'var(--t3)':'var(--text)')+';'+(ck?'text-decoration:line-through':'')+'">'+item.text+'</div></div>';
-  });
-  h+='</div></div>';
-  // Fokus
-  h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:8px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
-  h+='<div style="font-size:13px;font-weight:700;color:var(--bd);margin-bottom:8px">🎯 Kierroksen fokus</div>';
-  h+='<div style="display:flex;flex-wrap:wrap;gap:6px">';
-  FOCUS_OPTIONS.forEach(function(opt){
-    const sel=focus===opt;
-    h+='<button class="kierros-focus-btn" data-focus="'+opt+'" style="padding:6px 10px;border-radius:20px;border:1.5px solid '+(sel?'var(--bd)':'var(--border)')+';background:'+(sel?'var(--bl)':'transparent')+';color:'+(sel?'var(--bd)':'var(--t2)')+';font-size:11px;cursor:pointer">'+opt+'</button>';
-  });
-  h+='</div></div>';
+  // Fokus (poistettu käyttöliittymästä, mutta muuttuja pidetään ennallaan yhteensopivuuden vuoksi)
   // Kierroksen jälkeen
   const hasAfterData=result||positive||saved.kentta;
   // Väyläkohtainen kirjaus -nappi
@@ -4069,8 +4087,15 @@ function renderKierros(){
   const calcedRating=selectedCourse&&result?getRatingFromTable(selectedCourse,parseInt(result)):null;
   h+='<div id="kierros-rating-result" style="background:var(--gl);border-radius:var(--rs);padding:8px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between"><div style="font-size:11px;color:var(--gd)">'+(calcedRating?'Kierros-rating (taulukosta)':'Syötä tulos → rating lasketaan')+'</div><div id="kierros-rating-val" style="font-size:20px;font-weight:700;color:'+(calcedRating?(calcedRating>=950?'var(--gd)':calcedRating>=900?'var(--ad)':'#E24B4A'):'var(--t3)')+'">'+(calcedRating||'–')+'</div></div>';
   // Väyläkirjaus
-  const holes=saved.holes||[];
+  const holesRaw=saved.holes||[];
   const holePars=selectedCourse?selectedCourse.holes:(saved.holePars||[]);
+  // Yhdistetään rivi kerrallaan: yksinkertainen holes-taulukko voittaa jos sillä on arvo,
+  // muuten käytetään tarkemman vaylaData-kirjauksen (esim. "Aloita väyläkohtainen kirjaus") tulosta.
+  const holes = holePars.map((_,i)=>{
+    if(holesRaw[i]!=null && holesRaw[i]!=='') return holesRaw[i];
+    const vd=saved.vaylaData && (saved.vaylaData[String(i+1)]||saved.vaylaData[i+1]);
+    return (vd && vd.score!=null) ? vd.score : (holesRaw[i]!=null?holesRaw[i]:null);
+  });
   if(holePars.length){
     h+='<div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:6px">Väyläkohtainen tulos</div>';
     h+='<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-bottom:8px">';
@@ -4078,7 +4103,7 @@ function renderKierros(){
       const par=holePars[i]||3;const res=holes[i]||'';
       const diff=res?parseInt(res)-par:null;
       const col=diff===null?'var(--border)':diff<0?'var(--gd)':diff===0?'var(--bd)':'#E24B4A';
-      h+='<div style="text-align:center"><div style="font-size:9px;color:var(--t3)">'+(i+1)+'</div><input class="hole-input" data-hole="'+i+'" data-par="'+par+'" type="number" min="1" max="10" value="'+res+'" style="width:100%;padding:3px;border-radius:4px;border:1.5px solid '+col+';font-size:13px;font-weight:700;text-align:center;background:var(--bg);color:'+col+'"><div style="font-size:9px;color:var(--t3)">p'+par+'</div></div>';
+      h+='<div style="text-align:center"><div style="font-size:9px;color:var(--t3)">'+(i+1)+'</div><input class="hole-input" data-hole="'+i+'" data-par="'+par+'" type="number" min="1" max="10" value="'+res+'" style="width:100%;padding:3px;border-radius:4px;border:1.5px solid '+col+';font-size:13px;font-weight:700;text-align:center;background:var(--bg);color:'+col+'"><div style="font-size:9px;color:var(--t3)">par '+par+'</div></div>';
     }
     h+='</div>';
     if(holes.some(Boolean)){
@@ -4102,7 +4127,8 @@ function renderKierros(){
   h+='<div style="background:var(--al);border-radius:var(--r);padding:12px 14px;margin-bottom:8px"><div style="font-size:12px;font-weight:600;color:var(--ad);margin-bottom:4px">💬 Valmentajan muistutus</div><div style="font-size:12px;color:var(--ad);line-height:1.5">Harjoituskierros on laboratorio – ei kisapaine. Valitse yksi fokus ja tee se täydellisesti joka väylällä.</div></div>';
   // Historia
   const allKierros=get('kierros_map')||{};
-  const prevDates=Object.keys(allKierros).filter(d=>d!==today).sort().reverse().slice(0,3);
+  const hasRealData=(kd)=>!!(kd.result || (kd.vaylaData && Object.keys(kd.vaylaData).length>0) || (kd.holes && kd.holes.some(Boolean)));
+  const prevDates=Object.keys(allKierros).filter(d=>d!==today && hasRealData(allKierros[d])).sort().reverse().slice(0,3);
   if(prevDates.length){
     h+='<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">📋 Edelliset kierrokset</div>';
     prevDates.forEach(function(d){
@@ -4115,13 +4141,14 @@ function renderKierros(){
       h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden">';
       h+='<div class="kierros-hist-toggle" data-date="'+d+'" style="display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer">';
       h+='<div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text)">'+d+(prevCourse?' · '+prevCourse.name:kd.kentta?' · '+kd.kentta:'')+'</div>';
-      h+='<div style="font-size:11px;color:var(--t2)">'+(kd.focus||'Ei fokusta')+(kd.result?' · '+kd.result+' ht':'')+(kd.calcRating?' · '+kd.calcRating+' rating':'')+'</div></div>';
+      h+='<div style="font-size:11px;color:var(--t2)">'+[kd.focus||'',kd.result?kd.result+' ht':'',kd.calcRating?kd.calcRating+' rating':'',c1str||''].filter(Boolean).join(' · ')+'</div></div>';
       h+='<div style="font-size:14px;color:var(--t3)">'+(isOpen?'▲':'▼')+'</div></div>';
       if(isOpen){
         h+='<div style="padding:0 14px 12px;border-top:.5px solid var(--border)">';
         if(kd.positive)h+='<div style="font-size:12px;color:var(--gd);margin-top:8px">✓ '+kd.positive+'</div>';
         if(prevCourse)h+='<div style="font-size:11px;color:var(--t2);margin-top:4px">'+prevCourse.layout+' · Par '+prevCourse.par+' · Rating '+prevCourse.rating+'</div>';
         if(statsStr)h+='<div style="font-size:11px;color:var(--t2);margin-top:4px">'+statsStr+'</div>';
+        h+='<button data-del-kierros="'+d+'" style="margin-top:8px;background:none;border:1px solid var(--rd);color:var(--rd);border-radius:var(--rs);padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer">🗑 Poista tämä kierros</button>';
         h+='</div>';
       }
       h+='</div>';
@@ -4172,6 +4199,16 @@ function renderKierros(){
     function toggleHist(e){e.preventDefault();var d=getKierros(today)||{};d._histOpen=(d._histOpen===el.dataset.date)?null:el.dataset.date;setKierros(today,d);renderKierros();}
     el.addEventListener('click',toggleHist);el.addEventListener('touchend',toggleHist);
   });
+  cont.querySelectorAll('[data-del-kierros]').forEach(function(btn){
+    function handleDel(e){e.preventDefault();e.stopPropagation();delKierros(btn.dataset.delKierros);}
+    btn.addEventListener('click',handleDel);btn.addEventListener('touchend',handleDel);
+  });
+}
+function delKierros(date){
+  const all=get('kierros_map')||{};
+  delete all[date];
+  set('kierros_map',all);
+  renderKierros();
 }
 
 function calcKierrosC1(){
