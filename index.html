@@ -4192,7 +4192,7 @@ function renderKierros(){
   }
   var resetBtn=cont.querySelector('#kierros-reset');
   if(resetBtn){
-    function resetKierros(e){e.preventDefault();var d=getKierros(today)||{};delete d.result;delete d.positive;delete d.kentta;delete d.holes;delete d.calcRating;setKierros(today,d);renderKierros();}
+    function resetKierros(e){e.preventDefault();if(!confirm('Nollataanko tämän kierroksen tiedot? Tulos, väyläkohtaiset tulokset, C1 ja rating poistetaan.'))return;var d=getKierros(today)||{};['result','positive','kentta','holes','calcRating','vaylaData','c1_made','c1_att','c1_pct','fh_hit','bull_hit','ob_count','par'].forEach(function(k){delete d[k];});setKierros(today,d);renderKierros();}
     resetBtn.addEventListener('click',resetKierros);resetBtn.addEventListener('touchend',resetKierros);
   }
   cont.querySelectorAll('.kierros-hist-toggle').forEach(function(el){
