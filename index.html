@@ -2248,7 +2248,7 @@ function buildWeekPlan(weekDates) {
   // Viikkokisat eivät laukaise comp_week rakennetta
   const pdgaDates = new Set([...compDates].filter(d => !vkDates.has(d)));
   const isCompWeek = pdgaDates.has(satDs) || pdgaDates.has(sunDs);
-  const isOffseasonP1 = dateStr(weekDates[0]) >= '2026-10-01' && dateStr(weekDates[0]) <= '2026-11-30';
+  const isOffseasonP1 = dateStr(weekDates[0]) >= '2026-10-12' && dateStr(weekDates[0]) <= '2026-11-30';
   const isOffseasonP2 = dateStr(weekDates[0]) >= '2026-12-01' && dateStr(weekDates[0]) <= '2027-01-31';
   const isOffseasonP3 = dateStr(weekDates[0]) >= '2027-02-01' && dateStr(weekDates[0]) <= '2027-04-30';
   const isOffseasonP4 = dateStr(weekDates[0]) >= '2027-05-01' && dateStr(weekDates[0]) <= '2027-05-08';
@@ -2287,7 +2287,7 @@ function buildWeekPlan(weekDates) {
       dayPlan = { day: base[i].day, label: base[i].label, date: ds, sessions:['kierros'], icon:'🏃', intensity:'low', note: hEvent.name };
     } else if ((get('events')||[]).some(e => e.type==='loma' && ds>=e.date && ds<=(e.dateTo||e.date))) {
       const lomaEvent = (get('events')||[]).find(e => e.type==='loma' && ds>=e.date && ds<=(e.dateTo||e.date));
-      dayPlan = { day: base[i].day, label: base[i].label, date: ds, sessions:['lepo'], icon:'🏖️', intensity:'rest', note: lomaEvent.name };
+      dayPlan = { day: base[i].day, label: base[i].label, date: ds, sessions:['lepo'], icon:(lomaEvent.icon||'🏖️'), intensity:'rest', note: lomaEvent.name };
     } else if ((get('events')||[]).some(e => e.type==='palautus' && e.date===ds)) {
       const pEvent = (get('events')||[]).find(e => e.type==='palautus' && e.date===ds);
       dayPlan = { day: base[i].day, label: base[i].label, date: ds, sessions:['heitto_tek','putti'], icon:'🔄', intensity:'low', note: pEvent.name };
