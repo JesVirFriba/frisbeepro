@@ -1120,7 +1120,7 @@ function renderProfile(){
       const wDates=getWeekDates(0);
       const plan=buildWeekPlan(wDates);
       const entry=plan.find(d=>d.date===todayStr);
-      if(entry)return{note:entry.note,icon:entry.icon};
+      if(entry)return{note:entry.note,icon:entry.icon,sessions:entry.sessions,date:entry.date};
     } catch(e){}
     return{note:'Treeniä tänään',icon:'🥏'};
   })();
@@ -1131,7 +1131,7 @@ function renderProfile(){
     if(isPreComp)return`⚡ Kisa huomenna (${nextComp.name||''}). Tänään kevyt aktivointi + putti. Väylästrategia mielessä ennen nukkumaanmenoa. Uni 8-9h.`;
     if(daysToComp&&daysToComp<=7)return`📅 ${nextComp.name||'Kisa'} ${daysToComp} päivän päästä. Pidä harjoittelu suunnitelman mukaan – ei ylikuormitusta kisaviikolla.`;
     if(daysToComp&&daysToComp<=14)return`🎯 ${nextComp.name||'Kisa'} ${daysToComp} päivää. Fokus: pre-shot rutiini joka heittoon. Bogey-recovery harjoittelussa.`;
-    return'💪 Perustreeni käynnissä. Muista kirjata nopeustestit ja puttitulokset sovellukseen.';
+    return offseasonCoachMsg(todayStr)||'💪 Perustreeni käynnissä. Muista kirjata nopeustestit ja puttitulokset sovellukseen.';
   })();
 
   const countdownColor=daysToComp&&daysToComp<=7?'var(--rd)':daysToComp&&daysToComp<=14?'var(--ad)':'var(--gd)';
@@ -1143,7 +1143,7 @@ function renderProfile(){
         <span style="font-size:22px">${todayPlan.icon}</span>
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.04em">Tänään</div>
-          <div style="font-size:14px;font-weight:700;color:var(--text)">${todayPlan.note}</div>
+          <div style="font-size:14px;font-weight:700;color:var(--text)">${shortDayTitle(todayPlan.note)}</div>${(todayPlan.sessions&&todayPlan.sessions.length)?'<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:4px">'+todayPlan.sessions.map(function(s){const q=SESSION_COLORS[s]||SESSION_COLORS.lepo;return '<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:'+q.bg+';color:'+q.col+';font-weight:500">'+sessionChipLabel(s,todayPlan.date)+'</span>';}).join('')+'</div>':''}
         </div>
       </div>
       ${nextComp?`<div style="text-align:center;background:${countdownBg};border-radius:var(--rs);padding:6px 10px;flex-shrink:0">
@@ -2182,6 +2182,49 @@ function weekOffsetOf(dateObj){
   return Math.floor(Math.round((d0-m0)/86400000)/7);
 }
 
+// ===== Päiväkortin ja etusivun apufunktiot =====
+// Karsitaan otsikosta apuharjoitteet (merkit näyttävät ne jo): "Voima A + yläselkäpika + hermosto" -> "Voima A"
+function shortDayTitle(note){
+  const s=String(note||'').replace(/\s*\+\s*(yläselkäpika|hermosto|peruskunto\s*\d+\s*min|täysi liikkuvuus)/gi,'').trim();
+  return s||String(note||'');
+}
+function sessionChipLabel(s,ds){
+  const sc=SESSION_COLORS[s]||SESSION_COLORS.lepo;
+  return s==='peruskunto' ? sc.lbl+' '+pkTargetMin(ds)+' min' : sc.lbl;
+}
+// Off-season-vaihe viikon alkupäivän (maanantai) perusteella. 0 = ei off-seasonia.
+function offseasonPhaseOf(weekStartDs){
+  if(weekStartDs>='2026-10-12'&&weekStartDs<='2026-11-30')return 1;
+  if(weekStartDs>='2026-12-01'&&weekStartDs<='2027-01-31')return 2;
+  if(weekStartDs>='2027-02-01'&&weekStartDs<='2027-04-30')return 3;
+  if(weekStartDs>='2027-05-01'&&weekStartDs<='2027-05-08')return 4;
+  return 0;
+}
+function fiDate(ds){return (+ds.slice(8))+'.'+(+ds.slice(5,7))+'.';}
+function daysBetweenDs(a,b){return Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/86400000);}
+// Etusivun valmentajaviesti kisattomalle ajalle: testit, sairasloma ja nykyinen vaihe
+function offseasonCoachMsg(ds){
+  const events=get('events')||[];
+  const tomorrow=dateStr(new Date(new Date(ds+'T12:00:00').getTime()+86400000));
+  const upcomingTests=events.filter(e=>e.type==='testi'&&e.date>=ds).sort((a,b)=>a.date.localeCompare(b.date));
+  const nextTest=upcomingTests[0]||null;
+  const testSuffix=nextTest&&daysBetweenDs(ds,nextTest.date)>0 ? ' Seuraava testi: '+fiDate(nextTest.date)+' ('+daysBetweenDs(ds,nextTest.date)+' pv).' : '';
+  if(events.some(e=>e.type==='testi'&&e.date===ds))
+    return '📏 TESTIPÄIVÄ. Putti 40 kpl ensin, sitten lämmittely ja BH/FH-nopeus (5 heittoa/osio, 5 min tauko). Kirjaa tulokset ja sää.';
+  if(events.some(e=>e.type==='testi'&&e.date===tomorrow))
+    return '🛌 Huomenna testi. Tänään täysi lepo, hyvä uni ja normaali ruokailu.';
+  const loma=events.find(e=>e.type==='loma'&&ds>=e.date&&ds<=(e.dateTo||e.date));
+  if(loma&&/sairaa/i.test(loma.name||'')) return '🤒 Lepo. Anna kehon palautua – aloita vasta kun olet ollut oireeton.'+(nextTest?' Seuraava askel: '+(nextTest.name||'testi').replace(/^Testi \d\/\d:\s*/,'')+' '+fiDate(nextTest.date):'');
+  const dt=new Date(ds+'T12:00:00'); const dow=(dt.getDay()+6)%7;
+  const wsDs=dateStr(new Date(dt.getTime()-dow*86400000));
+  const ph=offseasonPhaseOf(wsDs);
+  if(ph===1){const wk=Math.max(1,Math.min(8,Math.floor(daysBetweenDs('2026-10-12',wsDs)/7)+1)); return '🏗️ Vaihe 1 (Perusta), viikko '+wk+'/8. Voima rakentuu lohko kerrallaan – kirjaa paino ja tuntuma (kevyt/sopiva/raskas). Yläselkä ja hermosto joka päivä.'+testSuffix;}
+  if(ph===2) return '⚡ Vaihe 2 (Teho-silta). Voima kevyempänä ja nopealla tempolla, teho/plyo keskiviikkoisin, heittovolyymi kasvaa.'+testSuffix;
+  if(ph===3) return '🚀 Vaihe 3 (Nopeus). Nopeusheitot ti + la ali-/ylikuormakiekoilla (~120 g / max 230–240 g), voima vain ylläpitona.'+testSuffix;
+  if(ph===4) return '🏁 Vaihe 4 (Kisakuntoon). Palaa pelikiekkoihin ja pelaa torstain kierros kuin kisa (paine-simulaatio).'+testSuffix;
+  return null;
+}
+
 // ===== AC-RATIO (Akuutti:Krooninen kuormitussuhde, Gabbet 2016) =====
 // Akuutti = tämän viikon heittomäärä. Krooninen = edeltävien (enintään 4) viikon keskiarvo.
 // Turvallinen alue 0.8-1.3. Yli 1.5 = vammariski voi kaksinkertaistua. Yli 50% nousu = riski nelinkertaistuu.
@@ -2258,10 +2301,11 @@ function buildWeekPlan(weekDates) {
   // Viikkokisat eivät laukaise comp_week rakennetta
   const pdgaDates = new Set([...compDates].filter(d => !vkDates.has(d)));
   const isCompWeek = pdgaDates.has(satDs) || pdgaDates.has(sunDs);
-  const isOffseasonP1 = dateStr(weekDates[0]) >= '2026-10-12' && dateStr(weekDates[0]) <= '2026-11-30';
-  const isOffseasonP2 = dateStr(weekDates[0]) >= '2026-12-01' && dateStr(weekDates[0]) <= '2027-01-31';
-  const isOffseasonP3 = dateStr(weekDates[0]) >= '2027-02-01' && dateStr(weekDates[0]) <= '2027-04-30';
-  const isOffseasonP4 = dateStr(weekDates[0]) >= '2027-05-01' && dateStr(weekDates[0]) <= '2027-05-08';
+  const offPhase = offseasonPhaseOf(dateStr(weekDates[0]));
+  const isOffseasonP1 = offPhase === 1;
+  const isOffseasonP2 = offPhase === 2;
+  const isOffseasonP3 = offPhase === 3;
+  const isOffseasonP4 = offPhase === 4;
   const base = isCompWeek ? WEEK_STRUCTURE.comp_week : (isOffseasonP1 ? WEEK_STRUCTURE.offseason_p1 : isOffseasonP2 ? WEEK_STRUCTURE.offseason_p2 : isOffseasonP3 ? WEEK_STRUCTURE.offseason_p3 : isOffseasonP4 ? WEEK_STRUCTURE.offseason_p4 : WEEK_STRUCTURE.base);
 
   for (let i = 0; i < 7; i++) {
@@ -2508,16 +2552,14 @@ function renderWeekView() {
 
     // Day cards
   const vkDates = getViikkokisaDatesInRange(weekDates[0], weekDates[6]);
+  if(weekViewOffset >= 0) h += `<div style="font-size:10px;color:var(--t3);margin:2px 2px 8px">Napauta harjoitusmerkkiä kuitataksesi sen tehdyksi (○ → ✓)</div>`;
   plan.forEach(day => {
     const isToday = day.date === today;
     const isPast = day.date < today;
     const sessions = Array.isArray(day.sessions) ? day.sessions : [day.sessions];
     const mainSession = sessions[0];
     const sc = SESSION_COLORS[mainSession] || SESSION_COLORS.lepo;
-    const badges = sessions.map(s => {
-      const ssc = SESSION_COLORS[s] || SESSION_COLORS.lepo;
-      return '<span style=\"font-size:10px;padding:2px 7px;border-radius:20px;background:'+ssc.bg+';color:'+ssc.col+';font-weight:500;flex-shrink:0\">'+ssc.lbl+'</span>';
-    }).join('');
+    // badges (merkit) lasketaan tehty-tilan jälkeen
     const cardBg = isToday ? sc.bg : 'var(--card)';
     const cardBorder = isToday ? '2px solid '+sc.col : '1.5px solid transparent';
     const textCol = isToday ? sc.col : 'var(--text)';
@@ -2540,6 +2582,18 @@ function renderWeekView() {
     // Kisapäivä: tehty jos kisatulos kirjattu kyseiselle päivälle
     const compDone = (isCompDay||isVKDay) && (get('comps')||[]).some(c=>c.date===day.date&&c.mrating);
     const isDone = compDone || !!(getDone(day.date));
+    // Merkki = väri + nimi + kuittaus: napautus merkitsee kyseisen istunnon tehdyksi (○ -> ✓)
+    const pillsMode = !(isDone && !isCompDay) && !compDone && !(isPast && day.intensity !== 'rest' && !isCompDay) && clickable && routableSessions.length >= 1 && !isRestDay;
+    const subDone = pillsMode ? getSubChecks(day.date) : {};
+    const badges = sessions.map(s => {
+      const ssc = SESSION_COLORS[s] || SESSION_COLORS.lepo;
+      const lbl = sessionChipLabel(s, day.date);
+      if(pillsMode && sessionRoute[s]){
+        const sd = !!subDone[s];
+        return `<span onclick="event.stopPropagation();toggleSubCheck('${day.date}','${s}')" style="font-size:10px;padding:2px 8px;border-radius:20px;cursor:pointer;flex-shrink:0;font-weight:${sd?600:500};background:${sd?'var(--gl)':ssc.bg};color:${sd?'var(--gd)':ssc.col};border:1px solid ${sd?'var(--g)':'transparent'}">${sd?'✓':'○'} ${lbl}</span>`;
+      }
+      return `<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:${ssc.bg};color:${ssc.col};font-weight:500;flex-shrink:0">${lbl}</span>`;
+    }).join('');
     const tagStyle = 'display:flex;align-items:center;gap:8px;padding:10px 12px;background:'+(isDone?'var(--gl)':cardBg)+';border-radius:var(--r);margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:'+(isDone?'1.5px solid var(--g)':cardBorder)+';opacity:'+opacity+';width:100%;text-align:left;font-family:inherit;cursor:'+(clickable?'pointer':'default');
 
     h += '<div'+onclickAttr+' style="'+tagStyle+'">';
@@ -2549,7 +2603,7 @@ function renderWeekView() {
     h += '<div style="font-size:10px;color:var(--t3)">'+day.date.slice(8)+'.</div>';
     h += '</div>';
     h += '<div style="flex:1;min-width:0">';
-    h += '<div style="font-size:12px;font-weight:600;color:'+(isDone?'var(--gd)':textCol)+';margin-bottom:4px;line-height:1.3">'+day.note+(isDone?' – tehty':'')+'</div>';
+    h += '<div style="font-size:12px;font-weight:600;color:'+(isDone?'var(--gd)':textCol)+';margin-bottom:4px;line-height:1.3">'+shortDayTitle(day.note)+(isDone?' – tehty':'')+'</div>';
     h += '<div style="display:flex;gap:3px;flex-wrap:wrap">'+badges+'</div>';
     h += '</div>';
     if(isDone && !isCompDay){
@@ -2559,15 +2613,7 @@ function renderWeekView() {
     } else if(isPast && day.intensity !== 'rest' && !isCompDay){
       h += '<div onclick="event.stopPropagation();setDone(\''+day.date+'\',1);renderTrain()" style="font-size:10px;color:var(--t3);cursor:pointer;flex-shrink:0;padding:3px 7px;border:1px solid var(--border);border-radius:20px">Merkitse</div>';
     } else if(clickable && routableSessions.length >= 1 && !isRestDay){
-      const SESSION_SHORT={heitto_tek:'Tekniikka',heitto_nop:'Nopeus',putti:'Putti',mob:'Liikkuvuus',mob_quick:'Yläselkä',teho:'Teho',hermosto:'Hermosto',peruskunto:'Peruskunto',str:'Voima',aktivointi:'Aktivointi',kierros:'Kierros',voima_a:'Voima A',voima_b:'Voima B',voima_c:'Nivelhuolto'};
-      const doneSubs=getSubChecks(day.date);
-      h += '<div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">';
-      routableSessions.forEach(function(s){
-        const sdone=!!doneSubs[s];
-        const slbl=SESSION_SHORT[s]||s;
-        h += '<div onclick="event.stopPropagation();toggleSubCheck(\''+day.date+'\',\''+s+'\')" style="font-size:10px;cursor:pointer;padding:2px 6px;border-radius:10px;border:1px solid '+(sdone?'var(--g)':'var(--border)')+';background:'+(sdone?'var(--gl)':'transparent')+';color:'+(sdone?'var(--gd)':'var(--t2)')+'">'+(sdone?'✓ ':'')+slbl+'</div>';
-      });
-      h += '</div>';
+      h += `<div style="font-size:16px;color:${sc.col};flex-shrink:0">›</div>`;
     } else if(clickable){
       h += '<div style="font-size:16px;color:'+sc.col+';flex-shrink:0">›</div>';
     }    h += '</div>';
