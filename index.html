@@ -1060,7 +1060,7 @@ function renderProfile(){
   const ratings=(get('ratings')||[]).sort((a,b)=>a.date.localeCompare(b.date));
   const speeds=(get('speeds')||[]).sort((a,b)=>a.date.localeCompare(b.date));
   const comps=get('comps')||[];
-  const goals=activeGoals();
+  const goals=getActiveGoals();
   const lastPDGA=ratings.length?ratings[ratings.length-1].val:p.rating;
   const lastMxFromRatings=ratings.length&&ratings[ratings.length-1].mval?ratings[ratings.length-1].mval:null;
   const compsWithRating=(get('comps')||[]).filter(c=>c.mrating).sort((a,b)=>a.date.localeCompare(b.date));
@@ -1276,7 +1276,7 @@ function buildCtx(){
   const ratings=(get('ratings')||[]).sort((a,b)=>a.date.localeCompare(b.date));
   const speeds=(get('speeds')||[]).sort((a,b)=>a.date.localeCompare(b.date));
   const comps=(get('comps')||[]).sort((a,b)=>b.date.localeCompare(a.date));
-  const goals=activeGoals();
+  const goals=getActiveGoals();
   const events=(get('events')||[]).filter(e=>e.date>=dateStr(new Date())).sort((a,b)=>a.date.localeCompare(b.date));
   const chatHist=(get('chat_history')||[]).sort((a,b)=>b.id-a.id).slice(0,5);
   const disc=get('disc_analytics');
@@ -2193,7 +2193,7 @@ function weekOffsetOf(dateObj){
 
 // ===== Tavoitteiden arkistointi (merkintä, ei poistoa: poisto palaisi toisen laitteen synkronoinnista) =====
 let showArchGoals=false;
-function activeGoals(){return (get('goals')||[]).filter(g=>!g.archived);}
+function getActiveGoals(){return (get('goals')||[]).filter(g=>!g.archived);}
 function archiveGoal(id,flag){set('goals',(get('goals')||[]).map(g=>g.id===id?{...g,archived:!!flag}:g));renderDev();}
 
 // ===== Päiväkortin ja etusivun apufunktiot =====
