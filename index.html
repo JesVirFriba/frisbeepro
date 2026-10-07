@@ -850,10 +850,19 @@ function getSubChecks(date){
 function toggleSubCheck(date, key){
   const all = get('sub_checks')||{};
   const d = all[date] || {};
+  // Päivän suunnitellut istunnot (lepoa lukuun ottamatta): päivä on valmis vasta kun KAIKKI on kuitattu
+  let planned = null;
+  try{
+    const e = buildWeekPlan(getWeekDates(weekOffsetOf(new Date(date+'T12:00:00')))).find(x=>x.date===date);
+    if(e) planned = e.sessions.filter(s=>s!=='lepo');
+  }catch(err){}
+  // Jos koko päivä on merkitty tehdyksi ilman istuntokohtaisia kuittauksia, lähdetään siitä että kaikki on tehty
+  if(Object.keys(d).length===0 && getDone(date) && planned) planned.forEach(s=>{d[s]=true;});
   d[key] = !d[key];
   all[date] = d;
   set('sub_checks', all);
-  const allDone = Object.keys(d).length>0 && Object.values(d).every(Boolean);
+  const check = (planned && planned.length) ? planned : Object.keys(d);
+  const allDone = check.length>0 && check.every(s=>!!d[s]);
   setDone(date, allDone?1:null);
   renderTrain();
 }
@@ -2583,13 +2592,13 @@ function renderWeekView() {
     const compDone = (isCompDay||isVKDay) && (get('comps')||[]).some(c=>c.date===day.date&&c.mrating);
     const isDone = compDone || !!(getDone(day.date));
     // Merkki = väri + nimi + kuittaus: napautus merkitsee kyseisen istunnon tehdyksi (○ -> ✓)
-    const pillsMode = !(isDone && !isCompDay) && !compDone && !(isPast && day.intensity !== 'rest' && !isCompDay) && clickable && routableSessions.length >= 1 && !isRestDay;
+    const pillsMode = !compDone && !(isPast && day.intensity !== 'rest' && !isCompDay) && clickable && routableSessions.length >= 1 && !isRestDay;
     const subDone = pillsMode ? getSubChecks(day.date) : {};
     const badges = sessions.map(s => {
       const ssc = SESSION_COLORS[s] || SESSION_COLORS.lepo;
       const lbl = sessionChipLabel(s, day.date);
       if(pillsMode && sessionRoute[s]){
-        const sd = !!subDone[s];
+        const sd = !!subDone[s] || (isDone && !isCompDay && Object.keys(subDone).length===0);
         return `<span onclick="event.stopPropagation();toggleSubCheck('${day.date}','${s}')" style="font-size:10px;padding:2px 8px;border-radius:20px;cursor:pointer;flex-shrink:0;font-weight:${sd?600:500};background:${sd?'var(--gl)':ssc.bg};color:${sd?'var(--gd)':ssc.col};border:1px solid ${sd?'var(--g)':'transparent'}">${sd?'✓':'○'} ${lbl}</span>`;
       }
       return `<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:${ssc.bg};color:${ssc.col};font-weight:500;flex-shrink:0">${lbl}</span>`;
