@@ -907,7 +907,7 @@ const DEF={name:'Jesse Virtanen',pdga:'252010',rating:919,metrix:939,target:940,
 
 // ===== NAV =====
 let calY=new Date().getFullYear(),calM=new Date().getMonth();
-let compTab='upcoming',devTabCur='rating',trainTabCur='week',kierrosPvm=null;
+let compTab='upcoming',devTabCur='rating',trainTabCur='week',kierrosPvm=null,trainCtxDate=null,trainCtxSession=null,throwManualWk=null,throwShowAll=false,strShowAll=false;
 let throwWk=parseInt(localStorage.getItem('fp_throw_wk')||'1')||1,strWk=parseInt(localStorage.getItem('fp_str_wk')||'1')||1,mobWk=parseInt(localStorage.getItem('fp_mob_wk')||'1')||1,putWk=parseInt(localStorage.getItem('fp_put_wk')||'1')||1;
 function setPutWk(w){putWk=w;localStorage.setItem('fp_put_wk',w);renderTrain()}
 
@@ -2160,6 +2160,7 @@ const SESSION_COLORS = {
   teho:       {bg:'#FFF3E0', col:'#E65100', lbl:'Teho'},
   hermosto:   {bg:'#E1F5EE', col:'#085041', lbl:'Hermosto'},
   peruskunto: {bg:'#E3F2FD', col:'#0D47A1', lbl:'Peruskunto'},
+  testi:      {bg:'#FFF3E0', col:'#BF360C', lbl:'Testi'},
   putti:      {bg:'#E1F5EE', col:'#085041', lbl:'Puttausrutiini'},
   mob:        {bg:'#FAEEDA', col:'#633806', lbl:'Liikkuvuus'},
   kierros:    {bg:'#E1F5EE', col:'#085041', lbl:'Kenttäkierros'},
@@ -2197,6 +2198,47 @@ function weekOffsetOf(dateObj){
 let showArchGoals=false;
 function getActiveGoals(){return (get('goals')||[]).filter(g=>!g.archived);}
 function archiveGoal(id,flag){set('goals',(get('goals')||[]).map(g=>g.id===id?{...g,archived:!!flag}:g));renderDev();}
+
+// ===== Viikkonäkymästä avattavan session konteksti (päivä + sessio) =====
+function weekStartOf(ds){const dt=new Date(ds+'T12:00:00');const dow=(dt.getDay()+6)%7;return dateStr(new Date(dt.getTime()-dow*86400000));}
+// Off-season-viikon numero (1 = viikko 12.10.2026 alkaen). Ennen alkua 0 tai negatiivinen.
+function offWeekN(ds){return Math.floor(daysBetweenDs('2026-10-12',weekStartOf(ds))/7)+1;}
+function pageDate(){return trainCtxDate||dateStr(new Date());}
+// Heitto-ohjelman viikko, kuittausalue ja suositeltu sessio päivälle. mode: 'tek' | 'nop' | null
+function throwProgramFor(ds,mode){
+  const ws=weekStartOf(ds); const ph=offseasonPhaseOf(ws); const n=Math.max(1,offWeekN(ds));
+  const effMode=mode||(ph>=3?'nop':'tek');
+  const plan=buildWeekPlan(getWeekDates(weekOffsetOf(new Date(ds+'T12:00:00'))));
+  const key=effMode==='nop'?'heitto_nop':'heitto_tek';
+  const days=plan.filter(d=>d.sessions.includes(key)).map(d=>d.date);
+  const di=days.indexOf(ds);
+  let cw,ns,title,pick;
+  if(ph>=3||effMode==='nop'){
+    const m=Math.max(1,Math.floor(daysBetweenDs('2027-02-01',ws)/7)+1);
+    cw=5+((m-1)%4); ns='s'+m;
+    if(effMode==='nop'){pick=di>=0?[['n1','n2'][Math.min(di,1)]]:null; title='Nopeusblokki – viikko '+cw+' (nopeusjakson vko '+m+')';}
+    else{pick=['t1m']; title='Tekniikan ylläpito – viikko '+cw+' (nopeusjakson vko '+m+')';}
+  }else{
+    cw=((n-1)%4)+1; ns='p'+n;
+    pick=di>=0?[['t1','t2'][Math.min(di,1)]]:null;
+    title='Tekniikkablokki – viikko '+cw+'/4 (off-season viikko '+n+')';
+  }
+  const note=pick?('Suositus tälle päivälle (heittopäivä '+(di+1)+'/'+days.length+' tällä viikolla). Muut viikon sessiot: "Näytä muut".'):(days.length?'':'Tälle päivälle ei ole heitto-sessiota – näytetään viikon kaikki sessiot.');
+  return {cw,ns,title,pick,note};
+}
+// Avaa session viikkonäkymästä: asettaa päivän/session kontekstin ja synkronoi ohjelmasivun viikon kalenteriin
+function openSession(target,date,sess){
+  trainCtxDate=date||null; trainCtxSession=sess||null;
+  throwManualWk=null; throwShowAll=false; strShowAll=false;
+  if(date){
+    kierrosPvm=date;
+    const n=offWeekN(date);
+    if(target==='str'){ strWk=Math.max(1,Math.min(8,n)); localStorage.setItem('fp_str_wk',strWk); }
+    if(target==='putti'){ if(n>=1&&n<=12){ putWk=n; localStorage.setItem('fp_put_wk',putWk); } window.puttiPreviewPhase=null; }
+    if(target==='mob'){ mobWk=Math.max(1,n); localStorage.setItem('fp_mob_wk',mobWk); }
+  }
+  trainTab(target,null);
+}
 
 // ===== Päiväkortin ja etusivun apufunktiot =====
 // Karsitaan otsikosta apuharjoitteet (merkit näyttävät ne jo): "Voima A + yläselkäpika + hermosto" -> "Voima A"
@@ -2360,7 +2402,7 @@ function buildWeekPlan(weekDates) {
       dayPlan = { day: base[i].day, label: base[i].label, date: ds, sessions:['lepo'], icon:(lomaEvent.icon||'🏖️'), intensity:'rest', note: lomaEvent.name };
     } else if ((get('events')||[]).some(e => e.type==='palautus' && e.date===ds)) {
       const pEvent = (get('events')||[]).find(e => e.type==='palautus' && e.date===ds);
-      dayPlan = { day: base[i].day, label: base[i].label, date: ds, sessions:['heitto_tek','putti'], icon:'🔄', intensity:'low', note: pEvent.name };
+      dayPlan = { day: base[i].day, label: base[i].label, date: ds, sessions:(pEvent.sessions&&pEvent.sessions.length)?pEvent.sessions:['heitto_tek','putti'], icon:(pEvent.icon||'🔄'), intensity:'low', note: pEvent.name };
     } else {
       dayPlan = { ...base[i], date: ds };
       // Peruskunto (matala-tehoinen aerobinen pohja): to + su vaiheissa 1-2, vain su vaiheessa 3; ei testipäivänä eikä sitä edeltävänä päivänä
@@ -2593,19 +2635,21 @@ function renderWeekView() {
     const textCol = isToday ? sc.col : 'var(--text)';
     const dayCol = isToday ? sc.col : 'var(--t3)';
     const opacity = isPast && !isToday ? '.55' : '1';
-    const sessionRoute = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',voima_c:'str',putti:'putti',mob:'mob',mob_quick:'mob_quick',teho:'teho',hermosto:'hermosto',peruskunto:'peruskunto',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros',kisa:'comp_day',lepo:'rest_day'};
+    const sessionRoute = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',voima_c:'str',putti:'putti',mob:'mob',mob_quick:'mob_quick',teho:'teho',hermosto:'hermosto',peruskunto:'peruskunto',testi:'testi',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros',kisa:'comp_day',lepo:'rest_day'};
     const routableSessions = sessions.filter(s=>sessionRoute[s]);
     // Kisa ja lepo ovat aina klikattavia
     const isCompDay = day.intensity === 'comp' && !vkDates.has(day.date);
     const isVKDay = vkDates.has(day.date);
     const isRestDay = day.intensity === 'rest';
     const clickable = (routableSessions.length > 0 || isCompDay || isVKDay || isRestDay) && !isPast;
-    const clickTarget = isVKDay ? 'viikkokisa' : isCompDay ? 'comp_day' : isRestDay ? 'rest_day' : routableSessions.length === 1 ? sessionRoute[routableSessions[0]] : routableSessions.length > 1 ? 'session_pick' : null;
+    const isTestDay = sessions.includes('testi');
+    const clickTarget = isTestDay ? 'testi' : isVKDay ? 'viikkokisa' : isCompDay ? 'comp_day' : isRestDay ? 'rest_day' : routableSessions.length === 1 ? sessionRoute[routableSessions[0]] : routableSessions.length > 1 ? 'session_pick' : null;
     const pickData = routableSessions.length > 1 ? JSON.stringify({sessions:routableSessions,date:day.date}).replace(/"/g,'&quot;') : '';
+    const mainRoutable = isTestDay ? 'testi' : (routableSessions[0] || '');
     const onclickAttr = clickable
-      ? (routableSessions.length > 1 && !isCompDay && !isVKDay && !isRestDay
-        ? ' onclick="trainTabPick(\''+pickData+'\')"'
-        : ' onclick="kierrosPvm=\''+day.date+'\';trainTab(\''+clickTarget+'\',null);renderTrain()"')
+      ? (routableSessions.length > 1 && !isCompDay && !isVKDay && !isRestDay && !isTestDay
+        ? ` onclick="trainTabPick('${pickData}')"`
+        : ` onclick="openSession('${clickTarget}','${day.date}','${mainRoutable}')"`)
       : '';
     // Kisapäivä: tehty jos kisatulos kirjattu kyseiselle päivälle
     const compDone = (isCompDay||isVKDay) && (get('comps')||[]).some(c=>c.date===day.date&&c.mrating);
@@ -2907,6 +2951,7 @@ function rpeBg(r){return r==='high'?'#FCEBEB':r==='med'?'#FAEEDA':'#E1F5EE'}
 function rpeLbl(r){return r==='high'?'RPE 9–10':r==='med'?'RPE 5–6':'RPE 2–4'}
 
 function trainTab(tab,el){
+  if(el||tab==='week'){trainCtxDate=null;trainCtxSession=null;throwManualWk=null;throwShowAll=false;strShowAll=false;}
   trainTabCur=tab;
   document.querySelectorAll('#pg-train .tb').forEach(b=>b.classList.remove('on'));
   if(el)el.classList.add('on');
@@ -2926,10 +2971,10 @@ function trainTabPick(pickDataStr){
 
 function renderSessionPick(){
   const cont = document.getElementById('train-content');
-  const SESSION_ROUTE = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',voima_c:'str',putti:'putti',mob:'mob',mob_quick:'mob_quick',teho:'teho',hermosto:'hermosto',peruskunto:'peruskunto',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros'};
+  const SESSION_ROUTE = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',voima_c:'str',putti:'putti',mob:'mob',mob_quick:'mob_quick',teho:'teho',hermosto:'hermosto',peruskunto:'peruskunto',testi:'testi',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros'};
   const SESSION_NAMES = {
     heitto_tek:'🥏 Tekniikan ylläpito', heitto_nop:'⚡ Nopeusheitto',
-    voima_a:'💪 Voima A', voima_b:'💪 Voima B', voima_c:'🧩 Nivelterveys', teho:'⚡ Teho', hermosto:'🧘 Hermosto', peruskunto:'🚶 Peruskunto',
+    voima_a:'💪 Voima A', voima_b:'💪 Voima B', voima_c:'🧩 Nivelterveys', teho:'⚡ Teho', hermosto:'🧘 Hermosto', peruskunto:'🚶 Peruskunto', testi:'📏 Testipäivä',
     putti:'🎯 Puttausrutiini', mob:'🧘 Liikkuvuus', mob_quick:'🧩 Yläselkäpika',
     aktivointi:'⚡ Aktivointi', comp_day:'🏆 Kisapäivä',
     kierros:'🏃 Kenttäkierros'
@@ -2941,6 +2986,7 @@ function renderSessionPick(){
     teho:'Plyo + med ball · ~25 min · Räjähtävyys',
     hermosto:'Box breathing aamu+ilta · 4-6 vk automatisoituu',
     peruskunto:'Matala teho · 30–45 min · kävely tai pyöräily',
+    testi:'Putti 40 kpl + BH/FH-nopeus · tulokset ja vertailu',
     putti:'C1-rutiini · Joka putilla samat 5 vaihetta',
     mob:'Liikkuvuus + palauttelu',
     mob_quick:'3 liikettä · ~10 min · Yläselkä/rintaranka',
@@ -2958,8 +3004,8 @@ function renderSessionPick(){
     const emojiMatch = name.match(/^(\S+)\s*(.*)/);
     const emoji = emojiMatch?emojiMatch[1]:'🥏';
     const label = emojiMatch?emojiMatch[2]:name;
-    const dateParam = (s==='kierros'&&sessionPickDate) ? 'kierrosPvm=\''+sessionPickDate+'\';' : '';
-    h += '<button onclick="'+dateParam+'trainTab(\''+target+'\',null);renderTrain()" style="display:flex;align-items:center;gap:12px;width:100%;padding:14px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r);margin-bottom:8px;cursor:pointer;font-family:inherit;text-align:left">';
+    const pDate = sessionPickDate ? `'${sessionPickDate}'` : 'null';
+    h += `<button onclick="openSession('${target}',${pDate},'${s}')" style="display:flex;align-items:center;gap:12px;width:100%;padding:14px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r);margin-bottom:8px;cursor:pointer;font-family:inherit;text-align:left">`;
     h += '<span style="font-size:24px">'+emoji+'</span>';
     h += '<div><div style="font-size:14px;font-weight:600;color:var(--text)">'+label+'</div>';
     if(desc) h += '<div style="font-size:11px;color:var(--t2);margin-top:2px">'+desc+'</div>';
@@ -2982,6 +3028,7 @@ function renderTrain(){
   else if(trainTabCur==='teho')renderTeho();
   else if(trainTabCur==='hermosto')renderHermosto();
   else if(trainTabCur==='peruskunto')renderPeruskunto();
+  else if(trainTabCur==='testi')renderTesti();
   else if(trainTabCur==='aktivointi')renderAktivointi();
   else if(trainTabCur==='kierros_vayla')renderKierrosVayla();
   else if(trainTabCur==='kierros')renderKierros();
@@ -2999,8 +3046,18 @@ function renderThrow(){
   const modeDesc=isNopeus?'RPE 10 – maksimiteho joka heitossa · 3 min palautus sarjojen välissä':isTek?'RPE 3–4 – rauhallinen tekniikka · älykiekko mukaan jos mahdollista':'';
   const modeBg=isNopeus?'var(--pl)':'var(--bl)';
   const modeCol=isNopeus?'var(--pd)':'var(--bd)';
-  const phase=throwWk<=4?'Tekniikkablokki':'Nopeusblokki';
-  const sessions=THROW_SESSIONS[throwWk]||THROW_SESSIONS[1];
+  // Off-season: viikko ja sessiot johdetaan päivästä; tuore kuittausalue (tho_), kesän th_-kuittaukset säilyvät arkistossa
+  let thWk,thNs,thTitle,sessions,thFiltered=false,thNote='';
+  if(throwManualWk){
+    thWk=throwManualWk; thNs='m'+thWk; sessions=THROW_SESSIONS[thWk]||THROW_SESSIONS[1];
+    thTitle=(thWk<=4?'Tekniikkablokki':'Nopeusblokki')+' – viikko '+thWk+' (käsin valittu)';
+  }else{
+    const prog=throwProgramFor(pageDate(),isNopeus?'nop':isTek?'tek':null);
+    thWk=prog.cw; thNs=prog.ns; thTitle=prog.title; thNote=prog.note;
+    const pool=THROW_SESSIONS[thWk]||THROW_SESSIONS[1];
+    sessions=pool;
+    if(prog.pick&&!throwShowAll){const f=pool.filter(s=>prog.pick.indexOf(s.id.replace(/w\d+$/,''))>=0);if(f.length){sessions=f;thFiltered=true;}}
+  }
   let h=`<div style="background:${modeBg};border-radius:var(--r);padding:12px 14px;margin-bottom:12px"><div style="font-size:14px;font-weight:700;color:${modeCol}">${modeTitle}</div>${modeDesc?`<div style="font-size:11px;color:${modeCol};opacity:.8;margin-top:3px">${modeDesc}</div>`:''}</div>`;
   const devFocus=get('dev_focus');
   if(devFocus && devFocus.until>=dateStr(new Date())){
@@ -3024,18 +3081,18 @@ function renderThrow(){
       <span style="font-size:11px;color:${acrStatus.col}">heittoa</span>
     </div>
   </div>`;
-  h+=`<div class="wk-scroll" id="throw-wk"></div><div class="sect">${phase} – viikko ${throwWk}</div>`
+  h+=`<div class="wk-scroll" id="throw-wk"></div><div class="sect">${thTitle}</div>${thNote?`<div style="font-size:11px;color:var(--t2);margin:-4px 0 8px">${thNote}</div>`:''}${thFiltered?`<button class="btn btn-out btn-sm" style="width:100%;margin-bottom:10px" onclick="throwShowAll=true;renderThrow()">Näytä muut viikon sessiot</button>`:(throwShowAll&&!throwManualWk?`<button class="btn btn-out btn-sm" style="width:100%;margin-bottom:10px" onclick="throwShowAll=false;renderThrow()">Näytä vain suositeltu sessio</button>`:'')}`
   sessions.forEach(sess=>{
-    const allDone=sess.exercises.every(e=>getSets('th_'+throwWk+'_'+sess.id+'_'+e.id)>=e.totalSets);
+    const allDone=sess.exercises.every(e=>getSets('tho_'+thNs+'_'+sess.id+'_'+e.id)>=e.totalSets);
     h+=`<div class="str-card">
-      <div class="str-head" onclick="toggleCard('thr_${throwWk}_${sess.id}')">
-        <div style="flex:1"><div style="font-size:13px;font-weight:600">${sess.name}<\/div><div style="font-size:10px;color:var(--t2)">${sess.exercises.filter(e=>getSets('th_'+throwWk+'_'+sess.id+'_'+e.id)>=e.totalSets).length}/${sess.exercises.length} valmis<\/div><\/div>
+      <div class="str-head" onclick="toggleCard('thro_${thNs}_${sess.id}')">
+        <div style="flex:1"><div style="font-size:13px;font-weight:600">${sess.name}<\/div><div style="font-size:10px;color:var(--t2)">${sess.exercises.filter(e=>getSets('tho_'+thNs+'_'+sess.id+'_'+e.id)>=e.totalSets).length}/${sess.exercises.length} valmis<\/div><\/div>
         ${allDone?`<span class="badge" style="background:var(--gl);color:var(--gd)">✓ Valmis<\/span>`:''}
-        <span style="color:var(--t3);font-size:12px">${get('card_thr_'+throwWk+'_'+sess.id)!==false?'▾':'▸'}<\/span>
+        <span style="color:var(--t3);font-size:12px">${get('card_thro_'+thNs+'_'+sess.id)!==false?'▾':'▸'}<\/span>
       <\/div>
-      <div class="str-body${get('card_thr_'+throwWk+'_'+sess.id)!==false?' open':''}">`;
+      <div class="str-body${get('card_thro_'+thNs+'_'+sess.id)!==false?' open':''}">`;
     sess.exercises.forEach(ex=>{
-      const ek='th_'+throwWk+'_'+sess.id+'_'+ex.id;
+      const ek='tho_'+thNs+'_'+sess.id+'_'+ex.id;
       const done=getSets(ek);const allS=done>=ex.totalSets;
       h+=`<div class="ex-block${allS?' all-done':''}">
         <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px"><span class="ex-name" style="${allS?'color:var(--g)':''}">${ex.name}<\/span><span class="rpe-pill" style="background:${rpeBg(ex.rpe)};color:${rpeCol(ex.rpe)}">${rpeLbl(ex.rpe)}<\/span><\/div>
@@ -3045,12 +3102,12 @@ function renderThrow(){
       for(let s=1;s<=ex.totalSets;s++){const d=done>=s;h+=`<button class="si-btn${d?' done-s':''}" onclick="clickThSet('${ek}',${s},${ex.totalSets})"><span style="font-size:8px;opacity:.7">S${s}<\/span><span style="font-size:13px">${d?'✓':'·'}<\/span><\/button>`;}
       h+=`<\/div><button class="reset-btn" onclick="resetSets('${ek}','throw')">↺ Nollaa<\/button><\/div>`;
     });
-    const nk='throw_notes_w'+throwWk+'_'+sess.id;
+    const nk='throw_notes_o'+thNs+'_'+sess.id;
     h+=`<textarea style="width:100%;min-height:50px;font-size:12px;padding:7px;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg);color:var(--text);resize:none;margin-top:6px;font-family:inherit" placeholder="Muistiinpanot..." id="thn_${sess.id}" onchange="set('${nk}',this.value)">${get(nk)||''}<\/textarea>
     <\/div><\/div>`;
   });
   h+='<div class="page-spacer"></div>';
-  const throwToday2=window.today||dateStr(new Date());
+  const throwToday2=pageDate();
   const throwDone2=getDone(throwToday2);
   if(!throwDone2){
     h+='<div style="padding:0 0 16px"><button onclick="setDone(\''+throwToday2+'\',1);showToast(\'Heittotreeni merkitty tehdyksi ✅\');renderTrain()" style="width:100%;padding:13px;border-radius:var(--r);border:none;background:var(--g);color:#fff;font-size:14px;font-weight:700;cursor:pointer">✓ Merkitse heittotreeni tehdyksi</button></div>';
@@ -3058,11 +3115,11 @@ function renderThrow(){
     h+='<div style="padding:0 0 16px"><button onclick="setDone(\''+throwToday2+'\',null);renderTrain()" style="width:100%;padding:13px;border-radius:var(--r);border:1.5px solid var(--g);background:var(--gl);color:var(--gd);font-size:14px;font-weight:700;cursor:pointer">✓ Tehty – peruuta</button></div>';
   }
   cont.innerHTML=h;
-  mkWkTabs('throw-wk',throwWk,8,'setThrowWk');
+  mkWkTabs('throw-wk',thWk,8,'setThrowWk');
 }
 function clickThSet(k,s,t){const c=getSets(k);setSets(k,c>=s?s-1:s);renderThrow()}
 function resetSets(k,pg){setSets(k,0);if(pg==='throw')renderThrow();else if(pg==='str')renderStr();else if(pg==='teho')renderTeho()}
-function setThrowWk(w){throwWk=w;localStorage.setItem('fp_throw_wk',w);renderThrow()}
+function setThrowWk(w){throwWk=w;throwManualWk=w;localStorage.setItem('fp_throw_wk',w);renderThrow()}
 function toggleCard(key){set('card_'+key,get('card_'+key)===false?true:false);renderTrain()}
 
 function strFeelMult(feel){
@@ -3086,7 +3143,11 @@ function renderStr(){
   const blockNames=['Totuttelu (Vk 1–2)','Kertymä (Vk 3–5)','Intensifikaatio (Vk 6–7)','Peikkaus (Vk 8 – ennen testiä)'];
   const phase=blockNames[blockIdx];
   let h=`<div class="wk-scroll" id="str-wk"><\/div><div class="sect">${phase} – viikko ${strWk}<\/div>`;
+  const ctxSessId=(trainCtxSession||'').indexOf('voima_')===0?({voima_a:'strA',voima_b:'strB',voima_c:'strC'})[trainCtxSession]:null;
+  const strFiltered=!!(ctxSessId&&!strShowAll);
+  if(trainCtxDate){const nn=offWeekN(trainCtxDate);h+=`<div style="font-size:11px;color:var(--t2);margin:-4px 0 8px">📅 ${fiDate(trainCtxDate)} · off-season viikko ${Math.max(1,nn)}${nn>8?' – Vaihe 1:n 8 viikon voimaohjelma on päättynyt, Vaihe 2 -voimaohjelmaa ei ole vielä sovelluksessa (näytetään viikko 8)':''}</div>`;}
   STR_DATA.forEach(sess=>{
+    if(strFiltered&&sess.id!==ctxSessId)return;
     const cfg=(ex)=>ex.blocks?ex.blocks[blockIdx]:{reps:ex.reps,sets:ex.sets,rpe:null};
     const ts=(ex)=>cfg(ex).sets;
     const allDone=sess.exercises.every(ex=>getSets('str_'+strWk+'_'+sess.id+'_'+ex.id)>=ts(ex));
@@ -3151,6 +3212,7 @@ function renderStr(){
     h+=`<textarea style="width:100%;min-height:50px;font-size:12px;padding:7px;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg);color:var(--text);resize:none;margin-top:6px;font-family:inherit" placeholder="Painot, tuntemukset..." id="strn_${sess.id}" onchange="set('${nk}',this.value)">${get(nk)||''}<\/textarea>
     <\/div><\/div>`;
   });
+  if(strFiltered)h+='<button class="btn btn-out" style="width:100%;margin:8px 0" onclick="strShowAll=true;renderStr()">Näytä muut viikon voimaistunnot</button>';
   h+='<div class="page-spacer"></div>';cont.innerHTML=h;
   mkWkTabs('str-wk',strWk,8,'setStrWk');
 }
@@ -3739,6 +3801,72 @@ function renderMobQuick(){
   }
 }
 
+// ===== TESTIPÄIVÄ (lähtötaso ja vertailutestit) =====
+const TESTI_PRE=[['rest48','Vähintään 2 lepopäivää (48 h) ennen testiä'],['healthy','Oireeton vähintään 2 päivää'],['hand','Käsi kunnossa (ei kipua)'],['same','Sama paikka, kiekko ja kellonaika kuin muissa testeissä']];
+const TESTI_DISTS=[4,8,12,16];
+const TESTI_COND=[['run','5 m vauhdilla'],['stand','Stand still'],['knee','Polviltaan']];
+function getTestRes(ds){return (get('test_results')||{})[ds]||{};}
+function testiSet(ds,path,val){
+  const all=get('test_results')||{}; const r=all[ds]||{};
+  const parts=path.split('.'); let o=r;
+  for(let i=0;i<parts.length-1;i++){o[parts[i]]=o[parts[i]]||{};o=o[parts[i]];}
+  o[parts[parts.length-1]]=val; all[ds]=r; set('test_results',all);
+}
+function testiNum(ds,path,el,max){
+  let v=parseFloat(String(el.value).replace(',','.'));
+  if(isNaN(v)||v<0)v=''; else if(max&&v>max)v=max;
+  testiSet(ds,path,v); renderTesti();
+}
+function testiTog(ds,k){testiSet(ds,'pre.'+k,!((getTestRes(ds).pre||{})[k]));renderTesti();}
+function testiText(ds,path,el){testiSet(ds,path,el.value);}
+function testiNumOrNull(v){const x=parseFloat(v);return (v===''||v===undefined||v===null||isNaN(x))?null:x;}
+function testiSummary(r){
+  const pu=r.putti||{};
+  const vals=TESTI_DISTS.map(d=>testiNumOrNull(pu[d]));
+  const filled=vals.filter(v=>v!==null);
+  return {putN:filled.length, putSum:filled.reduce((a,b)=>a+b,0), bhMax:testiNumOrNull(r.bhMax), fhMax:testiNumOrNull(r.fhMax)};
+}
+function renderTesti(){
+  const cont=document.getElementById('train-content');
+  const ds=pageDate();
+  const ev=(get('events')||[]).find(e=>e.type==='testi'&&e.date===ds);
+  const r=getTestRes(ds); const pre=r.pre||{}; const pu=r.putti||{}; const bh=r.bh||{}; const fh=r.fh||{};
+  const sm=testiSummary(r);
+  const inpStyle='width:64px;padding:7px;text-align:center;font-size:16px;font-weight:700;border:1.5px solid var(--border);border-radius:var(--rs);background:var(--bg);color:var(--text)';
+  const num=(path,val,max)=>`<input type="number" inputmode="decimal" min="0" ${max?`max="${max}"`:''} step="${max===10?1:0.1}" value="${(val===undefined||val===null)?'':val}" style="${inpStyle}" onchange="testiNum('${ds}','${path}',this,${max||0})">`;
+  let h=`<div style="background:#FFF3E0;border-radius:var(--r);padding:12px 14px;margin-bottom:12px"><div style="font-size:14px;font-weight:700;color:#BF360C">📏 ${ev?ev.name:'Testipäivä'}</div><div style="font-size:11px;color:#BF360C;opacity:.85;margin-top:3px">${fiDate(ds)} · putti 40 kpl + BH/FH-nopeus · tee samassa järjestyksessä joka testikerralla</div></div>`;
+  // Edellytykset
+  h+=`<div class="card card-p" style="margin-bottom:10px"><div style="font-size:13px;font-weight:700;margin-bottom:6px">Edellytykset</div>`;
+  TESTI_PRE.forEach(function(p){const on=!!pre[p[0]];h+=`<div onclick="testiTog('${ds}','${p[0]}')" style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:.5px solid var(--border);cursor:pointer"><div style="width:20px;height:20px;border-radius:50%;border:2px solid ${on?'var(--g)':'var(--border)'};background:${on?'var(--g)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0"><span style="color:#fff;font-size:11px">${on?'✓':''}</span></div><div style="font-size:12px;color:${on?'var(--t3)':'var(--text)'}">${p[1]}</div></div>`;});
+  h+=`<div style="font-size:11px;color:var(--t3);margin-top:6px">Jos jokin ei täyty, siirrä testi ja pidä edellinen päivä täysin lepona.</div></div>`;
+  // 1. Putti
+  h+=`<div class="card card-p" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px"><div style="font-size:13px;font-weight:700">1. Putti – 10 puttia/etäisyys</div><div style="font-size:12px;color:var(--t2)">${sm.putN===4?`<b>${sm.putSum}/40 · ${Math.round(sm.putSum/40*100)} %</b>`:(sm.putN>0?sm.putSum+' tähän mennessä':'')}</div></div>`;
+  TESTI_DISTS.forEach(function(d){const v=testiNumOrNull(pu[d]);h+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="width:44px;font-size:13px;font-weight:600">${d} m</div>${num('putti.'+d,pu[d],10)}<div style="font-size:12px;color:var(--t2)">/ 10${v!==null?' · '+Math.round(v*10)+' %':''}</div></div>`;});
+  h+=`<div style="font-size:11px;color:var(--t3)">Sama etäisyysjärjestys 4 → 8 → 12 → 16 m joka testikerralla.</div></div>`;
+  // 2+3 Nopeus
+  h+=`<div class="card card-p" style="margin-bottom:10px"><div style="font-size:13px;font-weight:700;margin-bottom:2px">2. Lämmittely + 3. Heittonopeus (km/h)</div><div style="font-size:11px;color:var(--t3);margin-bottom:8px">Level 2 -lämmittely ensin. 5 heittoa/osio, 5 min tauko jokaisen 5 heiton jälkeen. Kirjaa viiden heiton keskiarvo.</div>`;
+  h+=`<div style="display:grid;grid-template-columns:1fr 70px 70px;gap:6px;align-items:center"><div></div><div style="font-size:11px;font-weight:700;text-align:center;color:var(--bd)">BH ka</div><div style="font-size:11px;font-weight:700;text-align:center;color:var(--pd)">FH ka</div>`;
+  TESTI_COND.forEach(function(cd){h+=`<div style="font-size:12px">${cd[1]}</div>${num('bh.'+cd[0],bh[cd[0]],0).replace('width:64px','width:60px')}${num('fh.'+cd[0],fh[cd[0]],0).replace('width:64px','width:60px')}`;});
+  h+=`<div style="font-size:12px;font-weight:700">Paras yksittäinen heitto</div>${num('bhMax',r.bhMax,0).replace('width:64px','width:60px')}${num('fhMax',r.fhMax,0).replace('width:64px','width:60px')}</div></div>`;
+  // Sää
+  h+=`<div class="card card-p" style="margin-bottom:10px"><div style="font-size:13px;font-weight:700;margin-bottom:6px">Sää ja olosuhteet</div><input type="text" value="${(r.weather||'').replace(/"/g,'&quot;')}" placeholder="esim. 6 °C, tuuli 3 m/s vastaan, kuiva" style="width:100%;padding:9px;border:1.5px solid var(--border);border-radius:var(--rs);background:var(--bg);color:var(--text);font-size:13px" onchange="testiText('${ds}','weather',this)"></div>`;
+  // Vertailu edelliseen
+  const allT=get('test_results')||{};
+  const prevDs=Object.keys(allT).filter(function(d){if(d>=ds)return false;const s=testiSummary(allT[d]);return s.putN>0||s.bhMax!==null||s.fhMax!==null;}).sort().reverse()[0];
+  if(prevDs){
+    const ps=testiSummary(allT[prevDs]);
+    const dl=(a,b,unit,dec)=>{if(a===null||b===null)return '–';const d=a-b;return (d>0?'+':'')+d.toFixed(dec)+(unit||'');};
+    h+=`<div class="card card-p" style="margin-bottom:10px;background:var(--bl)"><div style="font-size:13px;font-weight:700;color:var(--bd);margin-bottom:6px">Vertailu edelliseen testiin (${fiDate(prevDs)})</div><div style="font-size:12px;color:var(--bd);line-height:1.7">Putti: ${ps.putN===4?ps.putSum+'/40':'–'} → ${sm.putN===4?sm.putSum+'/40':'–'} (${sm.putN===4&&ps.putN===4?((sm.putSum-ps.putSum>0?'+':'')+(sm.putSum-ps.putSum)):'–'})<br>BH max: ${ps.bhMax!==null?ps.bhMax:'–'} → ${sm.bhMax!==null?sm.bhMax:'–'} (${dl(sm.bhMax,ps.bhMax,' km/h',1)})<br>FH max: ${ps.fhMax!==null?ps.fhMax:'–'} → ${sm.fhMax!==null?sm.fhMax:'–'} (${dl(sm.fhMax,ps.fhMax,' km/h',1)})</div></div>`;
+  }
+  // Valmis
+  const isDoneT=getDone(ds);
+  h+=isDoneT
+    ? `<button onclick="setDone('${ds}',null);renderTesti()" style="width:100%;padding:13px;border-radius:var(--r);border:1.5px solid var(--g);background:var(--gl);color:var(--gd);font-size:14px;font-weight:700;margin-bottom:16px">✓ Testi tehty – peru</button>`
+    : `<button onclick="setDone('${ds}',1);showToast('Testi merkitty tehdyksi ✅');renderTesti()" style="width:100%;padding:13px;border-radius:var(--r);border:none;background:var(--g);color:#fff;font-size:14px;font-weight:700;margin-bottom:16px">Merkitse testi tehdyksi</button>`;
+  h+='<div class="page-spacer"></div>';
+  cont.innerHTML=h;
+}
+
 // ===== PERUSKUNTO (matala-tehoinen aerobinen pohja) =====
 function pkStart(){return '2026-10-26';}
 function pkTargetMin(ds){
@@ -3751,13 +3879,13 @@ function setPeruskunto(ds,v){const m=parseInt(v);set('peruskunto_'+ds,(isNaN(m)|
 function setPkType(ds,t){set('pk_tyyppi_'+ds,get('pk_tyyppi_'+ds)===t?'':t);renderTrain();}
 function renderPeruskunto(){
   const cont=document.getElementById('train-content');
-  const today=dateStr(new Date());
+  const today=pageDate();
   const target=pkTargetMin(today);
   const mins=getPeruskunto(today);
   const type=get('pk_tyyppi_'+today)||'';
   const pct=Math.min(100,Math.round(mins/target*100));
   // viikon yhteenveto: suunnitellut peruskuntopäivät vs tehdyt minuutit
-  const wkDates=getWeekDates(0);
+  const wkDates=getWeekDates(weekOffsetOf(new Date(today+'T12:00:00')));
   const wkPlan=buildWeekPlan(wkDates);
   let wkTarget=0,wkDone=0,wkDays=0;
   wkPlan.forEach(function(d){if(d.sessions.includes('peruskunto')){wkDays++;wkTarget+=pkTargetMin(d.date);wkDone+=getPeruskunto(d.date);}});
@@ -3797,7 +3925,7 @@ function toggleHermosto(key){
 
 function renderHermosto(){
   const cont=document.getElementById('train-content');
-  const today=dateStr(new Date());
+  const today=pageDate();
   const done=HERMOSTO_DAILY.filter(ex=>getSets('hermosto_'+today+'_'+ex.id)>0).length;
   const total=HERMOSTO_DAILY.length;
   const pct=Math.round(done/total*100);
