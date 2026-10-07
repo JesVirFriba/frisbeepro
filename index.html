@@ -1060,7 +1060,7 @@ function renderProfile(){
   const ratings=(get('ratings')||[]).sort((a,b)=>a.date.localeCompare(b.date));
   const speeds=(get('speeds')||[]).sort((a,b)=>a.date.localeCompare(b.date));
   const comps=get('comps')||[];
-  const goals=get('goals')||[];
+  const goals=activeGoals();
   const lastPDGA=ratings.length?ratings[ratings.length-1].val:p.rating;
   const lastMxFromRatings=ratings.length&&ratings[ratings.length-1].mval?ratings[ratings.length-1].mval:null;
   const compsWithRating=(get('comps')||[]).filter(c=>c.mrating).sort((a,b)=>a.date.localeCompare(b.date));
@@ -1276,7 +1276,7 @@ function buildCtx(){
   const ratings=(get('ratings')||[]).sort((a,b)=>a.date.localeCompare(b.date));
   const speeds=(get('speeds')||[]).sort((a,b)=>a.date.localeCompare(b.date));
   const comps=(get('comps')||[]).sort((a,b)=>b.date.localeCompare(a.date));
-  const goals=get('goals')||[];
+  const goals=activeGoals();
   const events=(get('events')||[]).filter(e=>e.date>=dateStr(new Date())).sort((a,b)=>a.date.localeCompare(b.date));
   const chatHist=(get('chat_history')||[]).sort((a,b)=>b.id-a.id).slice(0,5);
   const disc=get('disc_analytics');
@@ -2190,6 +2190,11 @@ function weekOffsetOf(dateObj){
   const d0=new Date(dateObj.getFullYear(),dateObj.getMonth(),dateObj.getDate());
   return Math.floor(Math.round((d0-m0)/86400000)/7);
 }
+
+// ===== Tavoitteiden arkistointi (merkintä, ei poistoa: poisto palaisi toisen laitteen synkronoinnista) =====
+let showArchGoals=false;
+function activeGoals(){return (get('goals')||[]).filter(g=>!g.archived);}
+function archiveGoal(id,flag){set('goals',(get('goals')||[]).map(g=>g.id===id?{...g,archived:!!flag}:g));renderDev();}
 
 // ===== Päiväkortin ja etusivun apufunktiot =====
 // Karsitaan otsikosta apuharjoitteet (merkit näyttävät ne jo): "Voima A + yläselkäpika + hermosto" -> "Voima A"
@@ -5082,11 +5087,21 @@ function saveMetrix(){
 function delMetrix(id){set('metrix',(get('metrix')||[]).filter(c=>c.id!==id));renderDev()}
 
 function renderGoalsDev(){
-  const goals=get('goals')||[];
+  const allGoals=get('goals')||[];
+  const goals=allGoals.filter(g=>!g.archived);
+  const archivedGoals=allGoals.filter(g=>g.archived);
   const icons={rating:'📊',metrix:'📊',speed:'⚡',speedfh:'⚡',putti:'🎯',kisa:'🏆',muu:'⭐'};
   let h='<button class=\"btn btn-out btn-sm\" onclick=\"openM(\'m-goal\')\" style=\"margin-bottom:12px\">+ Lisää tavoite</button>';
   if(!goals.length){
-    h+='<div class=\"coach-msg\">💬 Jesse, lisää ensimmäiset tavoitteet: 1) PDGA 919→940, 2) BH nopeus →125 km/h, 3) Kisatavoite tälle kaudelle.</div>';
+    if(archivedGoals.length){
+    h+=`<button id="gl-arch-toggle" class="btn btn-out btn-sm" style="width:100%;margin:6px 0 10px">Arkistoidut tavoitteet (${archivedGoals.length}) ${showArchGoals?'▴':'▾'}</button>`;
+    if(showArchGoals){
+      archivedGoals.forEach(function(g){
+        h+=`<div class="goal-card" style="opacity:.7"><div style="font-size:12px;font-weight:600">${g.desc}</div><div style="font-size:10px;color:var(--t3);margin-top:2px">Aikaraja: ${g.deadline} · lopputulos ${g.cur} / ${g.to}</div>${g.coach?`<div style="font-size:11px;color:var(--bd);background:var(--bl);padding:6px 9px;border-radius:var(--rs);margin-top:6px">💬 ${g.coach}</div>`:''}<button data-unarch-goal="${g.id}" class="btn btn-out btn-sm" style="width:100%;margin-top:8px">Palauta aktiiviseksi</button></div>`;
+      });
+    }
+  }
+  h+='<div class=\"coach-msg\">💬 Jesse, lisää ensimmäiset tavoitteet: 1) PDGA 919→940, 2) BH nopeus →125 km/h, 3) Kisatavoite tälle kaudelle.</div>';
     h+='<div class=\"empty\"><div class=\"ei\">⭐</div><div class=\"et\">Ei tavoitteita</div></div>';
   }else{
     goals.forEach(function(g){
@@ -5101,7 +5116,8 @@ function renderGoalsDev(){
       h+='<div style=\"display:flex;justify-content:space-between;margin-bottom:3px;font-size:12px\"><span style=\"color:var(--t2)\">'+cur+' / '+to+'</span><span style=\"color:'+col+';font-weight:600\">'+pct+'%</span></div>';
       h+='<div class=\"prog-bar\"><div class=\"prog-fill\" style=\"width:'+pct+'%;background:'+col+'\"></div></div>';
       if(g.coach)h+='<div style=\"font-size:11px;color:var(--bd);background:var(--bl);padding:6px 9px;border-radius:var(--rs);margin-top:7px\">💬 '+g.coach+'</div>';
-      h+='<button data-upd-goal=\"'+g.id+'\" class=\"btn btn-out btn-sm\" style=\"width:100%;margin-top:8px\">Päivitä arvo</button></div>';
+      h+='<button data-upd-goal=\"'+g.id+'\" class=\"btn btn-out btn-sm\" style=\"width:100%;margin-top:8px\">Päivitä arvo</button>';
+      h+=`<button data-arch-goal="${g.id}" class="btn btn-out btn-sm" style="width:100%;margin-top:6px">Arkistoi tavoite</button></div>`;
     });
   }
   h+='<div class="page-spacer"></div>';document.getElementById('dev-content').innerHTML=h;
@@ -5111,6 +5127,14 @@ function renderGoalsDev(){
   document.getElementById('dev-content').querySelectorAll('[data-upd-goal]').forEach(function(btn){
     btn.addEventListener('click',function(){updateGoal(parseInt(btn.dataset.updGoal))});
   });
+  document.getElementById('dev-content').querySelectorAll('[data-arch-goal]').forEach(function(btn){
+    btn.addEventListener('click',function(){archiveGoal(parseInt(btn.dataset.archGoal),true)});
+  });
+  document.getElementById('dev-content').querySelectorAll('[data-unarch-goal]').forEach(function(btn){
+    btn.addEventListener('click',function(){archiveGoal(parseInt(btn.dataset.unarchGoal),false)});
+  });
+  const archTog=document.getElementById('gl-arch-toggle');
+  if(archTog)archTog.addEventListener('click',function(){showArchGoals=!showArchGoals;renderGoalsDev();});
 }
 function saveGoal(){
   const goals=get('goals')||[];
