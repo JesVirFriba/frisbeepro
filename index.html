@@ -5093,15 +5093,7 @@ function renderGoalsDev(){
   const icons={rating:'📊',metrix:'📊',speed:'⚡',speedfh:'⚡',putti:'🎯',kisa:'🏆',muu:'⭐'};
   let h='<button class=\"btn btn-out btn-sm\" onclick=\"openM(\'m-goal\')\" style=\"margin-bottom:12px\">+ Lisää tavoite</button>';
   if(!goals.length){
-    if(archivedGoals.length){
-    h+=`<button id="gl-arch-toggle" class="btn btn-out btn-sm" style="width:100%;margin:6px 0 10px">Arkistoidut tavoitteet (${archivedGoals.length}) ${showArchGoals?'▴':'▾'}</button>`;
-    if(showArchGoals){
-      archivedGoals.forEach(function(g){
-        h+=`<div class="goal-card" style="opacity:.7"><div style="font-size:12px;font-weight:600">${g.desc}</div><div style="font-size:10px;color:var(--t3);margin-top:2px">Aikaraja: ${g.deadline} · lopputulos ${g.cur} / ${g.to}</div>${g.coach?`<div style="font-size:11px;color:var(--bd);background:var(--bl);padding:6px 9px;border-radius:var(--rs);margin-top:6px">💬 ${g.coach}</div>`:''}<button data-unarch-goal="${g.id}" class="btn btn-out btn-sm" style="width:100%;margin-top:8px">Palauta aktiiviseksi</button></div>`;
-      });
-    }
-  }
-  h+='<div class=\"coach-msg\">💬 Jesse, lisää ensimmäiset tavoitteet: 1) PDGA 919→940, 2) BH nopeus →125 km/h, 3) Kisatavoite tälle kaudelle.</div>';
+    h+='<div class=\"coach-msg\">💬 Jesse, lisää ensimmäiset tavoitteet: 1) PDGA 919→940, 2) BH nopeus →125 km/h, 3) Kisatavoite tälle kaudelle.</div>';
     h+='<div class=\"empty\"><div class=\"ei\">⭐</div><div class=\"et\">Ei tavoitteita</div></div>';
   }else{
     goals.forEach(function(g){
@@ -5119,6 +5111,14 @@ function renderGoalsDev(){
       h+='<button data-upd-goal=\"'+g.id+'\" class=\"btn btn-out btn-sm\" style=\"width:100%;margin-top:8px\">Päivitä arvo</button>';
       h+=`<button data-arch-goal="${g.id}" class="btn btn-out btn-sm" style="width:100%;margin-top:6px">Arkistoi tavoite</button></div>`;
     });
+  }
+  if(archivedGoals.length){
+  h+=`<button id="gl-arch-toggle" class="btn btn-out btn-sm" style="width:100%;margin:6px 0 10px">Arkistoidut tavoitteet (${archivedGoals.length}) ${showArchGoals?'▴':'▾'}</button>`;
+  if(showArchGoals){
+    archivedGoals.forEach(function(g){
+      h+=`<div class="goal-card" style="opacity:.7"><div style="font-size:12px;font-weight:600">${g.desc}</div><div style="font-size:10px;color:var(--t3);margin-top:2px">Aikaraja: ${g.deadline} · lopputulos ${g.cur} / ${g.to}</div>${g.coach?`<div style="font-size:11px;color:var(--bd);background:var(--bl);padding:6px 9px;border-radius:var(--rs);margin-top:6px">💬 ${g.coach}</div>`:''}<button data-unarch-goal="${g.id}" class="btn btn-out btn-sm" style="width:100%;margin-top:8px">Palauta aktiiviseksi</button></div>`;
+    });
+  }
   }
   h+='<div class="page-spacer"></div>';document.getElementById('dev-content').innerHTML=h;
   document.getElementById('dev-content').querySelectorAll('[data-del-goal]').forEach(function(btn){
