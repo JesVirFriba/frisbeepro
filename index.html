@@ -3871,6 +3871,7 @@ function renderMobQuick(){
 const TESTI_PRE=[['rest48','Vähintään 2 lepopäivää (48 h) ennen testiä'],['healthy','Oireeton vähintään 2 päivää'],['hand','Käsi kunnossa (ei kipua)'],['same','Sama paikka, kiekko ja kellonaika kuin muissa testeissä']];
 const TESTI_DISTS=[4,8,12,16];
 const TESTI_COND=[['run','5 m vauhdilla'],['stand','Stand still'],['knee','Polviltaan']];
+const TESTI_THROWS=5;
 function getTestRes(ds){return (get('test_results')||{})[ds]||{};}
 function testiSet(ds,path,val){
   const all=get('test_results')||{}; const r=all[ds]||{};
@@ -3878,84 +3879,121 @@ function testiSet(ds,path,val){
   for(let i=0;i<parts.length-1;i++){o[parts[i]]=o[parts[i]]||{};o=o[parts[i]];}
   o[parts[parts.length-1]]=val; all[ds]=r; set('test_results',all);
 }
-function testiSpeedId(ds){return 9000000000000+Number(ds.replace(/-/g,''));}
-// Kirjaa testin heittonopeudet myös Nopeus-sivun dataan (speeds), jotta ne näkyvät kaaviossa ja historiassa
-function testiSyncSpeed(ds){
-  const r=getTestRes(ds); const bh=r.bh||{}, fh=r.fh||{};
-  const avgOf=(o)=>{const v=TESTI_COND.map(cd=>testiNumOrNull(o[cd[0]])).filter(x=>x!==null);return v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length*10)/10:null;};
-  const bhAvg=avgOf(bh), fhAvg=avgOf(fh), bhMax=testiNumOrNull(r.bhMax), fhMax=testiNumOrNull(r.fhMax);
-  const id=testiSpeedId(ds);
-  let speeds=(get('speeds')||[]).filter(s=>s.id!==id);
-  if(bhAvg!==null||fhAvg!==null||bhMax!==null||fhMax!==null){
-    const ev=(get('events')||[]).find(e=>e.type==='testi'&&e.date===ds);
-    const groups={};
-    TESTI_COND.forEach(cd=>{
-      const b=testiNumOrNull(bh[cd[0]]), f=testiNumOrNull(fh[cd[0]]);
-      if(b!==null)groups['BH '+cd[1]]={avg:b};
-      if(f!==null)groups['FH '+cd[1]]={avg:f};
-    });
-    const entry={id,date:ds,type:'testi',note:(ev?ev.name:'Testipäivä')+(r.weather?' · '+r.weather:''),groups};
-    if(bhAvg!==null)entry.bhAvg=bhAvg; if(bhMax!==null)entry.bhMax=bhMax;
-    if(fhAvg!==null)entry.fhAvg=fhAvg; if(fhMax!==null)entry.fhMax=fhMax;
-    speeds.push(entry);
-  }
-  set('speeds',speeds);
-}
-function testiNum(ds,path,el,max){
-  let v=parseFloat(String(el.value).replace(',','.'));
-  if(isNaN(v)||v<0)v=''; else if(max&&v>max)v=max;
-  testiSet(ds,path,v);
-  if(/^(bh|fh)/.test(path))testiSyncSpeed(ds);
-  renderTesti();
-}
-function testiTog(ds,k){testiSet(ds,'pre.'+k,!((getTestRes(ds).pre||{})[k]));renderTesti();}
-function testiText(ds,path,el){testiSet(ds,path,el.value);}
 function testiNumOrNull(v){const x=parseFloat(v);return (v===''||v===undefined||v===null||isNaN(x))?null:x;}
+function testiFmt(x){return (x===null||x===undefined)?'–':(Math.round(x*10)/10).toFixed(1).replace('.',',');}
+function testiArr(o,k){const a=o&&o[k];return Array.isArray(a)?a:[];}
+function testiAvg(list){const v=list.map(testiNumOrNull).filter(x=>x!==null);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null;}
+function testiSideThrows(r,side){const o=r[side]||{};return TESTI_COND.flatMap(cd=>testiArr(o,cd[0]).map(testiNumOrNull).filter(x=>x!==null));}
+function testiCondAvg(r,side,cond){return testiAvg(testiArr(r[side]||{},cond));}
+function testiSideAvg(r,side){const v=TESTI_COND.map(cd=>testiCondAvg(r,side,cd[0])).filter(x=>x!==null);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null;}
+function testiSideMax(r,side){const t=testiSideThrows(r,side);return t.length?Math.max(...t):testiNumOrNull(r[side+'Max']);}
 function testiSummary(r){
   const pu=r.putti||{};
   const vals=TESTI_DISTS.map(d=>testiNumOrNull(pu[d]));
   const filled=vals.filter(v=>v!==null);
-  return {putN:filled.length, putSum:filled.reduce((a,b)=>a+b,0), bhMax:testiNumOrNull(r.bhMax), fhMax:testiNumOrNull(r.fhMax)};
+  const pair=(a,b)=>{const x=testiNumOrNull(pu[a]),y=testiNumOrNull(pu[b]);return(x!==null&&y!==null)?x+y:null;};
+  return {putN:filled.length,putSum:filled.reduce((a,b)=>a+b,0),c1:pair(4,8),c2:pair(12,16),
+    bhMax:testiSideMax(r,'bh'),fhMax:testiSideMax(r,'fh'),bhAvg:testiSideAvg(r,'bh'),fhAvg:testiSideAvg(r,'fh')};
+}
+function testiSpeedId(ds){return 9000000000000+Number(ds.replace(/-/g,''));}
+// Kirjaa testin heittonopeudet myös Nopeus-sivun dataan (speeds), jotta ne näkyvät kaaviossa ja historiassa
+function testiSyncSpeed(ds){
+  const r=getTestRes(ds); const sm=testiSummary(r); const id=testiSpeedId(ds);
+  const r1=(x)=>x===null?null:Math.round(x*10)/10;
+  let speeds=(get('speeds')||[]).filter(s=>s.id!==id);
+  if(sm.bhAvg!==null||sm.fhAvg!==null||sm.bhMax!==null||sm.fhMax!==null){
+    const ev=(get('events')||[]).find(e=>e.type==='testi'&&e.date===ds);
+    const groups={};
+    ['bh','fh'].forEach(side=>TESTI_COND.forEach(cd=>{
+      const arr=testiArr(r[side]||{},cd[0]).map(testiNumOrNull).filter(x=>x!==null);
+      if(arr.length)groups[side.toUpperCase()+' '+cd[1]]={avg:r1(testiAvg(arr)),max:Math.max(...arr)};
+    }));
+    const entry={id,date:ds,type:'testi',note:(ev?ev.name:'Testipäivä')+(r.weather?' · '+r.weather:''),groups};
+    if(sm.bhAvg!==null)entry.bhAvg=r1(sm.bhAvg); if(sm.bhMax!==null)entry.bhMax=sm.bhMax;
+    if(sm.fhAvg!==null)entry.fhAvg=r1(sm.fhAvg); if(sm.fhMax!==null)entry.fhMax=sm.fhMax;
+    speeds.push(entry);
+  }
+  set('speeds',speeds);
+}
+function testiTog(ds,k){testiSet(ds,'pre.'+k,!((getTestRes(ds).pre||{})[k]));renderTesti();}
+function testiText(ds,path,el){testiSet(ds,path,el.value);}
+function testiPutNum(ds,d,el){
+  let v=parseFloat(String(el.value).replace(',','.'));
+  if(isNaN(v)||v<0)v=''; else{v=Math.min(10,Math.round(v));}
+  testiSet(ds,'putti.'+d,v); if(String(el.value)!==String(v))el.value=v;
+  testiRefresh(ds);
+}
+function testiThrow(ds,side,cond,idx,el){
+  let v=parseFloat(String(el.value).replace(',','.'));
+  if(isNaN(v)||v<0)v=''; else if(v>200)v=200;
+  const all=get('test_results')||{}; const r=all[ds]||{}; r[side]=r[side]||{};
+  const arr=Array.isArray(r[side][cond])?r[side][cond].slice():[]; while(arr.length<TESTI_THROWS)arr.push('');
+  arr[idx]=v; r[side][cond]=arr; all[ds]=r; set('test_results',all);
+  if(v===''&&String(el.value)!=='')el.value='';
+  testiSyncSpeed(ds); testiRefresh(ds);
+}
+function testiCompareHtml(ds){
+  const r=getTestRes(ds); const sm=testiSummary(r);
+  const allT=get('test_results')||{};
+  const prevDs=Object.keys(allT).filter(function(d){if(d>=ds)return false;const s=testiSummary(allT[d]);return s.putN>0||s.bhMax!==null||s.fhMax!==null;}).sort().reverse()[0];
+  if(!prevDs)return '';
+  const ps=testiSummary(allT[prevDs]);
+  const dl=(a,b,unit)=>(a===null||b===null)?'–':((a-b>0?'+':'')+testiFmt(a-b)+(unit||''));
+  const put=(x)=>x.putN===4?x.putSum+'/40':'–';
+  const putD=(sm.putN===4&&ps.putN===4)?((sm.putSum-ps.putSum>0?'+':'')+(sm.putSum-ps.putSum)):'–';
+  return `<div class="card card-p" style="margin-bottom:10px;background:var(--bl)"><div style="font-size:13px;font-weight:700;color:var(--bd);margin-bottom:6px">Vertailu edelliseen testiin (${fiDate(prevDs)})</div><div style="font-size:12px;color:var(--bd);line-height:1.7">Putti: ${put(ps)} → ${put(sm)} (${putD})<br>BH ka: ${testiFmt(ps.bhAvg)} → ${testiFmt(sm.bhAvg)} (${dl(sm.bhAvg,ps.bhAvg,' km/h')})<br>BH max: ${testiFmt(ps.bhMax)} → ${testiFmt(sm.bhMax)} (${dl(sm.bhMax,ps.bhMax,' km/h')})<br>FH ka: ${testiFmt(ps.fhAvg)} → ${testiFmt(sm.fhAvg)} (${dl(sm.fhAvg,ps.fhAvg,' km/h')})<br>FH max: ${testiFmt(ps.fhMax)} → ${testiFmt(sm.fhMax)} (${dl(sm.fhMax,ps.fhMax,' km/h')})</div></div>`;
+}
+// Päivittää lasketut luvut ilman koko sivun uudelleenpiirtoa (kenttien kohdistus ja näppäimistö säilyvät)
+function testiRefresh(ds){
+  const r=getTestRes(ds); const sm=testiSummary(r); const pu=r.putti||{};
+  const el=(id)=>document.getElementById(id);
+  TESTI_DISTS.forEach(function(d){const v=testiNumOrNull(pu[d]);const e=el('tput-'+d);if(e)e.textContent='/ 10'+(v!==null?' · '+Math.round(v*10)+' %':'');});
+  const pct=(n,of)=>Math.round(n/of*100);
+  const tot=el('tput-total'); if(tot)tot.innerHTML=sm.putN===4?`<b>${sm.putSum}/40 · ${pct(sm.putSum,40)} %</b>`:(sm.putN>0?`${sm.putSum} puttia tähän mennessä`:'');
+  const c1=el('tput-c1'); if(c1)c1.textContent=sm.c1!==null?`C1 (4 + 8 m): ${sm.c1}/20 · ${pct(sm.c1,20)} %`:'';
+  const c2=el('tput-c2'); if(c2)c2.textContent=sm.c2!==null?`C2 (12 + 16 m): ${sm.c2}/20 · ${pct(sm.c2,20)} %`:'';
+  TESTI_COND.forEach(function(cd){const e=el('tavg-'+cd[0]);if(e)e.textContent='BH ka '+testiFmt(testiCondAvg(r,'bh',cd[0]))+' · FH ka '+testiFmt(testiCondAvg(r,'fh',cd[0]));});
+  const best=el('tbest'); if(best)best.innerHTML=`Paras heitto: <b style="color:var(--bd)">BH ${testiFmt(sm.bhMax)}</b> · <b style="color:var(--pd)">FH ${testiFmt(sm.fhMax)}</b> &nbsp;|&nbsp; Keskiarvo: <b style="color:var(--bd)">BH ${testiFmt(sm.bhAvg)}</b> · <b style="color:var(--pd)">FH ${testiFmt(sm.fhAvg)}</b>`;
+  const cmp=el('testi-cmp'); if(cmp)cmp.innerHTML=testiCompareHtml(ds);
 }
 function renderTesti(){
   const cont=document.getElementById('train-content');
   const ds=pageDate();
   const ev=(get('events')||[]).find(e=>e.type==='testi'&&e.date===ds);
-  const r=getTestRes(ds); const pre=r.pre||{}; const pu=r.putti||{}; const bh=r.bh||{}; const fh=r.fh||{};
-  const sm=testiSummary(r);
-  const inpStyle='width:64px;padding:7px;text-align:center;font-size:16px;font-weight:700;border:1.5px solid var(--border);border-radius:var(--rs);background:var(--bg);color:var(--text)';
-  const num=(path,val,max)=>`<input type="number" inputmode="decimal" min="0" ${max?`max="${max}"`:''} step="${max===10?1:0.1}" value="${(val===undefined||val===null)?'':val}" style="${inpStyle}" onchange="testiNum('${ds}','${path}',this,${max||0})">`;
+  const r=getTestRes(ds); const pre=r.pre||{}; const pu=r.putti||{};
+  const inp1='width:100%;min-width:0;padding:8px 2px;text-align:center;font-size:15px;font-weight:700;border:1.5px solid var(--border);border-radius:var(--rs);background:var(--bg);color:var(--text)';
   let h=`<div style="background:#FFF3E0;border-radius:var(--r);padding:12px 14px;margin-bottom:12px"><div style="font-size:14px;font-weight:700;color:#BF360C">📏 ${ev?ev.name:'Testipäivä'}</div><div style="font-size:11px;color:#BF360C;opacity:.85;margin-top:3px">${fiDate(ds)} · putti 40 kpl + BH/FH-nopeus · tee samassa järjestyksessä joka testikerralla</div></div>`;
   // Edellytykset
   h+=`<div class="card card-p" style="margin-bottom:10px"><div style="font-size:13px;font-weight:700;margin-bottom:6px">Edellytykset</div>`;
   TESTI_PRE.forEach(function(p){const on=!!pre[p[0]];h+=`<div onclick="testiTog('${ds}','${p[0]}')" style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:.5px solid var(--border);cursor:pointer"><div style="width:20px;height:20px;border-radius:50%;border:2px solid ${on?'var(--g)':'var(--border)'};background:${on?'var(--g)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0"><span style="color:#fff;font-size:11px">${on?'✓':''}</span></div><div style="font-size:12px;color:${on?'var(--t3)':'var(--text)'}">${p[1]}</div></div>`;});
   h+=`<div style="font-size:11px;color:var(--t3);margin-top:6px">Jos jokin ei täyty, siirrä testi ja pidä edellinen päivä täysin lepona.</div></div>`;
   // 1. Putti
-  h+=`<div class="card card-p" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px"><div style="font-size:13px;font-weight:700">1. Putti – 10 puttia/etäisyys</div><div style="font-size:12px;color:var(--t2)">${sm.putN===4?`<b>${sm.putSum}/40 · ${Math.round(sm.putSum/40*100)} %</b>`:(sm.putN>0?sm.putSum+' tähän mennessä':'')}</div></div>`;
-  TESTI_DISTS.forEach(function(d){const v=testiNumOrNull(pu[d]);h+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="width:44px;font-size:13px;font-weight:600">${d} m</div>${num('putti.'+d,pu[d],10)}<div style="font-size:12px;color:var(--t2)">/ 10${v!==null?' · '+Math.round(v*10)+' %':''}</div></div>`;});
-  h+=`<div style="font-size:11px;color:var(--t3)">Sama etäisyysjärjestys 4 → 8 → 12 → 16 m joka testikerralla.</div></div>`;
-  // 2+3 Nopeus
-  h+=`<div class="card card-p" style="margin-bottom:10px"><div style="font-size:13px;font-weight:700;margin-bottom:2px">2. Lämmittely + 3. Heittonopeus (km/h)</div><div style="font-size:11px;color:var(--t3);margin-bottom:8px">Level 2 -lämmittely ensin. 5 heittoa/osio, 5 min tauko jokaisen 5 heiton jälkeen. Kirjaa viiden heiton keskiarvo.</div>`;
-  h+=`<div style="display:grid;grid-template-columns:1fr 70px 70px;gap:6px;align-items:center"><div></div><div style="font-size:11px;font-weight:700;text-align:center;color:var(--bd)">BH ka</div><div style="font-size:11px;font-weight:700;text-align:center;color:var(--pd)">FH ka</div>`;
-  TESTI_COND.forEach(function(cd){h+=`<div style="font-size:12px">${cd[1]}</div>${num('bh.'+cd[0],bh[cd[0]],0).replace('width:64px','width:60px')}${num('fh.'+cd[0],fh[cd[0]],0).replace('width:64px','width:60px')}`;});
-  h+=`<div style="font-size:12px;font-weight:700">Paras yksittäinen heitto</div>${num('bhMax',r.bhMax,0).replace('width:64px','width:60px')}${num('fhMax',r.fhMax,0).replace('width:64px','width:60px')}</div></div>`;
+  h+=`<div class="card card-p" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px"><div style="font-size:13px;font-weight:700">1. Putti – 10 puttia/etäisyys</div><div id="tput-total" style="font-size:12px;color:var(--t2)"></div></div>`;
+  TESTI_DISTS.forEach(function(d){const v=pu[d];h+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="width:44px;font-size:13px;font-weight:600">${d} m</div><input type="number" inputmode="numeric" min="0" max="10" step="1" value="${(v===undefined||v===null)?'':v}" style="width:64px;padding:7px;text-align:center;font-size:16px;font-weight:700;border:1.5px solid var(--border);border-radius:var(--rs);background:var(--bg);color:var(--text)" onchange="testiPutNum('${ds}',${d},this)"><div id="tput-${d}" style="font-size:12px;color:var(--t2)">/ 10</div></div>`;});
+  h+=`<div id="tput-c1" style="font-size:12px;color:var(--t2);margin-top:2px"></div><div id="tput-c2" style="font-size:12px;color:var(--t2)"></div><div style="font-size:11px;color:var(--t3);margin-top:6px">Kirjaa montako 10:stä upposi. Sama etäisyysjärjestys 4 → 8 → 12 → 16 m joka testikerralla.</div></div>`;
+  // 2+3 Nopeus: 5 heittoa / olosuhde
+  h+=`<div class="card card-p" style="margin-bottom:10px"><div style="font-size:13px;font-weight:700;margin-bottom:2px">2. Lämmittely + 3. Heittonopeus (km/h)</div><div style="font-size:11px;color:var(--t3);margin-bottom:10px">Level 2 -lämmittely ensin. 5 heittoa/osio, 5 min tauko jokaisen 5 heiton jälkeen. Kirjaa jokaisen heiton nopeus (1–5), keskiarvo ja paras heitto lasketaan automaattisesti.</div>`;
+  TESTI_COND.forEach(function(cd){
+    h+=`<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><div style="font-size:12px;font-weight:700">${cd[1]}</div><div id="tavg-${cd[0]}" style="font-size:11px;color:var(--t2)"></div></div>`;
+    ['bh','fh'].forEach(function(side){
+      const arr=testiArr(r[side]||{},cd[0]);
+      h+=`<div style="display:grid;grid-template-columns:26px repeat(${TESTI_THROWS},1fr);gap:5px;align-items:center;margin-top:5px"><div style="font-size:11px;font-weight:700;color:var(${side==='bh'?'--bd':'--pd'})">${side.toUpperCase()}</div>`;
+      for(let i=0;i<TESTI_THROWS;i++){const v=arr[i];h+=`<input type="number" inputmode="decimal" min="0" max="200" step="0.1" placeholder="${i+1}" value="${(v===undefined||v===null)?'':v}" style="${inp1}" onchange="testiThrow('${ds}','${side}','${cd[0]}',${i},this)">`;}
+      h+=`</div>`;
+    });
+    h+=`</div>`;
+  });
+  h+=`<div id="tbest" style="font-size:12px;color:var(--t2);padding-top:8px;border-top:.5px solid var(--border);line-height:1.6"></div></div>`;
   // Sää
   h+=`<div class="card card-p" style="margin-bottom:10px"><div style="font-size:13px;font-weight:700;margin-bottom:6px">Sää ja olosuhteet</div><input type="text" value="${(r.weather||'').replace(/"/g,'&quot;')}" placeholder="esim. 6 °C, tuuli 3 m/s vastaan, kuiva" style="width:100%;padding:9px;border:1.5px solid var(--border);border-radius:var(--rs);background:var(--bg);color:var(--text);font-size:13px" onchange="testiText('${ds}','weather',this)"></div>`;
-  // Vertailu edelliseen
-  const allT=get('test_results')||{};
-  const prevDs=Object.keys(allT).filter(function(d){if(d>=ds)return false;const s=testiSummary(allT[d]);return s.putN>0||s.bhMax!==null||s.fhMax!==null;}).sort().reverse()[0];
-  if(prevDs){
-    const ps=testiSummary(allT[prevDs]);
-    const dl=(a,b,unit,dec)=>{if(a===null||b===null)return '–';const d=a-b;return (d>0?'+':'')+d.toFixed(dec)+(unit||'');};
-    h+=`<div class="card card-p" style="margin-bottom:10px;background:var(--bl)"><div style="font-size:13px;font-weight:700;color:var(--bd);margin-bottom:6px">Vertailu edelliseen testiin (${fiDate(prevDs)})</div><div style="font-size:12px;color:var(--bd);line-height:1.7">Putti: ${ps.putN===4?ps.putSum+'/40':'–'} → ${sm.putN===4?sm.putSum+'/40':'–'} (${sm.putN===4&&ps.putN===4?((sm.putSum-ps.putSum>0?'+':'')+(sm.putSum-ps.putSum)):'–'})<br>BH max: ${ps.bhMax!==null?ps.bhMax:'–'} → ${sm.bhMax!==null?sm.bhMax:'–'} (${dl(sm.bhMax,ps.bhMax,' km/h',1)})<br>FH max: ${ps.fhMax!==null?ps.fhMax:'–'} → ${sm.fhMax!==null?sm.fhMax:'–'} (${dl(sm.fhMax,ps.fhMax,' km/h',1)})</div></div>`;
-  }
-  // Valmis
+  h+=`<div id="testi-cmp"></div>`;
   const isDoneT=getDone(ds);
   h+=isDoneT
     ? `<button onclick="setDone('${ds}',null);renderTesti()" style="width:100%;padding:13px;border-radius:var(--r);border:1.5px solid var(--g);background:var(--gl);color:var(--gd);font-size:14px;font-weight:700;margin-bottom:16px">✓ Testi tehty – peru</button>`
     : `<button onclick="setDone('${ds}',1);showToast('Testi merkitty tehdyksi ✅');renderTesti()" style="width:100%;padding:13px;border-radius:var(--r);border:none;background:var(--g);color:#fff;font-size:14px;font-weight:700;margin-bottom:16px">Merkitse testi tehdyksi</button>`;
   h+='<div class="page-spacer"></div>';
   cont.innerHTML=h;
+  testiRefresh(ds);
 }
 
 // ===== PERUSKUNTO (matala-tehoinen aerobinen pohja) =====
