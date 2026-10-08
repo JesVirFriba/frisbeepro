@@ -707,6 +707,67 @@ function mergeFpData(remote, local, preferLocal){
   return merged;
 }
 
+// ===== Kolmitieyhdistäminen (3-way): base = Gistin sisältö viime synkronoinnin jälkeen =====
+// Idea: jos paikallinen arvo on sama kuin base, laite ei ole muuttanut sitä → etäarvo voittaa (vanhentunut laite ei ylikirjoita).
+// Jos etäarvo on sama kuin base, vain tämä laite on muuttanut sitä → paikallinen voittaa. Jos molemmat muuttuneet: paikallinen voittaa.
+function fpCanon(x){
+  if(x===null||typeof x!=='object')return JSON.stringify(x);
+  if(Array.isArray(x))return '['+x.map(fpCanon).join(',')+']';
+  return '{'+Object.keys(x).sort().map(function(k){return JSON.stringify(k)+':'+fpCanon(x[k]);}).join(',')+'}';
+}
+function fpEq(a,b){return fpCanon(a)===fpCanon(b);}
+function fpIsObj(x){return x!==null&&typeof x==='object'&&!Array.isArray(x);}
+function fpMergeIdArray(R,L,B){
+  const idsOf=function(arr){const m=new Map();arr.forEach(function(it){if(it&&it.id!=null)m.set(it.id,it);});return m;};
+  const mr=idsOf(R),ml=idsOf(L),mb=idsOf(B);
+  const out=[];
+  new Set([...mr.keys(),...ml.keys()]).forEach(function(id){
+    const r=mr.get(id),l=ml.get(id),b=mb.get(id);
+    if(r&&l){
+      if(fpEq(l,r))out.push(l);
+      else if(b&&fpEq(l,b))out.push(r);   // paikallinen ennallaan → etämuutos
+      else if(b&&fpEq(r,b))out.push(l);   // etä ennallaan → paikallinen muutos
+      else out.push(l);                   // molemmat muuttuneet → paikallinen
+    }else out.push(l||r);
+  });
+  // id:tön data (vanha): yhdistetään sisällön mukaan ja pudotetaan id:llisen kaksoiskappaleen kanssa samat rivit
+  const seen={},noId=[];
+  R.concat(L).forEach(function(it){if(it&&it.id==null){const s=fpCanon(it);if(!seen[s]){seen[s]=1;noId.push(it);}}});
+  const keyOf=function(it){return (it.date||'')+'|'+(it.name||'');};
+  const idKeys={};out.forEach(function(it){if(it&&it.date&&it.name)idKeys[keyOf(it)]=true;});
+  return out.concat(noId.filter(function(it){return !(it.date&&it.name&&idKeys[keyOf(it)]);}));
+}
+function fpMerge3(R,L,B,depth){
+  if(fpEq(L,R))return L;
+  if(B!==undefined&&fpEq(L,B))return R;
+  if(B!==undefined&&fpEq(R,B))return L;
+  if(Array.isArray(L)&&Array.isArray(R)){
+    const hasIds=L.concat(R).some(function(it){return it&&typeof it==='object'&&it.id!=null;});
+    return hasIds?fpMergeIdArray(R,L,Array.isArray(B)?B:[]):L;
+  }
+  if(fpIsObj(L)&&fpIsObj(R)&&(depth||0)<2){
+    const bb=fpIsObj(B)?B:{},out={};
+    new Set([...Object.keys(R),...Object.keys(L)]).forEach(function(k){
+      const inL=Object.prototype.hasOwnProperty.call(L,k),inR=Object.prototype.hasOwnProperty.call(R,k);
+      out[k]=(inL&&inR)?fpMerge3(R[k],L[k],bb[k],(depth||0)+1):(inL?L[k]:R[k]);
+    });
+    return out;
+  }
+  return L;
+}
+function mergeFpData3(remote,local,base){
+  const out={};
+  new Set([...Object.keys(remote),...Object.keys(local)]).forEach(function(k){
+    if(k[0]==='_'){out[k]=Object.prototype.hasOwnProperty.call(local,k)?local[k]:remote[k];return;}
+    const inL=Object.prototype.hasOwnProperty.call(local,k),inR=Object.prototype.hasOwnProperty.call(remote,k);
+    out[k]=(inL&&inR)?fpMerge3(remote[k],local[k],base?base[k]:undefined,0):(inL?local[k]:remote[k]);
+  });
+  return out;
+}
+const SYNC_BASE_KEY='fp_sync_base_v1';
+function getSyncBase(){try{const r=localStorage.getItem(SYNC_BASE_KEY);return r?JSON.parse(r):null;}catch(e){return null;}}
+function putSyncBase(d){try{localStorage.setItem(SYNC_BASE_KEY,JSON.stringify(d));}catch(e){console.error('FrisbeePro: sync base write error',e);}}
+
 async function gistSave(){
   const token=getGistToken();
   if(!token){gistUpdateStatus('idle','Ei tokenia');return;}
@@ -718,6 +779,7 @@ async function gistSave(){
     // Hae ensin Gistin senhetkinen sisältö ja yhdistä se paikalliseen ennen pushia,
     // jotta toisen laitteen sillä välin lisäämät, vain-Gistissä-olevat avaimet eivät katoa.
     let localData=ld();
+    let remoteOk=false;
     try{
       const rFetch=await fetch(`https://api.github.com/gists/${id}`,
         {headers:{Authorization:`token ${token}`,'User-Agent':'frisbeepro'}});
@@ -728,17 +790,22 @@ async function gistSave(){
           try{
             const rRaw=await fetch(gist.files[GIST_FILENAME].raw_url);
             if(rRaw.ok) raw=await rRaw.text();
-          }catch(e){/* jos raw-haku epäonnistuu, jatketaan alla olevalla suojauksella */}
+          }catch(e){/* jos raw-haku epäonnistuu, raw jää katkaistuksi ja JSON.parse alla estää kirjoituksen */}
         }
         if(raw){
           const parsed=JSON.parse(raw);
           if(parsed&&parsed.data){
-            localData=mergeFpData(parsed.data, localData, true);
+            const base=getSyncBase();
+            // Kolmitieyhdistäminen: tämän laitteen todelliset muutokset voittavat, muu tulee Gististä
+            localData=base?mergeFpData3(parsed.data, localData, base):mergeFpData(parsed.data, localData, true);
             sv(localData);
           }
         }
+        remoteOk=true;
       }
-    }catch(e){/* haku epäonnistui - jatketaan silti pelkällä paikallisella datalla */}
+    }catch(e){remoteOk=false;}
+    // Ei sokkokirjoitusta: jos Gistin nykytilaa ei saatu luettua, ei kirjoiteta vanhalla paikallisella datalla yli
+    if(!remoteOk){gistUpdateStatus('error','Gistin luku epäonnistui – tallennus yritetään uudelleen');return;}
     const payload={version:1,updated:new Date().toISOString(),data:localData};
     const r=await fetch(`https://api.github.com/gists/${id}`,{
       method:'PATCH',
@@ -746,6 +813,7 @@ async function gistSave(){
       body:JSON.stringify({files:{[GIST_FILENAME]:{content:JSON.stringify(payload,null,2)}}})
     });
     if(r.ok){
+      putSyncBase(payload.data);
       const t=new Date().toLocaleTimeString('fi',{hour:'2-digit',minute:'2-digit'});
       gistUpdateStatus('saved',`Tallennettu ${t}`);
     }else{gistUpdateStatus('error','Tallennus epäonnistui');}
@@ -778,9 +846,12 @@ async function gistLoad(){
     const local=ld();
     const localUpdated=local._updated||'1970-01-01';
     const remoteNewer=parsed.updated>localUpdated;
-    const merged=mergeFpData(parsed.data, local, !remoteNewer);
+    const base=getSyncBase();
+    // Kolmitieyhdistäminen: vanhentunut laite ei ylikirjoita tuoreempaa dataa. Ensimmäisellä kerralla (ei basea) käytetään vanhaa aikaleimalogiikkaa.
+    const merged=base?mergeFpData3(parsed.data, local, base):mergeFpData(parsed.data, local, !remoteNewer);
     merged._updated=remoteNewer?parsed.updated:localUpdated;
     const changed=JSON.stringify(merged)!==JSON.stringify(local);
+    putSyncBase(parsed.data);
     if(changed){
       sv(merged);
       gistUpdateStatus('saved',`Ladattu Gististä ${parsed.updated.slice(11,16)}`);
@@ -5894,6 +5965,21 @@ if(todayKisaEvent && todayHour < 18 && !kisaCheckedToday){
   }, 800);
 }
 migrateOldKeys();
+// Päivitys kun sovellukseen palataan taustalta (PWA ei lataudu uudelleen): hae tuore data ja piirrä nykyinen sivu uudelleen
+let _lastGistPull=0;
+function gistResumePull(){
+  if(!getGistToken())return;
+  const t=Date.now(); if(t-_lastGistPull<15000)return; _lastGistPull=t;
+  gistLoad().then(function(loaded){
+    if(!loaded)return;
+    migrateOldKeys();
+    const pg=document.querySelector('.page.on'); const id=pg?pg.id.replace('pg-',''):null;
+    const fn={profile:renderProfile,speed:renderSpeed,train:renderTrain,cal:renderCal,comp:renderComp,dev:renderDev}[id];
+    if(fn)fn();
+  });
+}
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')gistResumePull();});
+window.addEventListener('pageshow',function(e){if(e.persisted)gistResumePull();});
 // Auto-load from Gist on startup
 if(getGistToken()){
   gistLoad().then(loaded=>{
