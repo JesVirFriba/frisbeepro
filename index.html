@@ -1404,7 +1404,7 @@ function renderSpeed(){
     speeds.slice().reverse().forEach(s=>{
       const bhVal=s.bh5||s.bhAvg||null;
       const fhVal=s.fh5||s.fhAvg||null;
-      const typeLabel=s.type==='heitto_tek'?' · Tekniikka':s.type==='heitto_nop'?' · Nopeus':'';
+      const typeLabel=s.type==='heitto_tek'?' · Tekniikka':s.type==='heitto_nop'?' · Nopeus':s.type==='testi'?' · Testi':'';
       h+=`<div class="row">
         <div style="flex:1">
           <div style="font-size:12px;color:var(--t3)">${s.date}${s.disc?' · '+s.disc:''}${typeLabel}</div>
@@ -3812,10 +3812,35 @@ function testiSet(ds,path,val){
   for(let i=0;i<parts.length-1;i++){o[parts[i]]=o[parts[i]]||{};o=o[parts[i]];}
   o[parts[parts.length-1]]=val; all[ds]=r; set('test_results',all);
 }
+function testiSpeedId(ds){return 9000000000000+Number(ds.replace(/-/g,''));}
+// Kirjaa testin heittonopeudet myös Nopeus-sivun dataan (speeds), jotta ne näkyvät kaaviossa ja historiassa
+function testiSyncSpeed(ds){
+  const r=getTestRes(ds); const bh=r.bh||{}, fh=r.fh||{};
+  const avgOf=(o)=>{const v=TESTI_COND.map(cd=>testiNumOrNull(o[cd[0]])).filter(x=>x!==null);return v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length*10)/10:null;};
+  const bhAvg=avgOf(bh), fhAvg=avgOf(fh), bhMax=testiNumOrNull(r.bhMax), fhMax=testiNumOrNull(r.fhMax);
+  const id=testiSpeedId(ds);
+  let speeds=(get('speeds')||[]).filter(s=>s.id!==id);
+  if(bhAvg!==null||fhAvg!==null||bhMax!==null||fhMax!==null){
+    const ev=(get('events')||[]).find(e=>e.type==='testi'&&e.date===ds);
+    const groups={};
+    TESTI_COND.forEach(cd=>{
+      const b=testiNumOrNull(bh[cd[0]]), f=testiNumOrNull(fh[cd[0]]);
+      if(b!==null)groups['BH '+cd[1]]={avg:b};
+      if(f!==null)groups['FH '+cd[1]]={avg:f};
+    });
+    const entry={id,date:ds,type:'testi',note:(ev?ev.name:'Testipäivä')+(r.weather?' · '+r.weather:''),groups};
+    if(bhAvg!==null)entry.bhAvg=bhAvg; if(bhMax!==null)entry.bhMax=bhMax;
+    if(fhAvg!==null)entry.fhAvg=fhAvg; if(fhMax!==null)entry.fhMax=fhMax;
+    speeds.push(entry);
+  }
+  set('speeds',speeds);
+}
 function testiNum(ds,path,el,max){
   let v=parseFloat(String(el.value).replace(',','.'));
   if(isNaN(v)||v<0)v=''; else if(max&&v>max)v=max;
-  testiSet(ds,path,v); renderTesti();
+  testiSet(ds,path,v);
+  if(/^(bh|fh)/.test(path))testiSyncSpeed(ds);
+  renderTesti();
 }
 function testiTog(ds,k){testiSet(ds,'pre.'+k,!((getTestRes(ds).pre||{})[k]));renderTesti();}
 function testiText(ds,path,el){testiSet(ds,path,el.value);}
