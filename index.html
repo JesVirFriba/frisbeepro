@@ -954,7 +954,7 @@ const PUTTI_P4_WEEKS=[
 function puttiDataFor(ds,wk){
   const ph=offseasonPhaseOf(weekStartOf(ds));
   if(ph===3)return{jakso:'Vaihe 3 – ylläpito (nopeusjakso)',label:'3 sessiota/vk',sessions:3,mix:{4:10,6:10,8:20,10:20},pressure:true};
-  if(ph===4)return{jakso:'Vaihe 4 – kisakuntoon',label:'ke + la + torstain kierros',sessions:3,mix:{4:10,6:10,8:10,10:10,12:10},pressure:true};
+  if(ph===4)return{jakso:'Vaihe 4 – kisakuntoon',label:'testiviikko: to testi (putti 40) + la',sessions:1,mix:{4:10,6:10,8:10,10:10,12:10},pressure:true};
   const w=Math.max(1,Math.min(16,wk));
   return Object.assign({},PUTTI_P4_WEEKS[w-1],{label:'Viikko '+w});
 }
