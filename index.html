@@ -907,7 +907,7 @@ const DEF={name:'Jesse Virtanen',pdga:'252010',rating:919,metrix:939,target:940,
 
 // ===== NAV =====
 let calY=new Date().getFullYear(),calM=new Date().getMonth();
-let compTab='upcoming',devTabCur='rating',trainTabCur='week',kierrosPvm=null,trainCtxDate=null,trainCtxSession=null,throwManualWk=null,throwShowAll=false,strShowAll=false;
+let compTab='upcoming',devTabCur='rating',trainTabCur='week',kierrosPvm=null,trainCtxDate=null,trainCtxSession=null,throwManualWk=null,throwShowAll=false,strShowAll=false,strManualWk=null;
 let throwWk=parseInt(localStorage.getItem('fp_throw_wk')||'1')||1,strWk=parseInt(localStorage.getItem('fp_str_wk')||'1')||1,mobWk=parseInt(localStorage.getItem('fp_mob_wk')||'1')||1,putWk=parseInt(localStorage.getItem('fp_put_wk')||'1')||1;
 function setPutWk(w){putWk=w;localStorage.setItem('fp_put_wk',w);renderTrain()}
 
@@ -944,13 +944,25 @@ const PUTTI_P4_WEEKS=[
   {jakso:'Jakso 2 – etäisyyspainotus', sessions:5, mix:{4:10,8:20,10:20,12:10,16:10}}, // Vk9: 5×70
   {jakso:'Jakso 2 – etäisyyspainotus', sessions:5, mix:{4:10,6:10,8:20,10:20,12:10,16:10}}, // Vk10: 5×80
   {jakso:'Jakso 2 – etäisyyspainotus', sessions:5, mix:{4:10,6:10,8:20,10:20,12:10,16:10}}, // Vk11: 5×80
-  {jakso:'Jakso 2 – etäisyyspainotus', sessions:5, mix:{4:10,6:10,8:20,10:20,12:10,16:10}} // Vk12: 5×80
+  {jakso:'Jakso 2 – etäisyyspainotus', sessions:5, mix:{4:10,6:10,8:20,10:20,12:10,16:10}}, // Vk12: 5×80
+  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:5, mix:{4:10,6:10,8:20,10:20,12:10,16:10}, pressure:true}, // Vk13: 5×80
+  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:5, mix:{4:10,6:10,8:20,10:20,12:10,16:10}, pressure:true}, // Vk14
+  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:5, mix:{4:10,6:10,8:20,10:20,12:10,16:10}, pressure:true}, // Vk15
+  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:5, mix:{4:10,6:10,8:20,10:20,12:10,16:10}, pressure:true}  // Vk16
 ];
+// Putti helmi–toukokuu: ylläpito (nopeusjakso) ja toukokuun alku (kisakuntoon), molemmissa paine-sarja
+function puttiDataFor(ds,wk){
+  const ph=offseasonPhaseOf(weekStartOf(ds));
+  if(ph===3)return{jakso:'Vaihe 3 – ylläpito (nopeusjakso)',label:'3 sessiota/vk',sessions:3,mix:{4:10,6:10,8:20,10:20},pressure:true};
+  if(ph===4)return{jakso:'Vaihe 4 – kisakuntoon',label:'ke + la + torstain kierros',sessions:3,mix:{4:10,6:10,8:10,10:10,12:10},pressure:true};
+  const w=Math.max(1,Math.min(16,wk));
+  return Object.assign({},PUTTI_P4_WEEKS[w-1],{label:'Viikko '+w});
+}
 function puttP4WeekTotal(wk){ // puttia / sessio
-  const m=PUTTI_P4_WEEKS[Math.min(wk,12)-1].mix;
+  const m=PUTTI_P4_WEEKS[Math.min(wk,16)-1].mix;
   return Object.values(m).reduce((a,b)=>a+b,0);
 }
-function puttP4WeekSessions(wk){return PUTTI_P4_WEEKS[Math.min(wk,12)-1].sessions;}
+function puttP4WeekSessions(wk){return PUTTI_P4_WEEKS[Math.min(wk,16)-1].sessions;}
 
 // Migraatio vanhoista avaimista → uudet C1/C2 avaimet
 (function migratePuttiDists(){
@@ -2229,12 +2241,12 @@ function throwProgramFor(ds,mode){
 // Avaa session viikkonäkymästä: asettaa päivän/session kontekstin ja synkronoi ohjelmasivun viikon kalenteriin
 function openSession(target,date,sess){
   trainCtxDate=date||null; trainCtxSession=sess||null;
-  throwManualWk=null; throwShowAll=false; strShowAll=false;
+  throwManualWk=null; throwShowAll=false; strShowAll=false; strManualWk=null;
   if(date){
     kierrosPvm=date;
     const n=offWeekN(date);
     if(target==='str'){ strWk=Math.max(1,Math.min(8,n)); localStorage.setItem('fp_str_wk',strWk); }
-    if(target==='putti'){ if(n>=1&&n<=12){ putWk=n; localStorage.setItem('fp_put_wk',putWk); } window.puttiPreviewPhase=null; }
+    if(target==='putti'){ if(n>=1&&n<=16){ putWk=n; localStorage.setItem('fp_put_wk',putWk); } window.puttiPreviewPhase=null; }
     if(target==='mob'){ mobWk=Math.max(1,n); localStorage.setItem('fp_mob_wk',mobWk); }
   }
   trainTab(target,null);
@@ -2408,13 +2420,13 @@ function buildWeekPlan(weekDates) {
       // Peruskunto (matala-tehoinen aerobinen pohja): to + su vaiheissa 1-2, vain su vaiheessa 3; ei testipäivänä eikä sitä edeltävänä päivänä
       // Putti Vaihe 4 (12 vk, alkaen 12.10.): ti, ke, to, la, ja pe 26.10. alkaen. Ke ja pe putti ENNEN voimaharjoitusta.
       const wsDs = dateStr(weekDates[0]);
-      const puttiProgWeek = (isOffseasonP1 || isOffseasonP2) && wsDs >= '2026-10-12' && wsDs <= '2026-12-28';
+      const puttiProgWeek = (isOffseasonP1 || isOffseasonP2) && wsDs >= '2026-10-12' && wsDs <= '2027-01-25';
       if(puttiProgWeek && !dayPlan.sessions.includes('putti') && !dayPlan.sessions.includes('lepo')){
         const ndp = new Date(weekDates[i]); ndp.setDate(ndp.getDate()+1);
         const testNearP = (get('events')||[]).some(e => e.type==='testi' && (e.date===ds || e.date===dateStr(ndp)));
         const addPutti = (i===1) || (i===2) || (i===4 && wsDs >= '2026-10-26');
         if(addPutti && !testNearP){
-          const before = (i===2 || i===4) ? ' (ennen voimaa)' : '';
+          const before = (i===2 || i===4) ? (dayPlan.sessions.some(s=>s==='voima_a'||s==='voima_b') ? ' (ennen voimaa)' : dayPlan.sessions.includes('teho') ? ' (ennen tehoa)' : '') : '';
           dayPlan = { ...dayPlan, sessions:[...dayPlan.sessions,'putti'], note: dayPlan.note+' + putti'+before };
         }
       }
@@ -2951,7 +2963,7 @@ function rpeBg(r){return r==='high'?'#FCEBEB':r==='med'?'#FAEEDA':'#E1F5EE'}
 function rpeLbl(r){return r==='high'?'RPE 9–10':r==='med'?'RPE 5–6':'RPE 2–4'}
 
 function trainTab(tab,el){
-  if(el||tab==='week'){trainCtxDate=null;trainCtxSession=null;throwManualWk=null;throwShowAll=false;strShowAll=false;}
+  if(el||tab==='week'){trainCtxDate=null;trainCtxSession=null;throwManualWk=null;throwShowAll=false;strShowAll=false;strManualWk=null;}
   trainTabCur=tab;
   document.querySelectorAll('#pg-train .tb').forEach(b=>b.classList.remove('on'));
   if(el)el.classList.add('on');
@@ -3122,6 +3134,57 @@ function resetSets(k,pg){setSets(k,0);if(pg==='throw')renderThrow();else if(pg==
 function setThrowWk(w){throwWk=w;throwManualWk=w;localStorage.setItem('fp_throw_wk',w);renderThrow()}
 function toggleCard(key){set('card_'+key,get('card_'+key)===false?true:false);renderTrain()}
 
+// ===== Voima: ohjelmat vaiheittain =====
+// P1 (12.10.–6.12.): 8 vk perusta. P2 (7.12.–31.1.): 8 vk voima→teho-silta, kevyempi + nopea konsentrinen.
+// P3 (helmi–huhti): 1×/vk ylläpito. P4 (toukokuun alku): kevyt, viimeistään 5 pv ennen kisaa.
+const STR_P2_DATA=STR_DATA.filter(s=>s.id!=='strC');
+const STR_M_DATA=[{id:'strM',name:'Voima – ylläpito (1× viikossa)',exercises:['sa2','sb1','sb3','sb4'].map(id=>STR_DATA.flatMap(s=>s.exercises).find(e=>e.id===id))}];
+function strP2Cfg(ex,wk){
+  const fast=' · nopea konsentrinen';
+  if(ex.blocks){ if(wk<=4)return{sets:4,reps:'3',rpe:'RPE 6–7'+fast}; if(wk<=7)return{sets:3,reps:'2–3',rpe:'RPE 7'+fast}; return{sets:2,reps:'3',rpe:'RPE 5–6 (kevennys)'}; }
+  if(ex.id==='sa1'){ return{sets:wk<=4?4:wk<=7?3:2,reps:'3',rpe:null}; }          // rinnalleveto
+  if(ex.id==='sb4'){ return{sets:wk<=7?3:2,reps:'5/käsi',rpe:null}; }              // yhden käden KP-punnerrus
+  return{sets:(wk===8?Math.max(1,ex.sets-1):ex.sets),reps:ex.reps,rpe:null};
+}
+function strP3Cfg(ex,wk){
+  const base={sa2:{sets:2,reps:'3'},sb1:{sets:2,reps:'3'},sb3:{sets:2,reps:'4–5'},sb4:{sets:2,reps:'5/käsi'}}[ex.id]||{sets:2,reps:'3'};
+  const deload=wk%4===0;
+  return{sets:deload?Math.max(1,base.sets-1):base.sets,reps:base.reps,rpe:'RPE 7'+(deload?' · kevennysviikko (−1 sarja)':'')};
+}
+function strP4Cfg(ex,wk){return{sets:2,reps:'2–3',rpe:'RPE 6 · kevyt, viimeistään 5 pv ennen kisaa'};}
+// Mikä voimaohjelma ja viikko kuuluu päivälle (kortista avattaessa) tai tälle päivälle
+function strProgramCtx(){
+  const ds=trainCtxDate||dateStr(new Date());
+  const ws=weekStartOf(ds); const ph=offseasonPhaseOf(ws); const n=offWeekN(ds);
+  let id='P1',wk,weeks=8;
+  if(n<1){wk=Math.max(1,Math.min(8,strWk));}
+  else if(n<=8){wk=n;}
+  else if(ph===2){id='P2';wk=Math.max(1,Math.min(8,Math.floor(daysBetweenDs('2026-12-07',ws)/7)+1));}
+  else if(ph===3){id='P3';weeks=13;wk=Math.max(1,Math.min(13,Math.floor(daysBetweenDs('2027-02-01',ws)/7)+1));}
+  else if(ph===4){id='P4';weeks=1;wk=1;}
+  else{wk=8;}
+  if(strManualWk!=null)wk=Math.max(1,Math.min(weeks,strManualWk));
+  const blockIdx=wk<=2?0:wk<=5?1:wk<=7?2:3;
+  const ns={P1:'str',P2:'str2',P3:'str3',P4:'str4'}[id];
+  const data=id==='P1'?STR_DATA:id==='P2'?STR_P2_DATA:STR_M_DATA;
+  const cfg=id==='P1'?(ex=>ex.blocks?ex.blocks[blockIdx]:{reps:ex.reps,sets:ex.sets,rpe:null}):id==='P2'?(ex=>strP2Cfg(ex,wk)):id==='P3'?(ex=>strP3Cfg(ex,wk)):(ex=>strP4Cfg(ex,wk));
+  const blockNames=['Totuttelu (Vk 1–2)','Kertymä (Vk 3–5)','Intensifikaatio (Vk 6–7)','Peikkaus (Vk 8 – ennen testiä)'];
+  const title=id==='P1'?blockNames[blockIdx]+' – viikko '+wk
+    :id==='P2'?'Vaihe 2 · Voima→teho-silta – viikko '+wk+'/8 ('+(wk<=4?'lohko 1: 4 × 3':wk<=7?'lohko 2: 3 × 2–3, nopeus':'kevennys')+')'
+    :id==='P3'?'Vaihe 3 · Voima ylläpito – viikko '+wk+(wk%4===0?' · kevennysviikko':'')
+    :'Vaihe 4 · Voima kevyt ylläpito';
+  return{id,wk,weeks,ns,data,cfg,title};
+}
+// Aloituspaino-ohje ohjelman ensimmäiselle viikolle edellisen ohjelman painoista
+function strStartHint(sp,ex){
+  if(ex.bw)return null;
+  const first=(prefix,ws)=>{for(const w of ws){const v=get('wt_'+prefix+'_w'+w+'_'+ex.id);if(v&&parseFloat(v)>0)return parseFloat(v);}return null;};
+  if(sp.id==='P2'&&sp.wk===1){const w=first('str',[7,6,5]);if(w){const lo=Math.round(w*0.75*2)/2,hi=Math.round(w*0.80*2)/2;return `Aloitus: ${lo}–${hi} kg (75–80 % Vaihe 1:n painosta ${w} kg)`;}}
+  if(sp.id==='P3'&&sp.wk===1){const w=first('str2',[7,6,5,4]);if(w)return `Ylläpito: käytä Vaihe 2:n lopun painoa (${w} kg)`;}
+  if(sp.id==='P4'){const w=first('str3',[13,12,11,10,9,8,7,6,5,4,3,2,1]);if(w)return `Kevyt: ${Math.round(w*0.9*2)/2}–${w} kg (noin 90–100 % ylläpitopainosta ${w} kg)`;}
+  return null;
+}
+
 function strFeelMult(feel){
   if(feel==='kevyt') return 1.05;
   if(feel==='sopiva') return 1.025;
@@ -3139,40 +3202,41 @@ function setStrFeel(key,feel){set(key,feel);renderStr()}
 
 function renderStr(){
   const cont=document.getElementById('train-content');
-  const blockIdx=strWk<=2?0:strWk<=5?1:strWk<=7?2:3;
-  const blockNames=['Totuttelu (Vk 1–2)','Kertymä (Vk 3–5)','Intensifikaatio (Vk 6–7)','Peikkaus (Vk 8 – ennen testiä)'];
-  const phase=blockNames[blockIdx];
-  let h=`<div class="wk-scroll" id="str-wk"><\/div><div class="sect">${phase} – viikko ${strWk}<\/div>`;
-  const ctxSessId=(trainCtxSession||'').indexOf('voima_')===0?({voima_a:'strA',voima_b:'strB',voima_c:'strC'})[trainCtxSession]:null;
+  const sp=strProgramCtx();
+  let h=`<div class="wk-scroll" id="str-wk"></div><div class="sect">${sp.title}</div>`;
+  const mappedSess=(trainCtxSession||'').indexOf('voima_')===0?({voima_a:'strA',voima_b:'strB',voima_c:'strC'})[trainCtxSession]:null;
+  const ctxSessId=(mappedSess&&sp.data.some(x=>x.id===mappedSess))?mappedSess:null;
   const strFiltered=!!(ctxSessId&&!strShowAll);
-  if(trainCtxDate){const nn=offWeekN(trainCtxDate);h+=`<div style="font-size:11px;color:var(--t2);margin:-4px 0 8px">📅 ${fiDate(trainCtxDate)} · off-season viikko ${Math.max(1,nn)}${nn>8?' – Vaihe 1:n 8 viikon voimaohjelma on päättynyt, Vaihe 2 -voimaohjelmaa ei ole vielä sovelluksessa (näytetään viikko 8)':''}</div>`;}
-  STR_DATA.forEach(sess=>{
+  if(trainCtxDate){h+=`<div style="font-size:11px;color:var(--t2);margin:-4px 0 8px">📅 ${fiDate(trainCtxDate)} · off-season viikko ${Math.max(1,offWeekN(trainCtxDate))}</div>`;}
+  sp.data.forEach(sess=>{
     if(strFiltered&&sess.id!==ctxSessId)return;
-    const cfg=(ex)=>ex.blocks?ex.blocks[blockIdx]:{reps:ex.reps,sets:ex.sets,rpe:null};
+    const cfg=sp.cfg;
     const ts=(ex)=>cfg(ex).sets;
-    const allDone=sess.exercises.every(ex=>getSets('str_'+strWk+'_'+sess.id+'_'+ex.id)>=ts(ex));
-    const doneCount=sess.exercises.filter(ex=>getSets('str_'+strWk+'_'+sess.id+'_'+ex.id)>=ts(ex)).length;
+    const allDone=sess.exercises.every(ex=>getSets(sp.ns+'_'+sp.wk+'_'+sess.id+'_'+ex.id)>=ts(ex));
+    const doneCount=sess.exercises.filter(ex=>getSets(sp.ns+'_'+sp.wk+'_'+sess.id+'_'+ex.id)>=ts(ex)).length;
     h+=`<div class="str-card">
-      <div class="str-head" onclick="toggleCard('str_${strWk}_${sess.id}')">
+      <div class="str-head" onclick="toggleCard('${sp.ns}_${sp.wk}_${sess.id}')">
         <div style="flex:1"><div style="font-size:13px;font-weight:600">${sess.name}<\/div><div style="font-size:10px;color:var(--t2)">${doneCount}/${sess.exercises.length} harjoitetta<\/div><\/div>
         ${allDone?`<span class="badge" style="background:var(--gl);color:var(--gd)">✓ Valmis<\/span>`:''}
-        <span style="color:var(--t3);font-size:12px">${get('card_str_'+strWk+'_'+sess.id)!==false?'▾':'▸'}<\/span>
+        <span style="color:var(--t3);font-size:12px">${get('card_'+sp.ns+'_'+sp.wk+'_'+sess.id)!==false?'▾':'▸'}<\/span>
       <\/div>
-      <div class="str-body${get('card_str_'+strWk+'_'+sess.id)!==false?' open':''}">`;
+      <div class="str-body${get('card_'+sp.ns+'_'+sp.wk+'_'+sess.id)!==false?' open':''}">`;
     sess.exercises.forEach(ex=>{
       const c=cfg(ex);
-      const ek='str_'+strWk+'_'+sess.id+'_'+ex.id;
+      const ek=sp.ns+'_'+sp.wk+'_'+sess.id+'_'+ex.id;
       const t=c.sets;const done=getSets(ek);const allS=done>=t;
-      const wKey='str_w'+strWk+'_'+ex.id;const curW=getW(wKey);
-      const feelKey='str_feel_w'+strWk+'_'+ex.id;const curFeel=get(feelKey);
+      const wKey=sp.ns+'_w'+sp.wk+'_'+ex.id;const curW=getW(wKey);
+      const feelKey=sp.ns+'_feel_w'+sp.wk+'_'+ex.id;const curFeel=get(feelKey);
       // Find prev week weight + feedback, compute suggestion
       let prevW=null,prevFeel=null,suggestion=null,suggestionNote=null;
-      for(let w=strWk-1;w>=1;w--){const pw=get('wt_str_w'+w+'_'+ex.id);if(pw){prevW={v:pw,w};prevFeel=get('str_feel_w'+w+'_'+ex.id);break}}
+      for(let w=sp.wk-1;w>=1;w--){const pw=get('wt_'+sp.ns+'_w'+w+'_'+ex.id);if(pw){prevW={v:pw,w};prevFeel=get(sp.ns+'_feel_w'+w+'_'+ex.id);break}}
+      if(!prevW){const hint=strStartHint(sp,ex);if(hint)suggestionNote=hint;}
       if(prevW && prevFeel){
         const prevNum=parseFloat(prevW.v);
         if(prevNum>0) suggestion=suggestedStrWeight(prevW.v,prevFeel);
         else if(prevNum===0) suggestionNote=(prevFeel==='raskas')?'Pysy kehonpainossa tällä viikolla':'Kehonpaino toimi – kokeile +1,25–2,5 kg lisäpainoa tai lisää toistoja';
       }
+      if(sp.id==='P3'||sp.id==='P4'){suggestion=null;if(prevW&&parseFloat(prevW.v)>0)suggestionNote='Ylläpito: pidä sama paino ('+prevW.v+' kg), ei progressiota';}
       h+=`<div class="ex-block">
         <div class="ex-name" style="${allS?'color:var(--g)':''}">${ex.name}${allS?' ✓':''}<\/div>
         <div style="font-size:11px;color:var(--t3);margin-bottom:2px">${ex.detail}<\/div>
@@ -3208,16 +3272,16 @@ function renderStr(){
       }
       h+=`</div>`;
     });
-    const nk='str_notes_'+strWk+'_'+sess.id;
+    const nk=sp.ns+'_notes_'+sp.wk+'_'+sess.id;
     h+=`<textarea style="width:100%;min-height:50px;font-size:12px;padding:7px;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg);color:var(--text);resize:none;margin-top:6px;font-family:inherit" placeholder="Painot, tuntemukset..." id="strn_${sess.id}" onchange="set('${nk}',this.value)">${get(nk)||''}<\/textarea>
     <\/div><\/div>`;
   });
   if(strFiltered)h+='<button class="btn btn-out" style="width:100%;margin:8px 0" onclick="strShowAll=true;renderStr()">Näytä muut viikon voimaistunnot</button>';
   h+='<div class="page-spacer"></div>';cont.innerHTML=h;
-  mkWkTabs('str-wk',strWk,8,'setStrWk');
+  mkWkTabs('str-wk',sp.wk,sp.weeks,'setStrWk');
 }
 function clickStrSet(k,s,t){const c=getSets(k);setSets(k,c>=s?s-1:s);renderStr()}
-function setStrWk(w){strWk=w;localStorage.setItem('fp_str_wk',w);renderStr()}
+function setStrWk(w){strWk=w;strManualWk=w;localStorage.setItem('fp_str_wk',w);renderStr()}
 function setMobWk(w){mobWk=w;localStorage.setItem('fp_mob_wk',w);renderMob()}
 
 function renderPuttiTrain(){
@@ -3246,7 +3310,7 @@ function renderPuttiTrain(){
   const viewPhase=window.puttiPreviewPhase;
   const todayKey='putti_today_'+dateStr(new Date());
   const todayDone=get(todayKey)||0;
-  const todayTarget=puttiPhase===1?50:puttiPhase===2?60:puttiPhase===4?puttP4WeekTotal(putWk):30;
+  const todayTarget=puttiPhase===1?50:puttiPhase===2?60:puttiPhase===4?Object.values(puttiDataFor(pageDate(),putWk).mix).reduce((a,b)=>a+b,0):30;
   const pct_today=Math.min(100,Math.round(todayDone/todayTarget*100));
 
   const steps=[['ASETU','Takajalka linjaan kohteeseen'],['KATSO','Ketjun alareuna – ei koko koria'],['HENGITÄ','Sisään 4s, ULOS 6-8s (pidempi uloshengitys aktivoi rauhoittavan hermoston)'],['RYTMI','Vakio tahti – ei liian hidas eikä nopea'],['SEURAA LÄPI','Käsi jatkuu kohti ketjua irrotuksen jälkeen']];
@@ -3292,12 +3356,14 @@ function renderPuttiTrain(){
   h+='<div style=\"font-size:11px;color:'+ph.tcol+';opacity:.8;margin-bottom:8px\">'+ph.weeks+' · '+ph.freq+'</div>';
   h+='<div style=\"font-size:12px;color:'+ph.tcol+';line-height:1.6\">'+ph.focus+'</div>';
   if(viewPhase===4){
-    const wkData=PUTTI_P4_WEEKS[putWk-1];
-    const mixStr=Object.entries(wkData.mix).filter(([d,n])=>n>0).map(([d,n])=>n+' × '+d+' m').join(' + ');
-    h+='<div style=\"margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,.1)\">';
-    h+='<div style=\"font-size:11px;font-weight:700;color:'+ph.tcol+'\">'+wkData.jakso+' – Viikko '+putWk+'</div>';
-    h+='<div style=\"font-size:12px;color:'+ph.tcol+';margin-top:2px\">'+mixStr+' = <b>'+puttP4WeekTotal(putWk)+' puttia/sessio</b> · '+wkData.sessions+' sessiota/vk = <b>'+(wkData.sessions*puttP4WeekTotal(putWk))+' puttia/vk</b></div>';
-    h+='</div>';
+    const pd=puttiDataFor(pageDate(),putWk);
+    const perSess=Object.values(pd.mix).reduce((a,b)=>a+b,0);
+    const mixStr=Object.entries(pd.mix).filter(([d,n])=>n>0).map(([d,n])=>n+' × '+d+' m').join(' + ');
+    h+=`<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,.1)">`;
+    h+=`<div style="font-size:11px;font-weight:700;color:${ph.tcol}">${pd.jakso} – ${pd.label}</div>`;
+    h+=`<div style="font-size:12px;color:${ph.tcol};margin-top:2px">${mixStr} = <b>${perSess} puttia/sessio</b> · ${pd.sessions} sessiota/vk = <b>${pd.sessions*perSess} puttia/vk</b></div>`;
+    if(pd.pressure)h+=`<div style="font-size:11px;color:${ph.tcol};margin-top:6px;line-height:1.5">🔥 <b>Paine-sarja</b> joka sessioon: portaat 4 → 8 → 10 m, ohi = alusta (max 3 yritystä). Kirjaa onnistuiko.</div>`;
+    h+=`</div>`;
   }
   h+='</div>';
   if(viewPhase===4){
@@ -3582,7 +3648,7 @@ function renderPuttiTrain(){
   });
 
   if(viewPhase===4){
-    mkWkTabs('putti-p4-wk',putWk,12,'setPutWk');
+    mkWkTabs('putti-p4-wk',putWk,16,'setPutWk');
   }
 }
 function renderPuttiInputs(){
