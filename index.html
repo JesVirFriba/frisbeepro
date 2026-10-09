@@ -217,6 +217,7 @@ textarea{resize:none;min-height:65px}
 .a-ol{background:var(--pl);color:var(--pd)}
 .a-ko{background:var(--cl);color:var(--cd)}
 .a-co{background:var(--bl);color:var(--bd)}
+.a-ni{background:var(--al);color:var(--ad)}
 /* CLAUDE COPY */
 .claude-btn{width:100%;background:linear-gradient(135deg,#085041,#1D9E75);border:none;color:#fff;padding:14px;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px}
 .claude-btn:active{opacity:.88}
@@ -3118,8 +3119,8 @@ function renderSessionPick(){
     peruskunto:'Matala teho · 30–45 min · kävely tai pyöräily',
     testi:'Putti 120 kpl (3 × 10 / etäisyys) + BH/FH-nopeus · tulokset ja vertailu',
     putti:'C1-rutiini · Joka putilla samat 5 vaihetta',
-    mob:'Ti/ke: lonkka & rintakehä · su: olkapää & palautuminen · ~14 min',
-    mob_quick:'3 liikettä · ~10 min · Yläselkä/rintaranka',
+    mob:'Ti/ke: lonkka, nilkka & rintakehä · su: olkapää, kyynärvarsi & palautuminen · ~12–13 min',
+    mob_quick:'4 liikettä · ~8 min · Yläselkä, rintaranka ja ranne',
     aktivointi:'Kevyt herättely ennen kisaa',
     kierros:'Kenttäkierros'
   };
@@ -3812,27 +3813,25 @@ function delPutti(id){set('putti_sessions',(get('putti_sessions')||[]).filter(s=
 // Täysi liikkuvuus: kaksi eri sessiota viikossa. HT = Lonkka & rintakehä (ti/ke), OP = Olkapää & palautuminen (su).
 // Rintakehän kierto, thoracic extension ja lapapumppaus ovat päivittäisessä pikarutiinissa, joten ne eivät toistu täällä.
 const MOB_SETS={
-  HT:{label:'Lonkka & rintakehä',subtitle:'Heittoliikkeen perusta: lonkka ja rintakehä · ~14 min',color:'var(--gl)',tcol:'var(--gd)',exercises:[
+  HT:{label:'Lonkka & rintakehä',mins:13,subtitle:'Heittoliikkeen perusta: lonkka, nilkka ja rintakehä · ~13 min',color:'var(--gl)',tcol:'var(--gd)',exercises:[
     {id:'h1',name:'90/90 lonkan avaus',desc:'Istu 90/90. Nojaa eteen etujalan yli, selkä suorana.',reps:'45 sek / puoli',area:'a-lo',st:true},
-    {id:'h2',name:'Lonkan koukistajan venytys',desc:'Yhden polven polvistuminen. Eteen kunnes tuntuu etupuolella.',reps:'45 sek / puoli',area:'a-lo',st:true},
+    {id:'h2',name:'Lonkan koukistajan venytys + kierto',desc:'Yhden polven polvistuminen. Purista takajalan pakara ja kallista lantiota taakse (älä notkota alaselkää), eteen kunnes tuntuu lonkan etupuolella. Pidä, sitten vie yläkehoa kiertäen ulos.',reps:'45 sek pito + 5 kierrosta / puoli',area:'a-lo',st:true},
     {id:'h3',name:'Hamstring selinmakuulla',desc:'Jalka ylös, polvi suorana. Vedä jalka kohti rintaa.',reps:'40 sek / jalka',area:'a-lo',st:true},
     {id:'h4',name:"World's greatest stretch",desc:'Askelkyykky + rintakehän avaus kiertämällä ylös.',reps:'5 toistoa / puoli',area:'a-ko'},
-    {id:'h5',name:'Kossack squat',desc:'Leveä haara-asento. Kyykky sivulle, toinen jalka suorana.',reps:'8 toistoa / puoli',area:'a-lo'},
-    {id:'h6',name:'Hip 90/90 aktiivinen siirto',desc:'Istu 90/90. Nosta takajalka ylös pitäen asento. Vaihda puolta.',reps:'8 toistoa / suunta',area:'a-lo'},
-    {id:'h7',name:'Hip flexor + rotaatio',desc:'Lonkan koukistajan venytys + lisää ylärangan kierto samalla.',reps:'30 sek + 5 kierrosta / puoli',area:'a-ko'},
-    {id:'h8',name:'Rintakehän kiertokulma seisaaltaan',desc:'Kädet rinnalle. Kierrä yläkeho max eteen ja taakse.',reps:'10 toistoa / suunta',area:'a-se'},
-    {id:'h9',name:'Side lying rotation reach',desc:'Kyljelläsi. Kierrä yläkäsi taaksepäin, katse seuraa.',reps:'10 toistoa / puoli',area:'a-se'}
+    {id:'h5',name:'Cossack squat',desc:'Leveä haara-asento. Kyykky sivulle, toinen jalka suorana.',reps:'8 toistoa / puoli',area:'a-lo'},
+    {id:'h6',name:'Hip 90/90 aktiivinen siirto',desc:'Istu 90/90. Nosta takapolvi irti lattiasta 2–3 s (lonkan aktiivinen ulkokierto), laske ja vaihda asento toiselle puolelle.',reps:'8 toistoa / suunta',area:'a-lo'},
+    {id:'h10',name:'Nilkan liikkuvuus – polvi seinään',desc:'Jalka noin 10 cm seinästä. Vie polvi suoraan seinää kohti kantapää maassa. Etsi kaukaisin etäisyys, jolta polvi vielä yltää seinään.',reps:'10 toistoa / puoli',area:'a-ni'},
+    {id:'h8',name:'Rintakehän kiertokulma seisaaltaan',desc:'Kädet rinnalle, lantio paikallaan. Kierrä yläkeho max eteen ja taakse.',reps:'10 toistoa / suunta',area:'a-se'}
   ]},
-  OP:{label:'Olkapää & palautuminen',subtitle:'Olkapää, selkä ja rentoutus · ~14 min',color:'var(--bl)',tcol:'var(--bd)',exercises:[
-    {id:'o1',name:'Olkapään kierto lattialla',desc:'Selällään 90°. Ulko- ja sisäkierto hitaasti, kyynärpää paikallaan.',reps:'12 toistoa / puoli',area:'a-ol'},
+  OP:{label:'Olkapää & palautuminen',mins:12,subtitle:'Olkapää, kyynärvarsi ja rentoutus · ~12 min',color:'var(--bl)',tcol:'var(--bd)',exercises:[
+    {id:'o1',name:'Olkapään kierto lattialla',desc:'Selällään, olkavarsi sivulle 90° ja kyynärpää 90°. Kierrä kyynärvartta hitaasti ylös (ulkokierto) ja alas (sisäkierto), olkavarsi pysyy paikallaan.',reps:'12 toistoa / puoli',area:'a-ol'},
     {id:'o2',name:'Doorway chest stretch',desc:'Käsi seinään 90°. Kierrä keho poispäin kunnes tuntuu rinnassa.',reps:'30 sek / puoli',area:'a-ol',st:true},
+    {id:'o10',name:'Cross-body olkapään venytys',desc:'Vedä suora käsi rintakehän poikki toisella kädellä, olka alhaalla. Venytys tuntuu olkapään takaosassa.',reps:'30 sek / puoli',area:'a-ol',st:true},
     {id:'o3',name:'Thread the needle',desc:'Nelinkontin. Vie käsi lattian kautta toiselle puolelle.',reps:'10 toistoa / puoli',area:'a-se'},
-    {id:'o4',name:'Ranteen liikkuvuus',desc:'Nelinkontin, sormet taaksepäin. Kallista keho varovasti eteen.',reps:'20 sek + 10 toistoa',area:'a-ol'},
+    {id:'o11',name:'Kyynärvarren venytys (ojentajat ja koukistajat)',desc:'Käsi eteen, kyynärpää suorana. Taivuta ranne alas toisella kädellä ja pidä (ojentajat), käännä sitten sormet ylös ja pidä (koukistajat). Ei kipua kyynärpäässä.',reps:'30 + 30 sek / käsi',area:'a-ol',st:true},
     {id:'o5',name:'Piriformis venytys',desc:'Selällään, toinen jalka toisen polven yli. Vedä jalat kohti rintaa.',reps:'45 sek / puoli',area:'a-lo',st:true},
-    {id:'o6',name:'Supine twist',desc:'Selällään, polvi ristiin toiselle puolelle. Katse vastakkaiseen.',reps:'45 sek / puoli',area:'a-se',st:true},
     {id:'o7',name:'Lapsi-asento',desc:'Polvillaan, kädet eteen. Hengitä vatsan kautta, rentouta.',reps:'45 sekuntia',area:'a-lo',st:true},
-    {id:'o8',name:'Diaphragm breathing',desc:'Selällään. Nenän kautta sisään (vatsa nousee), suu auki ulos.',reps:'10 rauhallista hengitystä',area:'a-co'},
-    {id:'o9',name:'Legs up the wall',desc:'Selällään, jalat seinää vasten 90°. Täysi rentoutuminen.',reps:'2–3 minuuttia',area:'a-co'}
+    {id:'o8',name:'Diaphragm breathing',desc:'Selällään. Nenän kautta sisään (vatsa nousee), suu auki ulos.',reps:'10 rauhallista hengitystä',area:'a-co'}
   ]}
 };
 // Minkä tyyppinen sessio päivälle kuuluu: su = Olkapää & palautuminen, muut päivät = Lonkka & rintakehä.
@@ -3851,7 +3850,7 @@ function renderMob(){
   const type=mobTypeSel||mobTypeFor(ds);
   const rot=MOB_SETS[type];
   const keyOf=function(ex){return 'mobd_'+ds+'_'+ex.id;};
-  const AREA_LBLS={'a-lo':'Lonkka','a-se':'Selkä','a-ol':'Olkapää','a-ko':'Koko keho','a-co':'Core'};
+  const AREA_LBLS={'a-lo':'Lonkka','a-se':'Selkä','a-ol':'Olkapää','a-ko':'Koko keho','a-co':'Core','a-ni':'Nilkka'};
   const done=rot.exercises.filter(ex=>getSets(keyOf(ex))>0).length;
   const total=rot.exercises.length;
   let h='<div style="display:flex;gap:6px;margin-bottom:10px">';
@@ -3907,11 +3906,12 @@ function toggleMob(key){
 }
 
 const MOB_QUICK_DAILY=[
-  {id:'mq1',name:'Rintakehän kierto lattialla',desc:'Kyljelläsi, polvet 90°. Vie käsi auki taaksepäin hitaasti.',reps:'8 toistoa/puoli'},
-  {id:'mq2',name:'Thoracic extension',desc:'Kädet niskan taakse, kyynärpäät taaksepäin – avaa rintakehä.',reps:'8–10 toistoa'},
+  {id:'mq1',name:'Avoin kirja – dynaaminen + staattinen pito',desc:'Kyljelläsi, polvet koukussa. Vie yläkäsi auki taaksepäin 6 toistoa, jää viimeiseen toistoon ja PIDÄ ääriasennossa. Staattinen pito kasvattaa liikelaajuutta paremmin kuin pelkkä dynaaminen liike.',reps:'6 toistoa + 30–45 sek pito / puoli'},
+  {id:'mq2',name:'Thoracic extension',desc:'Istu tuolilla tai makaa foam rullan päällä lapojen alla. Kädet niskan taakse (tue päätä), ojenna rintarankaa taaksepäin rullan tai selkänojan yli. Älä notkota alaselkää.',reps:'8–10 toistoa'},
   {id:'mq3',name:'Lapapumppaus seisaaltaan',desc:'Kädet eteen – lapaluut loittonee. Vedä takaisin.',reps:'10 toistoa'},
-  {id:'mq4',name:'Avoin kirja – staattinen pito',desc:'Kyljelläsi, polvet koukussa. Kierrä yläkeho auki ja PIDÄ ääriasennossa – tutkitusti staattinen pito kasvattaa pysyvää liikelaajuutta paremmin kuin pelkkä dynaaminen liike.',reps:'30–45 sek/puoli'}
+  {id:'mq5',name:'Ranteen liikkuvuus',desc:'Nelinkontin, sormet taaksepäin. Kallista keho varovasti eteen. Jos leikattu käsi oireilee, kevennä.',reps:'20 sek + 10 toistoa'}
 ];
+
 
 function toggleMobQuick(key){
   const cur=getSets(key);
@@ -4801,7 +4801,7 @@ function renderRestDay(){
   const rdDs=pageDate(); const rdPlan=buildWeekPlan(getWeekDates(weekOffsetOf(new Date(rdDs+'T12:00:00')))).find(function(d){return d.date===rdDs;});
   if(rdPlan&&rdPlan.sessions.includes('mob')){
     const rdT=({HT:'Lonkka & rintakehä',OP:'Olkapää & palautuminen'})[mobTypeFor(rdDs)];
-    h+='<button onclick="openSession(\'mob\',\''+rdDs+'\',\'mob\')" style="width:100%;padding:13px;border-radius:var(--r);border:none;background:var(--g);color:#fff;font-size:14px;font-weight:700;margin-bottom:12px;cursor:pointer;font-family:inherit">🧘 Avaa liikkuvuus: '+rdT+' (~14 min)</button>';
+    h+='<button onclick="openSession(\'mob\',\''+rdDs+'\',\'mob\')" style="width:100%;padding:13px;border-radius:var(--r);border:none;background:var(--g);color:#fff;font-size:14px;font-weight:700;margin-bottom:12px;cursor:pointer;font-family:inherit">🧘 Avaa liikkuvuus: '+rdT+' (~'+MOB_SETS[mobTypeFor(rdDs)].mins+' min)</button>';
   }
 
   const sections=[
