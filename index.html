@@ -2303,11 +2303,29 @@ function throwProgramFor(ds,mode){
     else{pick=['t1m']; title='Tekniikan ylläpito – viikko '+cw+' (nopeusjakson vko '+m+')';}
   }else{
     cw=((n-1)%4)+1; ns='p'+n;
-    pick=di>=0?[['t1','t2'][Math.min(di,1)]]:null;
+    pick=di>=0?[['t2','t1'][Math.min(di,1)]]:null;
     title='Tekniikkablokki – viikko '+cw+'/4 (off-season viikko '+n+')';
   }
   const note=pick?('Suositus tälle päivälle (heittopäivä '+(di+1)+'/'+days.length+' tällä viikolla). Muut viikon sessiot: "Näytä muut".'):(days.length?'':'Tälle päivälle ei ole heitto-sessiota – näytetään viikon kaikki sessiot.');
-  return {cw,ns,title,pick,note};
+  let extra='';
+  if(effMode==='tek'&&ph<=2&&n<=2)extra+=' Vk 1–2: nopeusheitot noin 80 % teholla (käden palautuminen).';
+  if(effMode==='tek'&&ph===2)extra+=' Vaihe 2: nopeusheitot molempina päivinä (ti ja la), harjoitevolyymi pienempi.';
+  return {cw,ns,title,pick,note:note+extra,n,ph,effMode};
+}
+// Mukauta session sisältö vaiheen ja viikon mukaan (80 % teho vk 1–2, Vaihe 2: nopeusheitot molempina päivinä)
+function thAdapt(sess,prog){
+  if(!prog||prog.effMode!=='tek'||prog.ph>2)return sess;
+  const isSpeed=function(e){return /Nopeusheitot/.test(e.name);};
+  const baseId=function(id){return id.replace(/w\d+$/,'');};
+  let exs=sess.exercises.map(function(e){return Object.assign({},e);});
+  if(prog.n<=2)exs.forEach(function(e){if(isSpeed(e))e.detail=(e.detail||'')+' · vk 1–2: noin 80 % teholla (käden palautuminen)';});
+  if(prog.ph===2&&baseId(sess.id)==='t2'){
+    exs=exs.map(function(e){return /Supersarja/.test(e.name)?Object.assign({},e,{totalSets:Math.max(3,Math.round(e.totalSets*0.6))}):e;});
+    const t1=(THROW_SESSIONS[prog.cw]||[]).find(function(s){return baseId(s.id)==='t1';});
+    const sp=t1&&t1.exercises.find(isSpeed);
+    if(sp)exs.push(Object.assign({},sp,{id:sp.id+'p2'}));
+  }
+  return Object.assign({},sess,{exercises:exs});
 }
 // Avaa session viikkonäkymästä: asettaa päivän/session kontekstin ja synkronoi ohjelmasivun viikon kalenteriin
 function openSession(target,date,sess){
@@ -3148,6 +3166,7 @@ function renderThrow(){
     const pool=THROW_SESSIONS[thWk]||THROW_SESSIONS[1];
     sessions=pool;
     if(prog.pick&&!throwShowAll){const f=pool.filter(s=>prog.pick.indexOf(s.id.replace(/w\d+$/,''))>=0);if(f.length){sessions=f;thFiltered=true;}}
+    sessions=sessions.map(function(s){return thAdapt(s,prog);});
   }
   let h=`<div style="background:${modeBg};border-radius:var(--r);padding:12px 14px;margin-bottom:12px"><div style="font-size:14px;font-weight:700;color:${modeCol}">${modeTitle}</div>${modeDesc?`<div style="font-size:11px;color:${modeCol};opacity:.8;margin-top:3px">${modeDesc}</div>`:''}</div>`;
   const devFocus=get('dev_focus');
