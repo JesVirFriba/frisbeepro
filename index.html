@@ -2975,11 +2975,11 @@ const STR_DATA=[
     {id:'sa2',name:'Takakyykky',detail:'Etureisi · pääliike',reps:'8–10',lo:8,hi:10,sets:[3,3,4,4,4,5,5,3],step:5,e1rm:true,hint:'Kantapäät maassa, hallittu syvyys.'},
     {id:'sb1',name:'Maastaveto (suora tanko, hihnat)',detail:'Takaketju · pääliike',reps:'8',lo:8,hi:8,sets:[3,3,3,4,4,4,4,2],step:5,e1rm:true,hint:'Hihnat sallittu pidon säästämiseksi (käsi). Selkä neutraalina, lopeta sarja kun tekniikka heikkenee.'},
     {id:'sj3',name:'Lantionojennus',detail:'Takaketju · pakara',reps:'10–12',lo:10,hi:12,sets:[2,3,3,3,3,4,4,2],step:5,hint:'Pidä ylhäällä 1 s.'},
-    {id:'sj4',name:'Askelkyykky käsipainoilla',detail:'Etureisi · jalkakohtainen vakaus',reps:'10 / jalka',lo:10,hi:10,sets:[2,3,3,3,3,3,3,2],step:2,hint:'Jalkakohtainen vakaus – heiton tukijalka. Kirjaa painona yhden käsipainon paino.'},
+    {id:'sj4',name:'Askelkyykky käsipainoilla',detail:'Etureisi · jalkakohtainen vakaus',reps:'10 / jalka',lo:10,hi:10,sets:[2,3,3,3,3,4,4,2],step:2,hint:'Jalkakohtainen vakaus – heiton tukijalka. Kirjaa painona yhden käsipainon paino.'},
     {id:'sj5',name:'Reiden koukistus',detail:'Takaketju · takareisi',reps:'12–15',lo:12,hi:15,sets:[2,3,3,3,3,3,3,2],step:2.5,hint:'Hidas laskeva vaihe.'},
-    {id:'sj6',name:'Reiden ojennus',detail:'Etureisi',reps:'12–15',lo:12,hi:15,sets:[2,3,3,3,3,3,3,2],step:2.5,hint:'Pidä ylhäällä 1 s.'},
     {id:'sj7',name:'Pohkeet',detail:'Pohkeet',reps:'12–15',lo:12,hi:15,sets:[3,3,4,4,4,4,4,2],step:5,hint:'Täysi liikerata, tauko alhaalla.'},
-    {id:'sj8',name:'Copenhagen plank (valinnainen)',detail:'Lonkka · lähentäjät, nivelterveys',reps:'30 s / puoli',lo:30,hi:30,sets:[2,2,2,2,2,2,2,1],time:true,hint:'Päällimmäinen jalka penkin päällä. Kirjaa sekunnit per sarja.'}
+    {id:'sj8',name:'Copenhagen plank',detail:'Lonkka · lähentäjät, nivelterveys',reps:'30 s / puoli',lo:30,hi:30,sets:[2,2,2,2,2,2,2,1],time:true,hint:'Päällimmäinen jalka penkin päällä. Kirjaa sekunnit per sarja. Etujalan lähentäjät osallistuvat lantion kiertoon.'},
+    {id:'sj9',name:'Dead bug (voimapyörä, kun helppo)',detail:'Ydin · anti-ekstensio',reps:'8–10 / puoli',lo:8,hi:10,sets:[2,2,2,2,2,2,2,1],step:0,bw:true,hint:'Alaselkä kiinni lattiassa, hidas. Kun helppo: ab wheel polvilta, lyhyellä liikeradalla.'}
   ]},
   {id:'strB',name:'Yläkroppa',exercises:[
     {id:'sy1',name:'Penkkipunnerrus',detail:'Rinta · pääliike',reps:'8–10',lo:8,hi:10,sets:[3,3,4,4,4,5,5,3],step:2.5,e1rm:true,hint:'Spotteri tai turvatelineet.'},
@@ -3072,7 +3072,7 @@ function renderSessionPick(){
     heitto_tek:'RPE 3–4 · Tekniikkasarjat · ~1h',
     heitto_nop:'RPE 10 · Maksiminopeus · ~1h',
     voima_c:'2 sarjaa/liike · ~15 min · Olkapää + lonkka',
-    teho:'Boxi, pallo, punnerrus läpsy · alle 6 toistoa · ~40 min',
+    teho:'Rinnalleveto, boxi, pallo, pallo slam + pakollinen ydinlohko · ~55 min',
     voima_a:'8+ toistoa · ~65 min · Kyykky, veto, jalat',
     voima_b:'8+ toistoa · ~65 min · Penkki, veto, olkapäät',
     hermosto:'Box breathing aamu+ilta · 4-6 vk automatisoituu',
@@ -3219,7 +3219,7 @@ function toggleCard(key){set('card_'+key,get('card_'+key)===false?true:false);re
 const STR_P2_DATA=STR_DATA.filter(s=>s.id!=='strC');
 const STR_C_DATA=STR_DATA.filter(s=>s.id==='strC');
 const STR_M_DATA=[{id:'strM',name:'Voima – ylläpito (1× viikossa)',exercises:['sa2','sb1','sy1','sb3'].map(id=>STR_DATA.flatMap(s=>s.exercises).find(e=>e.id===id))}];
-const STR_P2_SETS={sa2:3,sb1:3,sj3:2,sj4:2,sj5:2,sj6:2,sj7:3,sj8:2,sy1:3,sb3:3,sy3:3,sy4:2,sy5:2,sy7:2,sy8:2};
+const STR_P2_SETS={sa2:3,sb1:3,sj3:2,sj4:2,sj5:2,sj7:3,sj8:2,sy1:3,sb3:3,sy3:3,sy4:2,sy5:2,sy7:2,sy8:2};
 function strCfgP1(ex,wk){return{sets:ex.sets[wk-1],reps:ex.reps,rpe:'RIR '+STR_RIR[wk-1]+(wk===8?' · kevennys, painot −10 %':''),lo:ex.lo,hi:ex.hi};}
 function strCfgP2(ex,wk){const s=STR_P2_SETS[ex.id]||2;return{sets:wk===8?Math.max(1,s-1):s,reps:ex.reps,rpe:'RIR 3 · nopea konsentrinen',lo:ex.lo,hi:ex.hi};}
 function strCfgP3(ex,wk){const d=wk%4===0;return{sets:d?1:2,reps:ex.reps,rpe:'RIR 2'+(d?' · kevennysviikko (−1 sarja)':''),lo:ex.lo,hi:ex.hi};}
@@ -4192,18 +4192,22 @@ function renderHermosto(){
   }
 }
 
-// Nopeustreeni (pe, Vaihe 2: ke): kaikki alle 6 toistoa, lepo 90–120 s, laatu ennen väsymystä. Sarjat viikoille 1–8.
+// Nopeustreeni (pe, Vaihe 2: ke): nopeusliikkeet alle 6 toistoa, lepo 90–120 s (rinnalleveto 2–3 min), laatu ennen väsymystä.
+// Lopuksi pakollinen ydinlohko (grp:'core') ja valinnainen täydentävä osa (grp:'opt'). Sarjat viikoille 1–8.
 const NOP_EX=[
+  {id:'n0',name:'Rinnalleveto (hang power clean)',reps:'3',sets:[2,3,4,4,4,4,4,2],kg:true,load:{type:'fixed',text:'Vk 1–2 kevyt, vk 3–7 ~70–80 %'},hint:'Nosto polven/reiden puolivälistä, räjähtävä lonkanojennus. Lepo 2–3 min. Vk 1–2 kevyt tekniikkapaino, vk 3–7 noin 70–80 % maksimista. Jos ranne tai leikattu käsi kipeytyy kiinniotossa → vaihda hang high pull (ei kiinniottoa). Kirjaa kg.'},
   {id:'n1',name:'Boxi yhdellä jalalla',reps:'3 / jalka',sets:[2,3,3,3,3,3,3,2],load:{type:'box',base:30,cap:55},hint:'Pehmeä alastulo, polvi ei sisäänpäin.'},
   {id:'n2',name:'Boxi yhdellä jalalla, toistuva',reps:'5 / jalka',sets:[2,2,2,2,2,2,2,1],load:{type:'fixed',text:'Matala boxi 20–25 cm, lyhyt kontakti'},hint:'Reaktiivinen: ponnista heti alastulosta.'},
   {id:'n3',name:'Boxi molemmilla jaloilla',reps:'4',sets:[2,3,3,3,3,3,3,2],load:{type:'box',base:40,cap:70},hint:'Hyppää ylös, astu alas (ei hyppyä alas).'},
-  {id:'n4',name:'Boxi molemmilla, toistuva',reps:'5',sets:[2,2,2,2,2,2,2,1],load:{type:'fixed',text:'Boxi 30 cm'},hint:'Lyhyt kontakti, kädet mukaan.'},
   {id:'n5',name:'Pallo ala (underhand ball throw)',reps:'4',sets:[2,3,3,3,3,3,3,2],load:{type:'ball'},hint:'Koko keho: jalat–lantio–kädet.'},
   {id:'n6',name:'Pallo seinään, rotaatio',reps:'4 / suunta',sets:[2,3,3,3,3,3,3,2],load:{type:'fixed',text:'Pallo 3–4 kg, maksiminopeus'},hint:'Lantio johtaa, olkapää seuraa. Lähin siirto heittoon.'},
-  {id:'n7',name:'Punnerrus läpsy (clap push-up)',reps:'5',sets:[2,3,3,3,3,3,3,2],load:{type:'pushup'},hint:'Lopeta sarja kun korkeus laskee.'},
-  {id:'n8',name:'Leuanveto',reps:'8',sets:[0,2,3,3,3,3,3,2],opt:true,hint:'Kevyt: 2–3 toistoa varastoon, ei uupumukseen. Täydentää yläkroppapäivää.'},
-  {id:'n9',name:'Yhden jalan RDL (käsipainolla)',reps:'10 / jalka',sets:[0,2,3,3,3,3,3,2],opt:true,hint:'Tasapaino ja takaketju, siirtyy heiton tukijalkaan. Käsipaino 10–16 kg.'},
-  {id:'n10',name:'Pallof-puristus (anti-rotaatio)',reps:'10 / puoli',sets:[2,2,3,3,3,3,3,2],opt:true,hint:'Vastustaa kiertoa: heiton ydinvakaus. Kaapeli tai kuminauha.'}
+  {id:'n7',name:'Pallo slam',reps:'5',sets:[2,3,3,3,3,3,3,2],kg:true,load:{type:'fixed',text:'Pallo 4 kg → 6 kg, kun nopeus säilyy'},hint:'Nosta pallo ylös kuin heittoon ja lyö lattiaan koko vartalolla, lantio mukana. Lopeta sarja kun nopeus laskee.'},
+  {id:'c1',grp:'core',name:'Pallof-puristus (anti-rotaatio)',reps:'10 / puoli',sets:[2,3,3,3,3,3,3,2],kg:true,load:{type:'fixed',text:'Kaapeli tai kuminauha'},hint:'Vastustaa kiertoa: heiton ydinvakaus. Kirjaa kuorma (kg tai vastus).'},
+  {id:'c2',grp:'core',name:'Rotaatio: woodchop tai landmine-kierto',reps:'10 / puoli',sets:[2,3,3,3,3,3,3,2],kg:true,load:{type:'fixed',text:'Kaapeli tai landmine'},hint:'Voima lantiosta ja vartalosta kierrossa. Kontrolloitu; lisää kuormaa kun 10 toistoa tuntuu kevyeltä.'},
+  {id:'c3',grp:'core',name:'Dead bug',reps:'8–10 / puoli',sets:[2,3,3,3,3,3,3,2],hint:'Alaselkä kiinni lattiassa, hidas. Vaikeampi: ab wheel.'},
+  {id:'c4',grp:'core',name:'Sivulankku',reps:'30–40 s / puoli',sets:[2,3,3,3,3,3,3,2],hint:'Sivuttaisvakaus: lantio ylhäällä, vartalo suorana. Vaikeampi: yläjalka nostettuna.'},
+  {id:'n8',grp:'opt',name:'Leuanveto',reps:'8',sets:[0,2,3,3,3,3,3,2],hint:'Kevyt: 2–3 toistoa varastoon, ei uupumukseen. Täydentää yläkroppapäivää.'},
+  {id:'n9',grp:'opt',name:'Yhden jalan RDL (käsipainolla)',reps:'10 / jalka',sets:[0,2,3,3,3,3,3,2],hint:'Tasapaino ja takaketju, siirtyy heiton tukijalkaan. Käsipaino 10–16 kg.'}
 ];
 function nopCtx(){
   const ds=trainCtxDate||dateStr(new Date());
@@ -4220,18 +4224,24 @@ function nopLoadText(ex,x){
   if(l.type==='pushup')return x.eff<3?'Kädet penkillä (kevyempi)':'Lattialta';
   return l.text||'';
 }
+// Edellisen kerran kirjattu kuorma samalle liikkeelle (uusin aiempi päivä)
+function nopPrevLoad(id,ds){
+  const d=ld(); let best=null;
+  Object.keys(d).forEach(function(k){const m=/^nop_load_(\d{4}-\d{2}-\d{2})_(.+)$/.exec(k);if(m&&m[2]===id&&m[1]<ds&&d[k]!==''&&d[k]!=null&&(!best||m[1]>best.date))best={date:m[1],v:d[k]};});
+  return best;
+}
 function renderTeho(){
   const cont=document.getElementById('train-content');
   const x=nopCtx(); const ds=x.ds;
   const nSets=(ex)=>ex.sets[Math.min(x.wk,8)-1];
   const active=NOP_EX.filter(ex=>nSets(ex)>0);
-  const main=active.filter(ex=>!ex.opt), opt=active.filter(ex=>ex.opt);
+  const main=active.filter(ex=>!ex.grp), core=active.filter(ex=>ex.grp==='core'), opt=active.filter(ex=>ex.grp==='opt');
   const doneN=(ex)=>getSets('nop_'+ds+'_'+ex.id);
-  const doneMain=main.filter(ex=>doneN(ex)>=nSets(ex)).length;
-  const totSets=main.reduce((a,ex)=>a+nSets(ex),0);
+  const cnt=(arr)=>arr.filter(ex=>doneN(ex)>=nSets(ex)).length;
+  const totSets=main.reduce((a,ex)=>a+nSets(ex),0), coreSets=core.reduce((a,ex)=>a+nSets(ex),0);
   let h='<div style="background:#FFF3E0;border-radius:var(--r);padding:12px 14px;margin-bottom:12px">';
   h+='<div style="font-size:14px;font-weight:700;color:#E65100">⚡ Nopeustreeni – '+x.label+'</div>';
-  h+='<div style="font-size:11px;color:#E65100;opacity:.85;margin-top:3px">Alle 6 toistoa/sarja · lepo 90–120 s · laatu ennen väsymystä, lopeta sarja kun korkeus tai nopeus laskee · '+totSets+' sarjaa (~40 min)</div>';
+  h+='<div style="font-size:11px;color:#E65100;opacity:.85;margin-top:3px">Nopeusliikkeet alle 6 toistoa/sarja · lepo 90–120 s (rinnalleveto 2–3 min) · laatu ennen väsymystä, lopeta sarja kun korkeus tai nopeus laskee · '+totSets+' sarjaa (~'+Math.round(totSets*2)+' min) + ydinlohko '+coreSets+' sarjaa (~12 min)</div>';
   h+='</div>';
   if(trainCtxDate)h+='<div style="font-size:11px;color:var(--t2);margin:-4px 0 8px">📅 '+fiDate(trainCtxDate)+'</div>';
   const block=function(ex){
@@ -4242,17 +4252,22 @@ function renderTeho(){
     b+='<div class="ex-detail">'+t+' sarjaa × '+ex.reps+(lt?' · '+lt:'')+'</div>';
     b+='<div class="ex-hint">'+ex.hint+'</div>';
     if(ex.load){
-      b+='<div class="weight-row"><span style="font-size:12px;color:var(--t2);flex:1">Käytetty kuorma (cm / kg, valinnainen)</span><input class="weight-in" style="width:110px;text-align:center" type="text" placeholder="'+lt.replace(/"/g,'')+'" value="'+(get('nop_load_'+ds+'_'+ex.id)||'')+'" onchange="set(\'nop_load_'+ds+'_'+ex.id+'\',this.value)"></div>';
+      const pl=ex.kg?nopPrevLoad(ex.id,ds):null;
+      b+='<div class="weight-row"><span style="font-size:12px;color:var(--t2);flex:1">'+(ex.kg?'Kuorma (kg)':'Käytetty kuorma (valinnainen)')+(pl?' · edellinen kerta '+fiDate(pl.date)+': '+pl.v:'')+'</span><input class="weight-in" style="width:110px;text-align:center" type="text" placeholder="'+(ex.kg?'kg':lt.replace(/"/g,''))+'" value="'+(get('nop_load_'+ds+'_'+ex.id)||'')+'" onchange="set(\'nop_load_'+ds+'_'+ex.id+'\',this.value)"></div>';
     }
     b+='<div style="font-size:11px;color:var(--t2);margin:6px 0">Sarjat: '+dc+'/'+t+'</div><div class="sets-row">';
     for(let s=1;s<=t;s++){const d=dc>=s;b+='<button class="set-btn'+(d?' done':'')+'" onclick="clickNopSet(\''+ek+'\','+s+','+t+')"><span class="set-sn">S'+s+'</span><span class="set-tick">'+(d?'✓':'·')+'</span></button>';}
     b+='</div><button class="reset-btn" onclick="resetSets(\''+ek+'\',\'teho\')">↺ Nollaa</button></div>';
     return b;
   };
-  h+='<div class="sect">'+doneMain+'/'+main.length+' nopeusliikettä</div>';
+  h+='<div class="sect">'+cnt(main)+'/'+main.length+' nopeusliikettä</div>';
   main.forEach(function(ex){h+=block(ex);});
+  if(core.length){
+    h+='<div class="sect" style="margin-top:14px">Ydinlohko (pakollinen, ~12 min) · '+cnt(core)+'/'+core.length+'</div><div style="font-size:11px;color:var(--t2);margin:-4px 0 8px">Kierron vastustus, kierron voima, anti-ekstensio ja sivuttaisvakaus. Kaikissa vähintään 8 toistoa.</div>';
+    core.forEach(function(ex){h+=block(ex);});
+  }
   if(opt.length){
-    h+='<div class="sect" style="margin-top:14px">Täydentävä osa (valinnainen, ~15 min)</div><div style="font-size:11px;color:var(--t2);margin:-4px 0 8px">Antaa vedolle ja takaketjulle toisen viikkokerran sekä ytimelle kierron vastustusta. Jos väsyttää tai aika loppuu, jätä väliin.</div>';
+    h+='<div class="sect" style="margin-top:14px">Täydentävä osa (valinnainen, ~10 min)</div><div style="font-size:11px;color:var(--t2);margin:-4px 0 8px">Antaa vedolle ja takaketjulle toisen viikkokerran. Jos väsyttää tai aika loppuu, jätä väliin.</div>';
     opt.forEach(function(ex){h+=block(ex);});
   }
   h+='<div class="page-spacer"></div>';
