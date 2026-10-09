@@ -262,6 +262,7 @@ textarea{resize:none;min-height:65px}
     <button class="tb on" onclick="trainTab('week',this)">📅 Viikko</button>
     <button class="tb" onclick="trainTab('throw',this)">🥏 Heitto</button>
     <button class="tb" onclick="trainTab('str',this)">💪 Voima</button>
+    <button class="tb" onclick="trainTab('teho',this)">⚡ Nopeus</button>
     <button class="tb" onclick="trainTab('putti',this)">🎯 Putti</button>
     <button class="tb" onclick="trainTab('mob',this)">🧘 Liikk.</button>
     <button class="tb" onclick="trainTab('kierros',this)">🏃 Kierros</button>
@@ -3062,6 +3063,12 @@ function trainTab(tab,el){
   trainTabCur=tab;
   document.querySelectorAll('#pg-train .tb').forEach(b=>b.classList.remove('on'));
   if(el)el.classList.add('on');
+  else{
+    // avattaessa kortista: korosta vastaava ylävalikon välilehti
+    const alias=({throw_tek:'throw',throw_nop:'throw',mob_quick:'mob'})[tab]||tab;
+    const btn=Array.from(document.querySelectorAll('#pg-train .tb')).find(function(x){return (x.getAttribute('onclick')||'').indexOf("trainTab('"+alias+"'")===0;});
+    if(btn)btn.classList.add('on');
+  }
   renderTrain();
 }
 let sessionPickList = [];
