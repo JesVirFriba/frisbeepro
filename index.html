@@ -978,7 +978,7 @@ const DEF={name:'Jesse Virtanen',pdga:'252010',rating:919,metrix:939,target:940,
 
 // ===== NAV =====
 let calY=new Date().getFullYear(),calM=new Date().getMonth();
-let compTab='upcoming',devTabCur='rating',trainTabCur='week',kierrosPvm=null,trainCtxDate=null,trainCtxSession=null,throwManualWk=null,throwShowAll=false,strShowAll=false,strManualWk=null;
+let compTab='upcoming',devTabCur='rating',trainTabCur='week',kierrosPvm=null,trainCtxDate=null,trainCtxSession=null,throwManualWk=null,throwShowAll=false,strShowAll=false,strManualWk=null,mobTypeSel=null;
 let throwWk=parseInt(localStorage.getItem('fp_throw_wk')||'1')||1,strWk=parseInt(localStorage.getItem('fp_str_wk')||'1')||1,mobWk=parseInt(localStorage.getItem('fp_mob_wk')||'1')||1,putWk=parseInt(localStorage.getItem('fp_put_wk')||'1')||1;
 function setPutWk(w){putWk=w;localStorage.setItem('fp_put_wk',w);renderTrain()}
 
@@ -2330,7 +2330,7 @@ function thAdapt(sess,prog){
 // Avaa session viikkonäkymästä: asettaa päivän/session kontekstin ja synkronoi ohjelmasivun viikon kalenteriin
 function openSession(target,date,sess){
   trainCtxDate=date||null; trainCtxSession=sess||null;
-  throwManualWk=null; throwShowAll=false; strShowAll=false; strManualWk=null;
+  throwManualWk=null; throwShowAll=false; strShowAll=false; strManualWk=null; mobTypeSel=null;
   if(date){
     kierrosPvm=date;
     const n=offWeekN(date);
@@ -3073,7 +3073,7 @@ function rpeBg(r){return r==='high'?'#FCEBEB':r==='med'?'#FAEEDA':'#E1F5EE'}
 function rpeLbl(r){return r==='high'?'RPE 9–10':r==='med'?'RPE 5–6':'RPE 2–4'}
 
 function trainTab(tab,el){
-  if(el||tab==='week'){trainCtxDate=null;trainCtxSession=null;throwManualWk=null;throwShowAll=false;strShowAll=false;strManualWk=null;}
+  if(el||tab==='week'){trainCtxDate=null;trainCtxSession=null;throwManualWk=null;throwShowAll=false;strShowAll=false;strManualWk=null;mobTypeSel=null;}
   trainTabCur=tab;
   document.querySelectorAll('#pg-train .tb').forEach(b=>b.classList.remove('on'));
   if(el)el.classList.add('on');
@@ -3118,7 +3118,7 @@ function renderSessionPick(){
     peruskunto:'Matala teho · 30–45 min · kävely tai pyöräily',
     testi:'Putti 120 kpl (3 × 10 / etäisyys) + BH/FH-nopeus · tulokset ja vertailu',
     putti:'C1-rutiini · Joka putilla samat 5 vaihetta',
-    mob:'Liikkuvuus + palauttelu',
+    mob:'Ti/ke: lonkka & rintakehä · su: olkapää & palautuminen · ~14 min',
     mob_quick:'3 liikettä · ~10 min · Yläselkä/rintaranka',
     aktivointi:'Kevyt herättely ennen kisaa',
     kierros:'Kenttäkierros'
@@ -3809,134 +3809,86 @@ function savePutti(){
 }
 function delPutti(id){set('putti_sessions',(get('putti_sessions')||[]).filter(s=>s.id!==id));renderTrain()}
 
+// Täysi liikkuvuus: kaksi eri sessiota viikossa. HT = Lonkka & rintakehä (ti/ke), OP = Olkapää & palautuminen (su).
+// Rintakehän kierto, thoracic extension ja lapapumppaus ovat päivittäisessä pikarutiinissa, joten ne eivät toistu täällä.
+const MOB_SETS={
+  HT:{label:'Lonkka & rintakehä',subtitle:'Heittoliikkeen perusta: lonkka ja rintakehä · ~14 min',color:'var(--gl)',tcol:'var(--gd)',exercises:[
+    {id:'h1',name:'90/90 lonkan avaus',desc:'Istu 90/90. Nojaa eteen etujalan yli, selkä suorana.',reps:'45 sek / puoli',area:'a-lo',st:true},
+    {id:'h2',name:'Lonkan koukistajan venytys',desc:'Yhden polven polvistuminen. Eteen kunnes tuntuu etupuolella.',reps:'45 sek / puoli',area:'a-lo',st:true},
+    {id:'h3',name:'Hamstring selinmakuulla',desc:'Jalka ylös, polvi suorana. Vedä jalka kohti rintaa.',reps:'40 sek / jalka',area:'a-lo',st:true},
+    {id:'h4',name:"World's greatest stretch",desc:'Askelkyykky + rintakehän avaus kiertämällä ylös.',reps:'5 toistoa / puoli',area:'a-ko'},
+    {id:'h5',name:'Kossack squat',desc:'Leveä haara-asento. Kyykky sivulle, toinen jalka suorana.',reps:'8 toistoa / puoli',area:'a-lo'},
+    {id:'h6',name:'Hip 90/90 aktiivinen siirto',desc:'Istu 90/90. Nosta takajalka ylös pitäen asento. Vaihda puolta.',reps:'8 toistoa / suunta',area:'a-lo'},
+    {id:'h7',name:'Hip flexor + rotaatio',desc:'Lonkan koukistajan venytys + lisää ylärangan kierto samalla.',reps:'30 sek + 5 kierrosta / puoli',area:'a-ko'},
+    {id:'h8',name:'Rintakehän kiertokulma seisaaltaan',desc:'Kädet rinnalle. Kierrä yläkeho max eteen ja taakse.',reps:'10 toistoa / suunta',area:'a-se'},
+    {id:'h9',name:'Side lying rotation reach',desc:'Kyljelläsi. Kierrä yläkäsi taaksepäin, katse seuraa.',reps:'10 toistoa / puoli',area:'a-se'}
+  ]},
+  OP:{label:'Olkapää & palautuminen',subtitle:'Olkapää, selkä ja rentoutus · ~14 min',color:'var(--bl)',tcol:'var(--bd)',exercises:[
+    {id:'o1',name:'Olkapään kierto lattialla',desc:'Selällään 90°. Ulko- ja sisäkierto hitaasti, kyynärpää paikallaan.',reps:'12 toistoa / puoli',area:'a-ol'},
+    {id:'o2',name:'Doorway chest stretch',desc:'Käsi seinään 90°. Kierrä keho poispäin kunnes tuntuu rinnassa.',reps:'30 sek / puoli',area:'a-ol',st:true},
+    {id:'o3',name:'Thread the needle',desc:'Nelinkontin. Vie käsi lattian kautta toiselle puolelle.',reps:'10 toistoa / puoli',area:'a-se'},
+    {id:'o4',name:'Ranteen liikkuvuus',desc:'Nelinkontin, sormet taaksepäin. Kallista keho varovasti eteen.',reps:'20 sek + 10 toistoa',area:'a-ol'},
+    {id:'o5',name:'Piriformis venytys',desc:'Selällään, toinen jalka toisen polven yli. Vedä jalat kohti rintaa.',reps:'45 sek / puoli',area:'a-lo',st:true},
+    {id:'o6',name:'Supine twist',desc:'Selällään, polvi ristiin toiselle puolelle. Katse vastakkaiseen.',reps:'45 sek / puoli',area:'a-se',st:true},
+    {id:'o7',name:'Lapsi-asento',desc:'Polvillaan, kädet eteen. Hengitä vatsan kautta, rentouta.',reps:'45 sekuntia',area:'a-lo',st:true},
+    {id:'o8',name:'Diaphragm breathing',desc:'Selällään. Nenän kautta sisään (vatsa nousee), suu auki ulos.',reps:'10 rauhallista hengitystä',area:'a-co'},
+    {id:'o9',name:'Legs up the wall',desc:'Selällään, jalat seinää vasten 90°. Täysi rentoutuminen.',reps:'2–3 minuuttia',area:'a-co'}
+  ]}
+};
+// Minkä tyyppinen sessio päivälle kuuluu: su = Olkapää & palautuminen, muut päivät = Lonkka & rintakehä.
+// Vaihe 2:ssa täyttä liikkuvuutta on vain sunnuntaisin, joten silloin tyypit vuorottelevat viikoittain (pariton vk = HT, parillinen = OP).
+function mobTypeFor(ds){
+  const dow=new Date(ds+'T12:00:00').getDay();
+  if(dow!==0)return 'HT';
+  const ws=weekStartOf(ds);
+  if(offseasonPhaseOf(ws)===2){const n2=Math.floor(daysBetweenDs('2026-12-07',ws)/7)+1;return (n2%2===1)?'HT':'OP';}
+  return 'OP';
+}
+function setMobType(t){mobTypeSel=t;renderMob();}
 function renderMob(){
   const cont=document.getElementById('train-content');
-
-  // 4 different weekly rotations - each focuses on different areas
-  const MOB_ROTATIONS = {
-    A: {
-      label:'Rotaatio A – Lonkka & Selkä',
-      subtitle:'Heittoliikkeen perusta',
-      color:'var(--gl)', tcol:'var(--gd)',
-      exercises:[
-        {id:'a1',name:'90/90 lonkan avaus',desc:'Istu 90/90. Nojaa eteen etujalan yli, selkä suorana.',reps:'45 sek / puoli',area:'a-lo'},
-        {id:'a2',name:'Rintakehän kierto lattialla',desc:'Kyljelläsi, polvet 90°. Vie käsi auki taaksepäin hitaasti.',reps:'10 toistoa / puoli',area:'a-se'},
-        {id:'a3',name:'Kissalehmä hengityksen rytmissä',desc:'Nelinkontin. Pyöristä ja laske selkä sisäänhengityksen rytmissä.',reps:'12 toistoa',area:'a-se'},
-        {id:'a4',name:'Lonkan koukistajan venytys',desc:'Yhden polven polvistuminen. Eteen kunnes tuntuu etupuolella.',reps:'45 sek / puoli',area:'a-lo'},
-        {id:'a5',name:"World's greatest stretch",desc:'Askelkyykky + rintakehän avaus kiertämällä ylös.',reps:'5 toistoa / puoli',area:'a-ko'},
-        {id:'a6',name:'Hamstring selinmakuulla',desc:'Jalka ylös, polvi suorana. Vedä jalka kohti rintaa.',reps:'40 sek / jalka',area:'a-lo'},
-        {id:'a7',name:'Thoracic extension',desc:'Kädet niskan taakse, kyynärpäät taaksepäin – avaa rintakehä.',reps:'10 toistoa',area:'a-se'},
-      ]
-    },
-    B: {
-      label:'Rotaatio B – Olkapää & Yläraaja',
-      subtitle:'Heittoterveyttä & voimansiirtoa',
-      color:'var(--bl)', tcol:'var(--bd)',
-      exercises:[
-        {id:'b1',name:'Olkapään kierto lattialla',desc:'Selällään 90°. Ulko- ja sisäkierto hitaasti, kyynärpää paikallaan.',reps:'12 toistoa / puoli',area:'a-ol'},
-        {id:'b2',name:'Lapapumppaus seisaaltaan',desc:'Kädet eteen – lapaluut loittonee. Vedä takaisin. Hidas tempo.',reps:'12 toistoa',area:'a-ol'},
-        {id:'b3',name:'Banded external rotation',desc:'Vastuskummi, kyynärpää 90°. Kierrä kättä ulospäin hitaasti.',reps:'15 toistoa / käsi',area:'a-ol'},
-        {id:'b4',name:'Doorway chest stretch',desc:'Käsi seinään 90°. Kierrä keho poispäin kunnes tuntuu rinnassa.',reps:'30 sek / puoli',area:'a-ol'},
-        {id:'b5',name:'Thread the needle',desc:'Nelinkontin. Vie käsi lattian kautta toiselle puolelle.',reps:'10 toistoa / puoli',area:'a-se'},
-        {id:'b6',name:'Diaphragm breathing',desc:'Selällään. Nenän kautta sisään (vatsa nousee), suu auki ulos.',reps:'10 rauhallista hengitystä',area:'a-co'},
-        {id:'b7',name:'Ranteen liikkuvuus',desc:'Nelinkontin, sormet taaksepäin. Kallista keho varovasti eteen.',reps:'20 sek + 10 toistoa',area:'a-ol'},
-      ]
-    },
-    C: {
-      label:'Rotaatio C – Koko keho & Rotaatio',
-      subtitle:'Heittospesifi liikkuvuus',
-      color:'var(--pl)', tcol:'var(--pd)',
-      exercises:[
-        {id:'c1',name:'Hip 90/90 aktiivinen siirto',desc:'Istu 90/90. Nosta takajalka ylös pitäen asento. Vaihda puolta.',reps:'8 toistoa / suunta',area:'a-lo'},
-        {id:'c2',name:'Pallonheitto seinään – lämmittely',desc:'3 kg pallo. Koko kehon kierto, ei maksimivoimaa.',reps:'20 heittoa / suunta',area:'a-ko'},
-        {id:'c3',name:'Kossack squat',desc:'Leveä haara-asento. Kyykky sivulle, toinen jalka suorana.',reps:'8 toistoa / puoli',area:'a-lo'},
-        {id:'c4',name:'Rintakehän kiertokulma seisaaltaan',desc:'Kädet rinnalle. Kierrä yläkeho max eteen ja taakse.',reps:'10 toistoa / suunta',area:'a-se'},
-        {id:'c5',name:'Hip flexor + rotaatio',desc:'Lonkan koukistajan venytys + lisää ylärangan kierto samalla.',reps:'30 sek + 5 kierrosta / puoli',area:'a-ko'},
-        {id:'c6',name:'Inchworm kävelyyn',desc:'Seiso, taivuta eteen, kävele käsillä lankku-asentoon ja takaisin.',reps:'6 toistoa',area:'a-ko'},
-        {id:'c7',name:'Side lying rotation reach',desc:'Kyljelläsi. Kierrä yläkäsi taaksepäin, katse seuraa.',reps:'10 toistoa / puoli',area:'a-se'},
-      ]
-    },
-    D: {
-      label:'Rotaatio D – Palautuminen & Core',
-      subtitle:'Kevyt viikko tai kisaviikko',
-      color:'var(--al)', tcol:'var(--ad)',
-      exercises:[
-        {id:'d1',name:'Lapsi-asento',desc:'Polvillaan, kädet eteen. Hengitä vatsan kautta, rentouta.',reps:'60 sekuntia',area:'a-lo'},
-        {id:'d2',name:'Supine twist',desc:'Selällään, polvi ristiin toiselle puolelle. Katse vastakkaiseen.',reps:'45 sek / puoli',area:'a-se'},
-        {id:'d3',name:'Dead bug',desc:'Selällään, kaikki raajat ylös. Laske vastakkainen käsi+jalka hitaasti.',reps:'8 toistoa / puoli',area:'a-co'},
-        {id:'d4',name:'Pirifomis venytys',desc:'Selällään, toinen jalka toisen polven yli. Vedä jalat kohti rintaa.',reps:'45 sek / puoli',area:'a-lo'},
-        {id:'d5',name:'Cat cow hengityksellä',desc:'Hidas kissalehmä: 4 sek sisään, 4 sek ulos. Täysi liike.',reps:'10 hengitystä',area:'a-se'},
-        {id:'d6',name:'Legs up the wall',desc:'Selällään, jalat seinää vasten 90°. Täysi rentoutuminen.',reps:'2–3 minuuttia',area:'a-co'},
-        {id:'d7',name:'Olkapään pendelum',desc:'Nojaa eteen, anna käden roikkua vapaasti. Pienet ympyrät.',reps:'30 sek / puoli',area:'a-ol'},
-      ]
-    }
-  };
-
+  const ds=pageDate();
+  const type=mobTypeSel||mobTypeFor(ds);
+  const rot=MOB_SETS[type];
+  const keyOf=function(ex){return 'mobd_'+ds+'_'+ex.id;};
   const AREA_LBLS={'a-lo':'Lonkka','a-se':'Selkä','a-ol':'Olkapää','a-ko':'Koko keho','a-co':'Core'};
-
-  // Determine rotation based on week number
-  const rotKeys=['A','B','C','D'];
-  const rotKey=rotKeys[(mobWk-1)%4];
-  const rot=MOB_ROTATIONS[rotKey];
-  const done=rot.exercises.filter(ex=>getSets('mob_'+mobWk+'_'+ex.id)>0).length;
+  const done=rot.exercises.filter(ex=>getSets(keyOf(ex))>0).length;
   const total=rot.exercises.length;
-
-  let h='<div class="wk-scroll" id="mob-wk"></div>';
-
-  // Rotation header
+  let h='<div style="display:flex;gap:6px;margin-bottom:10px">';
+  [['HT','Lonkka & rintakehä'],['OP','Olkapää & palautuminen']].forEach(function(t){
+    const on=t[0]===type;
+    h+='<button onclick="setMobType(\''+t[0]+'\')" style="flex:1;padding:8px 6px;border-radius:var(--r);border:1.5px solid '+(on?'var(--g)':'var(--border)')+';background:'+(on?'var(--gl)':'var(--bg)')+';color:'+(on?'var(--gd)':'var(--t2)')+';font-size:12px;font-weight:'+(on?'700':'500')+';cursor:pointer;font-family:inherit">'+t[1]+'</button>';
+  });
+  h+='</div>';
   h+='<div style="background:'+rot.color+';border-radius:var(--r);padding:12px 14px;margin-bottom:12px">';
   h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">';
   h+='<div style="font-size:13px;font-weight:700;color:'+rot.tcol+'">'+rot.label+'</div>';
   h+='<span style="font-size:11px;padding:2px 9px;border-radius:20px;background:'+rot.tcol+';color:#fff;font-weight:600">'+done+'/'+total+'</span>';
   h+='</div>';
-  h+='<div style="font-size:11px;color:'+rot.tcol+';opacity:.8">'+rot.subtitle+' · Viikko '+mobWk+'</div>';
+  h+='<div style="font-size:11px;color:'+rot.tcol+';opacity:.8">'+rot.subtitle+' · '+fiDate(ds)+'</div>';
   h+='</div>';
-
-  // Progress bar
-  const pct=Math.round(done/total*100);
-  h+='<div class="prog-bar" style="margin-bottom:14px"><div class="prog-fill" style="width:'+pct+'%;background:var(--g)"></div></div>';
-
-  // Exercise list
+  h+='<div class="prog-bar" style="margin-bottom:10px"><div class="prog-fill" style="width:'+Math.round(done/total*100)+'%;background:var(--g)"></div></div>';
+  h+='<div style="font-size:11px;color:var(--t2);margin-bottom:10px;line-height:1.5">Noin 10 min viikossa per alue riittää. Staattiset pidot enintään 45 s ja mieluiten treenin tai heittojen <b>jälkeen</b>; ennen nopeusheittoja tai nopeustreeniä vain dynaamiset liikkeet.</div>';
   h+='<div class="card card-p" id="mob-ex-list">';
   rot.exercises.forEach(function(ex){
-    var mobKey='mob_'+mobWk+'_'+ex.id;
-    var ck=getSets(mobKey)>0;
+    const mobKey=keyOf(ex); const ck=getSets(mobKey)>0;
     h+='<div class="mob-row" data-mobkey="'+mobKey+'">';
     h+='<div class="mob-cb'+(ck?' c':'')+'">'+(ck?'✓':'')+'</div>';
-    h+='<div style="flex:1">';
-    h+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">';
+    h+='<div style="flex:1"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">';
     h+='<span style="font-size:13px;font-weight:600">'+ex.name+'</span>';
     h+='<span class="area-tag '+ex.area+'">'+AREA_LBLS[ex.area]+'</span>';
+    if(ex.st)h+='<span style="font-size:9px;color:var(--t3)">staattinen pito</span>';
     h+='</div>';
     h+='<div style="font-size:11px;color:var(--t2);margin-top:1px;line-height:1.4">'+ex.desc+'</div>';
     h+='<div style="font-size:10px;color:var(--gd);font-weight:500;margin-top:2px">'+ex.reps+'</div>';
     h+='</div></div>';
-  });  h+='</div>';
-
-  // Rotation overview
-  h+='<div class="sect">4 viikon kiertokalenteri</div>';
-  h+='<div style="background:var(--card);border-radius:var(--r);padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
-  rotKeys.forEach(function(k){
-    const r=MOB_ROTATIONS[k];
-    const isCur=k===rotKey;
-    h+='<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:.5px solid var(--border)'+(k==='D'?';border:none':'')+';">';
-    h+='<div style="width:28px;height:28px;border-radius:50%;background:'+(isCur?r.tcol:'var(--border)')+';color:'+(isCur?'#fff':'var(--t2)')+';display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">'+k+'</div>';
-    h+='<div style="flex:1"><div style="font-size:12px;font-weight:'+(isCur?'600':'400')+';color:'+(isCur?r.tcol:'var(--text)')+'">'+r.label+'</div>';
-    h+='<div style="font-size:10px;color:var(--t3)">'+r.subtitle+'</div></div>';
-    if(isCur)h+='<span style="font-size:10px;padding:1px 7px;border-radius:20px;background:'+r.color+';color:'+r.tcol+';font-weight:600">Nyt</span>';
-    h+='</div>';
   });
   h+='</div>';
-
+  h+='<div style="font-size:11px;color:var(--t3);margin:8px 0 0">Päivittäinen yläselkärutiini (pika) on erillinen ja sen liikkeet eivät toistu tässä.</div>';
   if(done===total&&total>0){
-    h+='<div style="text-align:center;padding:14px;background:var(--gl);border-radius:var(--r);margin-top:8px">';
-    h+='<div style="font-size:28px">🎉</div>';
-    h+='<div style="font-size:14px;font-weight:600;color:var(--gd);margin-top:4px">Kaikki liikkeet tehty!</div>';
-    h+='</div>';
+    h+='<div style="text-align:center;padding:14px;background:var(--gl);border-radius:var(--r);margin-top:8px"><div style="font-size:28px">🎉</div><div style="font-size:14px;font-weight:600;color:var(--gd);margin-top:4px">Kaikki liikkeet tehty!</div></div>';
   }
-
   h+='<div class="page-spacer"></div>';cont.innerHTML=h;
-  mkWkTabs('mob-wk',mobWk,8,'setMobWk');
   var exList=cont.querySelector('#mob-ex-list');
   if(exList){
     function handleMobToggle(e){
@@ -3969,7 +3921,7 @@ function toggleMobQuick(key){
 
 function renderMobQuick(){
   const cont=document.getElementById('train-content');
-  const today=dateStr(new Date());
+  const today=pageDate();
   const done=MOB_QUICK_DAILY.filter(ex=>getSets('mobq_'+today+'_'+ex.id)>0).length;
   const total=MOB_QUICK_DAILY.length;
   const pct=Math.round(done/total*100);
