@@ -2985,31 +2985,31 @@ for(let w=5;w<=8;w++){
 }
 
 // Voima (Vaihe 1): Ma Jalkapäivä (strA), Ke Yläkroppa (strB), Pe Nopeustreeni (teho-sivu).
-// sets = sarjamäärä viikoille 1–8; lo/hi = toistoalue. Progressio (double progression): kun KAIKKI sarjat yltävät ylärajalle → nosta painoa step kg.
+// sets = sarjamäärä viikoille 1–8 (vakiosarjat vk 1–7, vk 8 kevennys −1 sarja; voima kasvaa painosta, ei sarjoista); lo/hi = toistoalue. Progressio (double progression): kun KAIKKI sarjat yltävät ylärajalle → nosta painoa step kg.
 // Säännöt: kaikissa liikkeissä vähintään 8 toistoa (nopeusliikkeet omalla sivullaan alle 6).
 const STR_RIR=[3,3,2,2,2,1,1,3];
 const STR_BLOCK_NAMES=['Totuttelu','Totuttelu','Kertymä','Kertymä','Kertymä','Huippuvolyymi','Huippuvolyymi','Kevennys'];
 const STR_DATA=[
   {id:'strA',name:'Jalkapäivä',exercises:[
-    {id:'sa2',name:'Takakyykky',detail:'Etureisi · pääliike',reps:'8–10',lo:8,hi:10,sets:[3,3,4,4,4,5,5,3],step:5,e1rm:true,hint:'Kantapäät maassa, hallittu syvyys.'},
-    {id:'sb1',name:'Maastaveto (suora tanko, hihnat)',detail:'Takaketju · pääliike',reps:'8',lo:8,hi:8,sets:[3,3,3,4,4,4,4,2],step:5,e1rm:true,hint:'Hihnat sallittu pidon säästämiseksi (käsi). Selkä neutraalina, lopeta sarja kun tekniikka heikkenee.'},
-    {id:'sj3',name:'Lantionojennus',detail:'Takaketju · pakara',reps:'10–12',lo:10,hi:12,sets:[2,3,3,3,3,4,4,2],step:5,hint:'Pidä ylhäällä 1 s.'},
-    {id:'sj4',name:'Askelkyykky käsipainoilla',detail:'Etureisi · jalkakohtainen vakaus',reps:'10 / jalka',lo:10,hi:10,sets:[2,3,3,3,3,4,4,2],step:2,hint:'Jalkakohtainen vakaus – heiton tukijalka. Kirjaa painona yhden käsipainon paino.'},
-    {id:'sj5',name:'Reiden koukistus',detail:'Takaketju · takareisi',reps:'12–15',lo:12,hi:15,sets:[2,3,3,3,3,3,3,2],step:2.5,hint:'Hidas laskeva vaihe.'},
-    {id:'sj7',name:'Pohkeet',detail:'Pohkeet',reps:'12–15',lo:12,hi:15,sets:[3,3,4,4,4,4,4,2],step:5,hint:'Täysi liikerata, tauko alhaalla.'},
+    {id:'sa2',name:'Takakyykky',detail:'Etureisi · pääliike',reps:'8–10',lo:8,hi:10,sets:[4,4,4,4,4,4,4,3],step:5,e1rm:true,hint:'Kantapäät maassa, hallittu syvyys.'},
+    {id:'sb1',name:'Maastaveto (suora tanko, hihnat)',detail:'Takaketju · pääliike',reps:'8',lo:8,hi:8,sets:[3,3,3,3,3,3,3,2],step:5,e1rm:true,hint:'Hihnat sallittu pidon säästämiseksi (käsi). Selkä neutraalina, lopeta sarja kun tekniikka heikkenee.'},
+    {id:'sj3',name:'Lantionojennus',detail:'Takaketju · pakara',reps:'10–12',lo:10,hi:12,sets:[3,3,3,3,3,3,3,2],step:5,hint:'Pidä ylhäällä 1 s.'},
+    {id:'sj4',name:'Askelkyykky käsipainoilla',detail:'Etureisi · jalkakohtainen vakaus',reps:'10 / jalka',lo:10,hi:10,sets:[3,3,3,3,3,3,3,2],step:2,hint:'Jalkakohtainen vakaus – heiton tukijalka. Kirjaa painona yhden käsipainon paino.'},
+    {id:'sj5',name:'Reiden koukistus',detail:'Takaketju · takareisi',reps:'12–15',lo:12,hi:15,sets:[3,3,3,3,3,3,3,2],step:2.5,hint:'Hidas laskeva vaihe.'},
+    {id:'sj7',name:'Pohkeet',detail:'Pohkeet',reps:'12–15',lo:12,hi:15,sets:[3,3,3,3,3,3,3,2],step:5,hint:'Täysi liikerata, tauko alhaalla.'},
     {id:'sj8',name:'Copenhagen plank',detail:'Lonkka · lähentäjät, nivelterveys',reps:'30 s / puoli',lo:30,hi:30,sets:[2,2,2,2,2,2,2,1],time:true,hint:'Päällimmäinen jalka penkin päällä. Kirjaa sekunnit per sarja. Etujalan lähentäjät osallistuvat lantion kiertoon.'},
     {id:'sj9',name:'Dead bug (voimapyörä, kun helppo)',detail:'Ydin · anti-ekstensio',reps:'8–10 / puoli',lo:8,hi:10,sets:[2,2,2,2,2,2,2,1],step:0,bw:true,hint:'Alaselkä kiinni lattiassa, hidas. Kun helppo: ab wheel polvilta, lyhyellä liikeradalla.'}
   ]},
   {id:'strB',name:'Yläkroppa',exercises:[
-    {id:'sy1',name:'Penkkipunnerrus',detail:'Rinta · pääliike',reps:'8–10',lo:8,hi:10,sets:[3,3,4,4,4,5,5,3],step:2.5,e1rm:true,hint:'Spotteri tai turvatelineet.'},
-    {id:'sb3',name:'Leuanveto (lisäpaino kun 10+ toistoa)',detail:'Selkä · pääliike',reps:'8–10',lo:8,hi:10,sets:[3,3,4,4,4,5,5,3],step:2.5,bw:true,hint:'Täysi ojennus alhaalla. Kirjaa lisäpaino (0 = kehonpaino).'},
-    {id:'sy3',name:'Käsipainosoutu',detail:'Selkä · veto',reps:'10–12 / käsi',lo:10,hi:12,sets:[3,3,4,4,4,4,4,2],step:2,hint:'Vetoa vähintään yhtä paljon kuin työntöä (olkapään terveys).'},
-    {id:'sy4',name:'Vinopenkki käsipainoilla',detail:'Rinta · yläosa',reps:'10–12',lo:10,hi:12,sets:[2,3,3,3,3,3,3,2],step:2,hint:'Kirjaa painona yhden käsipainon paino.'},
-    {id:'sy5',name:'Pystypunnerrus käsipainoilla',detail:'Olkapäät',reps:'10–12',lo:10,hi:12,sets:[2,3,3,3,3,3,3,2],step:2,hint:'Hallittu, ei selän notkoa.'},
+    {id:'sy1',name:'Penkkipunnerrus',detail:'Rinta · pääliike',reps:'8–10',lo:8,hi:10,sets:[4,4,4,4,4,4,4,3],step:2.5,e1rm:true,hint:'Spotteri tai turvatelineet.'},
+    {id:'sb3',name:'Leuanveto (lisäpaino kun 10+ toistoa)',detail:'Selkä · pääliike',reps:'8–10',lo:8,hi:10,sets:[4,4,4,4,4,4,4,3],step:2.5,bw:true,hint:'Täysi ojennus alhaalla. Kirjaa lisäpaino (0 = kehonpaino).'},
+    {id:'sy3',name:'Käsipainosoutu',detail:'Selkä · veto',reps:'10–12 / käsi',lo:10,hi:12,sets:[3,3,3,3,3,3,3,2],step:2,hint:'Vetoa vähintään yhtä paljon kuin työntöä (olkapään terveys).'},
+    {id:'sy4',name:'Vinopenkki käsipainoilla',detail:'Rinta · yläosa',reps:'10–12',lo:10,hi:12,sets:[3,3,3,3,3,3,3,2],step:2,hint:'Kirjaa painona yhden käsipainon paino.'},
+    {id:'sy5',name:'Pystypunnerrus käsipainoilla',detail:'Olkapäät',reps:'10–12',lo:10,hi:12,sets:[3,3,3,3,3,3,3,2],step:2,hint:'Hallittu, ei selän notkoa.'},
     {id:'sy7',name:'Face pull',detail:'Olkapäät · takaolkapää ja lapa',reps:'15',lo:15,hi:15,sets:[3,3,3,3,3,3,3,2],step:2.5,hint:'Heittäjän olkapää: kyynärpäät korkealla.'},
     {id:'sy8',name:'Ulkokierto (kaapeli tai kuminauha)',detail:'Olkapäät · rotaattorit, nivelterveys',reps:'15 / käsi',lo:15,hi:15,sets:[2,2,2,2,2,2,2,2],step:1,hint:'Kyynärpää kiinni kyljessä.'}
   ]},
-  {id:'strN',name:'Nopeustreeni',note:'Nopeusliikkeet alle 6 toistoa/sarja · lepo 90–120 s (rinnalleveto 2–3 min) · laatu ennen väsymystä, lopeta sarja kun korkeus tai nopeus laskee. Lopuksi pakollinen ydinlohko (~12 min). Lajinopeutta harjoitellaan heittotreeneissä.',exercises:[
+  {id:'strN',name:'Nopeustreeni',note:'Nopeusliikkeet alle 6 toistoa/sarja · lepo 90–120 s (rinnalleveto 2–3 min) · laatu ennen väsymystä, lopeta sarja kun korkeus tai nopeus laskee. Nopeusliikkeiden jälkeen kevyt kyykky ja penkki (toinen viikkokerta, ~10 min), lopuksi pakollinen ydinlohko (~12 min). Lajinopeutta harjoitellaan heittotreeneissä.',exercises:[
     {id:'sn0',sp:true,prog:'q',noW:false,name:'Rinnalleveto (hang power clean)',detail:'Nopeus · lonkan räjähtävä ojennus',reps:'3',lo:3,hi:3,sets:[2,3,4,4,4,4,4,2],step:2.5,load:{type:'fixed',text:'Vk 1–2 kevyt tekniikkapaino, vk 3–7 noin 70–80 % maksimista'},hint:'Nosto polven/reiden puolivälistä, räjähtävä lonkanojennus. Lepo 2–3 min. Jos ranne tai leikattu käsi kipeytyy kiinniotossa → vaihda hang high pull (ei kiinniottoa).'},
     {id:'sn1',sp:true,name:'Boxi yhdellä jalalla',detail:'Nopeus · yhden jalan voima',reps:'3 / jalka',lo:3,hi:3,sets:[2,3,3,3,3,3,3,2],load:{type:'box',base:30,cap:55},wlabel:'Boxin korkeus (cm)',wunit:'cm',hint:'Pehmeä alastulo, polvi ei sisäänpäin. Tauko jokaisen toiston välillä.'},
     {id:'sn2',sp:true,noW:true,name:'Boxi yhdellä jalalla, toistuva',detail:'Nopeus · reaktiivinen voima',reps:'5 / jalka',lo:5,hi:5,sets:[2,2,2,2,2,2,2,1],load:{type:'fixed',text:'Matala boxi 20–25 cm, lyhyt kontakti'},hint:'Reaktiivinen: ponnista heti alastulosta, ei taukoa.'},
@@ -3017,6 +3017,8 @@ const STR_DATA=[
     {id:'sn5',sp:true,name:'Pallo ala (underhand ball throw)',detail:'Nopeus · koko kehon teho',reps:'4',lo:4,hi:4,sets:[2,3,3,3,3,3,3,2],load:{type:'ball'},wlabel:'Pallon paino (kg)',hint:'Koko keho: jalat–lantio–kädet.'},
     {id:'sn6',sp:true,name:'Pallo seinään, rotaatio',detail:'Nopeus · kierron voima (lähin siirto heittoon)',reps:'4 / suunta',lo:4,hi:4,sets:[2,3,3,3,3,3,3,2],load:{type:'fixed',text:'Pallo 3–4 kg, maksiminopeus'},wlabel:'Pallon paino (kg)',hint:'Lantio johtaa, olkapää seuraa.'},
     {id:'sn7',sp:true,prog:'q',name:'Pallo slam',detail:'Nopeus · veto ja vartalo',reps:'5',lo:5,hi:5,sets:[2,3,3,3,3,3,3,2],step:1,load:{type:'fixed',text:'Pallo 4 kg → 6 kg, kun nopeus säilyy'},wlabel:'Pallon paino (kg)',hint:'Nosta pallo ylös kuin heittoon ja lyö lattiaan koko vartalolla, lantio mukana. Lopeta sarja kun nopeus laskee.'},
+    {id:'sl1',sp:true,grp:'light',ref:'sa2',refPct:0.85,name:'Kevyt takakyykky (toinen viikkokerta)',detail:'Voima · kevyt, tekniikka ja toinen viikkokerta',reps:'8',lo:8,hi:8,sets:[2,2,2,2,2,2,2,1],step:0,wlabel:'Paino kg',hint:'Noin 85 % jalkapäivän painosta, 4+ toistoa varastoon. Ei uupumukseen: kevyt ja nopea tahti, tekniikka kunnossa.'},
+    {id:'sl2',sp:true,grp:'light',ref:'sy1',refPct:0.85,name:'Kevyt penkkipunnerrus (toinen viikkokerta)',detail:'Voima · kevyt, tekniikka ja toinen viikkokerta',reps:'8',lo:8,hi:8,sets:[2,2,2,2,2,2,2,1],step:0,wlabel:'Paino kg',hint:'Noin 85 % yläkroppapäivän painosta, 4+ toistoa varastoon. Ei uupumukseen: kevyt ja nopea tahti.'},
     {id:'sc1',sp:true,grp:'core',prog:true,name:'Pallof-puristus (anti-rotaatio)',detail:'Ydin · kierron vastustus',reps:'10 / puoli',lo:10,hi:10,sets:[2,3,3,3,3,3,3,2],step:2.5,wlabel:'Kuorma (kg tai vastus)',hint:'Kaapeli tai kuminauha. Vastustaa kiertoa: heiton ydinvakaus.'},
     {id:'sc2',sp:true,grp:'core',prog:true,name:'Rotaatio: woodchop tai landmine-kierto',detail:'Ydin · kierron voima',reps:'10 / puoli',lo:10,hi:10,sets:[2,3,3,3,3,3,3,2],step:2.5,wlabel:'Kuorma (kg)',hint:'Voima lantiosta ja vartalosta kierrossa. Kontrolloitu; lisää kuormaa kun 10 toistoa tuntuu kevyeltä.'},
     {id:'sc3',sp:true,grp:'core',noW:true,name:'Dead bug',detail:'Ydin · anti-ekstensio',reps:'8–10 / puoli',lo:8,hi:10,sets:[2,3,3,3,3,3,3,2],hint:'Alaselkä kiinni lattiassa, hidas. Vaikeampi: ab wheel polvilta.'},
@@ -3112,7 +3114,7 @@ function renderSessionPick(){
     heitto_tek:'RPE 3–4 · Tekniikkasarjat · ~1h',
     heitto_nop:'RPE 10 · Maksiminopeus · ~1h',
     voima_c:'2 sarjaa/liike · ~15 min · Olkapää + lonkka',
-    teho:'Rinnalleveto, boxi, pallo, pallo slam + pakollinen ydinlohko · ~55 min',
+    teho:'Rinnalleveto, boxi, pallo, pallo slam + kevyt kyykky/penkki + pakollinen ydinlohko · ~65 min',
     voima_a:'8+ toistoa · ~65 min · Kyykky, veto, jalat',
     voima_b:'8+ toistoa · ~65 min · Penkki, veto, olkapäät',
     hermosto:'Box breathing aamu+ilta · 4-6 vk automatisoituu',
@@ -3311,6 +3313,15 @@ function strStartHint(sp,ex){
 }
 // Painoehdotus edellisen viikon painosta ja toistoista (double progression)
 function strSuggest(sp,ex,cfg){
+  if(ex.ref){
+    // kevyt toinen viikkokerta: paino = osuus pääsession painosta (tältä viikolta, muuten viimeisimmältä kirjatulta)
+    let rw=null;
+    for(let w=sp.wk;w>=1&&rw===null;w--){const v=get('wt_'+sp.ns+'_w'+w+'_'+ex.ref);if(v!==undefined&&v!==null&&v!==''&&parseFloat(v)>0)rw={v:parseFloat(v),w:w};}
+    const pct=Math.round(ex.refPct*100);
+    if(!rw)return{text:'Käytä noin '+pct+' % pääsession painosta (kirjaa ensin '+(ex.ref==='sa2'?'jalkapäivän kyykky':'yläkroppapäivän penkki')+').'};
+    const lw=Math.round(rw.v*ex.refPct/2.5)*2.5;
+    return{text:'Kevyt: '+lw+' kg ('+pct+' % painosta '+rw.v+' kg'+(rw.w<sp.wk?', vk '+rw.w:'')+'), 4+ toistoa varastoon',weight:lw};
+  }
   if(ex.time)return null;
   const lt=ex.load?nopLoadText(ex,{eff:sp.eff||sp.wk}):'';
   if(ex.load&&!ex.prog)return lt?{text:'Tänään: '+lt}:null;
@@ -3333,6 +3344,42 @@ function strSuggest(sp,ex,cfg){
   }
   if(belowLo)return{text:'Edellinen vk: '+prev.rr.join(',')+' – jäi alle toistoalueen. Pysy samassa ('+prev.pw+' kg) tai laske 5 % ('+strRound(prev.pw*0.95)+' kg)',weight:prev.pw};
   return{text:'Pysy samassa painossa ('+prev.pw+' kg), tavoite '+ex.hi+' toistoa joka sarjaan',weight:prev.pw};
+}
+// Pääliikkeiden kehitys: viikon paras sarja (paino × toistot) ja arvioitu 1RM; muutos = paras ensimmäiseen kirjattuun viikkoon verrattuna
+function strProgressHtml(sp){
+  if(sp.id==='PC'||sp.id==='P4')return '';
+  const lifts=[{id:'sa2',lbl:'Kyykky'},{id:'sb1',lbl:'Maastaveto'},{id:'sy1',lbl:'Penkki'},{id:'sb3',lbl:'Leuat',bw:true}];
+  const cellOf=function(l,w){
+    const wt=get('wt_'+sp.ns+'_w'+w+'_'+l.id), rr=strParseReps(get('rp_'+sp.ns+'_w'+w+'_'+l.id));
+    if(wt===undefined||wt===null||wt===''||!rr.length)return null;
+    const wv=parseFloat(wt)||0, mr=Math.max.apply(null,rr);
+    return {w:wv,r:mr,e:l.bw?null:strE1rm(wv,rr)};
+  };
+  const data=lifts.map(function(l){const a=[];for(let w=1;w<=sp.weeks;w++)a.push(cellOf(l,w));return a;});
+  const th='style="padding:4px 2px;color:var(--t3);font-weight:600"';
+  let h='<div class="card card-p" style="margin-top:12px"><div style="font-size:13px;font-weight:700;margin-bottom:2px">📈 Pääliikkeiden kehitys</div><div style="font-size:11px;color:var(--t2);margin-bottom:8px">Viikon paras sarja (paino × toistot) ja arvioitu 1RM (Epley, pienellä). Voima kasvaa painosta, joten seuraa tästä painojen nousua.</div>';
+  h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px;text-align:center"><tr><th style="text-align:left;padding:4px 2px;color:var(--t3);font-weight:600">Vk</th>'+lifts.map(function(l){return '<th '+th+'>'+l.lbl+'</th>';}).join('')+'</tr>';
+  for(let w=1;w<=sp.weeks;w++){
+    const cur=w===sp.wk;
+    h+='<tr style="'+(cur?'background:var(--gl)':'')+'"><td style="text-align:left;padding:4px 2px;font-weight:'+(cur?'700':'500')+'">'+w+'</td>';
+    lifts.forEach(function(l,i){const c=data[i][w-1];h+='<td style="padding:4px 2px;border-top:.5px solid var(--border)">'+(c?('<b>'+(l.bw?'+':'')+c.w+'×'+c.r+'</b>'+(c.e!==null?'<div style="color:var(--t3);font-size:10px">'+c.e+'</div>':'')):'<span style="color:var(--t3)">–</span>')+'</td>';});
+    h+='</tr>';
+  }
+  h+='<tr><td style="text-align:left;padding:6px 2px;font-weight:700;border-top:1px solid var(--border)">Muutos</td>';
+  lifts.forEach(function(l,i){
+    const logged=data[i].filter(function(c){return c;});
+    let txt='<span style="color:var(--t3)">–</span>';
+    if(logged.length>=2){
+      const a=logged[0];
+      const b=logged.reduce(function(m,c){return (l.bw?c.w>m.w:c.e>m.e)?c:m;},a);
+      const v=l.bw?(b.w-a.w):(b.e-a.e);
+      const pct=(!l.bw&&a.e)?' ('+(v>=0?'+':'')+Math.round(v/a.e*100)+' %)':'';
+      txt='<b style="color:'+(v>=0?'var(--gd)':'#C62828')+'">'+(v>0?'+':'')+(Math.round(v*10)/10)+' kg'+pct+'</b>';
+    }
+    h+='<td style="padding:6px 2px;border-top:1px solid var(--border)">'+txt+'</td>';
+  });
+  h+='</tr></table></div><div style="font-size:10px;color:var(--t3);margin-top:6px">Muutos = paras viikko verrattuna ensimmäiseen kirjattuun viikkoon (arvioitu 1RM, leuoilla lisäpaino). Kevennysviikko ei laske tulosta.</div></div>';
+  return h;
 }
 function strRepsSet(key,val){set(key,strParseReps(val).join(','));renderStr();}
 function strWeightSet(key,val){set(key,val);renderStr();}
@@ -3382,7 +3429,7 @@ function renderStr(){
     let lastGrp=null;
     exs.forEach(ex=>{
       const grpKey=ex.grp||'';
-      if(sess.id==='strN'&&grpKey!==lastGrp){lastGrp=grpKey;h+=`<div class="sect" style="margin:10px 0 6px">${({'':'Nopeusliikkeet (alle 6 toistoa)',core:'Ydinlohko (pakollinen, ~12 min)',opt:'Täydentävä osa (valinnainen, ~10 min)'})[grpKey]}</div>`;}
+      if(sess.id==='strN'&&grpKey!==lastGrp){lastGrp=grpKey;h+=`<div class="sect" style="margin:10px 0 6px">${({'':'Nopeusliikkeet (alle 6 toistoa)',light:'Kevyt voima – toinen viikkokerta (~10 min)',core:'Ydinlohko (pakollinen, ~12 min)',opt:'Täydentävä osa (valinnainen, ~10 min)'})[grpKey]}</div>`;}
       const c=sp.cfg(ex);
       const wKey=sp.ns+'_w'+sp.wk+'_'+ex.id; const rKey='rp_'+wKey;
       const curW=getW(wKey); const repsStr=get(rKey)||''; const rr=strParseReps(repsStr);
@@ -3417,6 +3464,7 @@ function renderStr(){
     </div></div>`;
   });
   if(strFiltered)h+='<button class="btn btn-out" style="width:100%;margin:8px 0" onclick="strShowAll=true;renderStr()">Näytä muut viikon voimaistunnot</button>';
+  h+=strProgressHtml(sp);
   h+='<div class="page-spacer"></div>';cont.innerHTML=h;
   mkWkTabs('str-wk',sp.wk,sp.weeks,'setStrWk');
 }
