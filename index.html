@@ -3549,7 +3549,7 @@ function renderPuttiTrain(){
     h+=`<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,.1)">`;
     h+=`<div style="font-size:11px;font-weight:700;color:${ph.tcol}">${pd.jakso} – ${pd.label}</div>`;
     h+=`<div style="font-size:12px;color:${ph.tcol};margin-top:2px">${mixStr} = <b>${perSess} puttia/sessio</b> · ${pd.sessions} sessiota/vk = <b>${pd.sessions*perSess} puttia/vk</b></div>`;
-    if(pd.pressure)h+=`<div style="font-size:11px;color:${ph.tcol};margin-top:6px;line-height:1.5">🔥 <b>Paine-sarja</b> joka sessioon: portaat 4 → 8 → 10 m, ohi = alusta (max 3 yritystä). Kirjaa onnistuiko.</div>`;
+    if(pd.pressure)h+=`<div style="font-size:11px;color:${ph.tcol};margin-top:6px;line-height:1.5">🔥 <b>Paine-sarja</b> joka sessioon: portaat 4 → 8 → 10 m, ohi = alusta (max 3 yritystä). Kirjaa tulos alla olevaan Paine-sarja-korttiin.</div>`;
     h+=`</div>`;
   }
   h+='</div>';
@@ -3634,6 +3634,7 @@ function renderPuttiTrain(){
   }
   h+='</div>';
   h+='</div>';
+  if(viewPhase===4&&puttiDataFor(pageDate(),putWk).pressure)h+=puttiPaineHtml(today2);
 
   // Prosentit C1/C2 jaoteltuna
   h+='<div class="sect">Puttausprosentit</div>';
@@ -3846,6 +3847,33 @@ function renderPuttiInputs(){
       <span style="color:var(--t3);font-size:13px">/<\/span>
       <input type="number" id="pt-a-${d.key}" placeholder="0" inputmode="numeric">
     <\/div><\/div>`).join('');
+}
+// Paine-sarja (portaat 4 → 8 → 10 m): päiväkohtainen kirjaus {attempts:1–3, res:'ok'|'fail'}
+function getPuttiPaine(ds){return (get('putti_paine')||{})[ds]||{};}
+function puttiPaineSet(field,val){
+  const ds=dateStr(new Date()); const all=get('putti_paine')||{}; const r=Object.assign({},all[ds]||{});
+  r[field]=(r[field]===val)?null:val;      // toinen painallus samaan arvoon poistaa valinnan
+  all[ds]=r; set('putti_paine',all); renderPuttiTrain();
+}
+function puttiPaineHtml(ds){
+  const pr=getPuttiPaine(ds);
+  const btn=function(label,on,call){return '<button onclick="'+call+'" style="flex:1;padding:9px 6px;border-radius:var(--r);border:1.5px solid '+(on?'var(--g)':'var(--border)')+';background:'+(on?'var(--g)':'var(--bg)')+';color:'+(on?'#fff':'var(--text)')+';font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">'+label+'</button>';};
+  let h='<div class="card card-p" id="putti-paine-card" style="margin-bottom:10px"><div style="font-size:13px;font-weight:700;margin-bottom:2px">🔥 Paine-sarja: portaat 4 → 8 → 10 m</div>';
+  h+='<div style="font-size:11px;color:var(--t2);margin-bottom:8px;line-height:1.5">Putit pitää mennä sisään peräkkäin. Ohi = alusta. Enintään 3 yritystä. Kirjaa montako yritystä käytit ja onnistuitko.</div>';
+  h+='<div style="font-size:12px;color:var(--t2);margin-bottom:4px">Yritykset</div><div style="display:flex;gap:6px;margin-bottom:8px">';
+  [1,2,3].forEach(function(n){h+=btn(String(n),pr.attempts===n,"puttiPaineSet('attempts',"+n+")");});
+  h+='</div><div style="font-size:12px;color:var(--t2);margin-bottom:4px">Tulos</div><div style="display:flex;gap:6px;margin-bottom:8px">';
+  h+=btn('✅ Läpi',pr.res==='ok',"puttiPaineSet('res','ok')")+btn('❌ Ei onnistunut',pr.res==='fail',"puttiPaineSet('res','fail')");
+  h+='</div>';
+  const all=get('putti_paine')||{};
+  const keys=Object.keys(all).filter(function(k){return all[k]&&(all[k].res||all[k].attempts);}).sort().reverse();
+  if(keys.length){
+    const ok=keys.filter(function(k){return all[k].res==='ok';}).length, tot=keys.filter(function(k){return all[k].res==='ok'||all[k].res==='fail';}).length;
+    if(tot)h+='<div style="font-size:12px;font-weight:600;margin-top:2px">Läpi '+ok+'/'+tot+' kertaa</div>';
+    h+='<div style="font-size:11px;color:var(--t2);margin-top:4px;line-height:1.7">'+keys.slice(0,5).map(function(k){const r=all[k];return fiDate(k)+' · '+(r.attempts?r.attempts+' yr.':'–')+' '+(r.res==='ok'?'✅':r.res==='fail'?'❌':'');}).join('<br>')+'</div>';
+  }
+  h+='</div>';
+  return h;
 }
 function savePutti(){
   const sess={id:Date.now(),date:v('pt-date')};
