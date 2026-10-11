@@ -593,15 +593,29 @@ function sv(d){
   }
 }
 
+// get(): jäsennetty data välimuistissa. Aiemmin jokainen get() jäsensi koko datan uudelleen (~93 % Voima- ja Kalenteri-sivun renderöintiajasta).
+// Välimuisti tyhjennetään aina, kun pääavainta kirjoitetaan (myös suorat localStorage.setItem-kutsut) tai toinen välilehti muuttaa sitä.
+let _gCache=null;
+(function(){
+  const si=Storage.prototype.setItem, ri=Storage.prototype.removeItem, cl=Storage.prototype.clear;
+  Storage.prototype.setItem=function(k){ if(k===SK)_gCache=null; return si.apply(this,arguments); };
+  Storage.prototype.removeItem=function(k){ if(k===SK)_gCache=null; return ri.apply(this,arguments); };
+  Storage.prototype.clear=function(){ _gCache=null; return cl.apply(this,arguments); };
+  window.addEventListener('storage',function(e){ if(e.key===null||e.key===SK)_gCache=null; });
+})();
 function get(k){
-  try{
-    const d=ld();
-    return d[k];
-  }catch(e){
-    console.error('FrisbeePro: get error for key',k,e);
-    return null;
+    try{
+      if(_gCache===null)_gCache=ld();
+      const v=_gCache[k];
+      // objekteista ja taulukoista palautetaan kopio: kutsujat saavat muokata tulosta ilman että välimuisti muuttuu
+      return (v!==null&&typeof v==='object')?JSON.parse(JSON.stringify(v)):v;
+    }catch(e){
+      console.error('FrisbeePro: get error for key',k,e);
+      return null;
+    }
   }
-}
+// getRO(): vain luku -haku ilman kopiota (kuumille poluille, esim. kalenterin päiväkohtaiset haut). ÄLÄ muokkaa palautettua arvoa.
+function getRO(k){ try{ if(_gCache===null)_gCache=ld(); return _gCache[k]; }catch(e){ return null; } }
 
 function set(k,v){
   try{
@@ -618,7 +632,6 @@ function num(id){return parseFloat(document.getElementById(id)?.value)||null}
 function v(id){return document.getElementById(id)?.value||''}
 function setV(id,val){const el=document.getElementById(id);if(el)el.value=val}
 function flash(id){const el=document.getElementById(id);if(el){el.style.display='block';setTimeout(()=>{el.style.display='none'},2000)}}
-function now(){return new Date().toLocaleTimeString('fi',{hour:'2-digit',minute:'2-digit'})}
 
 // ===== GITHUB GIST SYNC =====
 const GIST_TOKEN_KEY='fpc_gist_token';
@@ -765,6 +778,10 @@ function mergeFpData3(remote,local,base){
   });
   return out;
 }
+// Laitekohtainen käyttöliittymätila (korttien auki/kiinni jne.) ei synkronoidu Gistiin: käynnistyssiivous poistaa sen paikallisesti,
+// mutta se palaisi muuten takaisin Gististä yhdistämisessä (ylimääräisiä versioita ja vanhoja avaimia).
+const FP_LOCAL_ONLY=/^(comp_open_|card_|sets_|putti_today_)/;
+function fpStripLocal(d){const o={};Object.keys(d).forEach(function(k){if(!FP_LOCAL_ONLY.test(k))o[k]=d[k];});return o;}
 const SYNC_BASE_KEY='fp_sync_base_v1';
 function getSyncBase(){try{const r=localStorage.getItem(SYNC_BASE_KEY);return r?JSON.parse(r):null;}catch(e){return null;}}
 function putSyncBase(d){try{localStorage.setItem(SYNC_BASE_KEY,JSON.stringify(d));}catch(e){console.error('FrisbeePro: sync base write error',e);}}
@@ -807,7 +824,7 @@ async function gistSave(){
     }catch(e){remoteOk=false;}
     // Ei sokkokirjoitusta: jos Gistin nykytilaa ei saatu luettua, ei kirjoiteta vanhalla paikallisella datalla yli
     if(!remoteOk){gistUpdateStatus('error','Gistin luku epäonnistui – tallennus yritetään uudelleen');return;}
-    const payload={version:1,updated:new Date().toISOString(),data:localData};
+    const payload={version:1,updated:new Date().toISOString(),data:fpStripLocal(localData)};
     const r=await fetch(`https://api.github.com/gists/${id}`,{
       method:'PATCH',
       headers:{Authorization:`token ${token}`,'Content-Type':'application/json','User-Agent':'frisbeepro'},
@@ -999,7 +1016,7 @@ const PUTTI_PHASES=[
   {n:1,title:'Vaihe 1 – Rutiinin oppiminen',short:'Rutiinin oppiminen',weeks:'Vk 1–2',freq:'3x viikossa · 20 min',focus:'Vain 4 metriä · 50 puttia · Rutiini joka putilla · Ei väliä meneekö sisään',col:'var(--gl)',tcol:'var(--gd)'},
   {n:2,title:'Vaihe 2 – Vakiinnus',short:'Vakiinnus',weeks:'Vk 3–4',freq:'3x viikossa · 25 min',focus:'4 m ja 8 m vuorotellen · 60 puttia · Kirjaa C1X% · Tavoite yli 85%',col:'var(--bl)',tcol:'var(--bd)'},
   {n:3,title:'Vaihe 3 – Kisapaine',short:'Kisapaine',weeks:'Vk 5–6',freq:'2x viikossa · 20 min',focus:'6 m:stä, 5 puttia sisään peräkkäin ennen lopetusta · Jos missaat → aloita alusta',col:'var(--al)',tcol:'var(--ad)'},
-  {n:4,title:'Vaihe 4 – Range-laajennus (off-season)',short:'Range-laajennus',weeks:'Off-season, 12 vk progressio',freq:'4–5x viikossa · 15–35 min',focus:'Progressiivinen 12 viikon ohjelma – katso viikkotavoite alta. TÄRKEÄÄ: sekoita etäisyydet satunnaiseen järjestykseen (älä lyö kaikkia 4m ensin, sitten 8m jne) – tuntuu vaikeammalta mutta tuottaa tutkitusti pysyvämmän oppimisen. 4 m tehdään aina viimeisenä sarjana (pakko-sisään väsyneenä).',col:'var(--rl)',tcol:'var(--rd)'}
+  {n:4,title:'Vaihe 4 – Range-laajennus (off-season)',short:'Range-laajennus',weeks:'Off-season, 16 vk progressio',freq:'4–5x viikossa · 15–35 min',focus:'Progressiivinen 16 viikon ohjelma (12 vk progressio + 4 vk paine-sarjat) – katso viikkotavoite alta. TÄRKEÄÄ: sekoita etäisyydet satunnaiseen järjestykseen (älä lyö kaikkia 4m ensin, sitten 8m jne) – tuntuu vaikeammalta mutta tuottaa tutkitusti pysyvämmän oppimisen. 4 m tehdään aina viimeisenä sarjana (pakko-sisään väsyneenä).',col:'var(--rl)',tcol:'var(--rd)'}
 ];
 
 // Vaihe 4 (off-season) viikkokohtainen progressio, 12 viikkoa 2x6vk-lohkoina (samalla periaatteella kuin Merelän tuotteissa):
@@ -1030,11 +1047,6 @@ function puttiDataFor(ds,wk){
   const w=Math.max(1,Math.min(16,wk));
   return Object.assign({},PUTTI_P4_WEEKS[w-1],{label:'Viikko '+w});
 }
-function puttP4WeekTotal(wk){ // puttia / sessio
-  const m=PUTTI_P4_WEEKS[Math.min(wk,16)-1].mix;
-  return Object.values(m).reduce((a,b)=>a+b,0);
-}
-function puttP4WeekSessions(wk){return PUTTI_P4_WEEKS[Math.min(wk,16)-1].sessions;}
 
 // Migraatio vanhoista avaimista → uudet C1/C2 avaimet
 (function migratePuttiDists(){
@@ -2103,7 +2115,6 @@ async function fetchMetrixCourse(prefix){
     }
     const comp=d.Competition;
     const courseId=comp.CourseID;
-    const courseName=comp.CourseName?.replace(/&rarr;/g,'→')||comp.Name;
     // Fetch course details for rating and par
     let rating='',par='',holes=0;
     if(courseId){
@@ -2483,7 +2494,7 @@ function buildWeekPlan(weekDates) {
       dayPlan = { ...WEEK_STRUCTURE.comp, note: compNote, day: base[i].day, label: base[i].label, date: ds };
     } else if (isVK) {
       // Viikkokisa korvaa treenisuunnitelman mutta ei laukaise comp_week rakennetta
-      const vkEvent = (get('events')||[]).find(e => e.type==='viikkokisa' && e.date===ds);
+      const vkEvent = (getRO('events')||[]).find(e => e.type==='viikkokisa' && e.date===ds);
       const vkName = vkEvent ? vkEvent.name : 'Viikkokisa';
       dayPlan = {
         ...WEEK_STRUCTURE.comp,
@@ -2496,24 +2507,24 @@ function buildWeekPlan(weekDates) {
       };
     } else if (isPreComp) {
       dayPlan = { ...WEEK_STRUCTURE.pre_comp, day: base[i].day, label: base[i].label, date: ds };
-    } else if ((get('events')||[]).some(e => e.type==='harjoitus' && e.date===ds)) {
-      const hEvent = (get('events')||[]).find(e => e.type==='harjoitus' && e.date===ds);
+    } else if ((getRO('events')||[]).some(e => e.type==='harjoitus' && e.date===ds)) {
+      const hEvent = (getRO('events')||[]).find(e => e.type==='harjoitus' && e.date===ds);
       dayPlan = { day: base[i].day, label: base[i].label, date: ds, sessions:['kierros'], icon:'🏃', intensity:'low', note: hEvent.name };
-    } else if ((get('events')||[]).some(e => e.type==='loma' && ds>=e.date && ds<=(e.dateTo||e.date))) {
-      const lomaEvent = (get('events')||[]).find(e => e.type==='loma' && ds>=e.date && ds<=(e.dateTo||e.date));
+    } else if ((getRO('events')||[]).some(e => e.type==='loma' && ds>=e.date && ds<=(e.dateTo||e.date))) {
+      const lomaEvent = (getRO('events')||[]).find(e => e.type==='loma' && ds>=e.date && ds<=(e.dateTo||e.date));
       dayPlan = { day: base[i].day, label: base[i].label, date: ds, sessions:['lepo'], icon:(lomaEvent.icon||'🏖️'), intensity:'rest', note: lomaEvent.name };
-    } else if ((get('events')||[]).some(e => e.type==='palautus' && e.date===ds)) {
-      const pEvent = (get('events')||[]).find(e => e.type==='palautus' && e.date===ds);
+    } else if ((getRO('events')||[]).some(e => e.type==='palautus' && e.date===ds)) {
+      const pEvent = (getRO('events')||[]).find(e => e.type==='palautus' && e.date===ds);
       dayPlan = { day: base[i].day, label: base[i].label, date: ds, sessions:(pEvent.sessions&&pEvent.sessions.length)?pEvent.sessions:['heitto_tek','putti'], icon:(pEvent.icon||'🔄'), intensity:'low', note: pEvent.name };
     } else {
       dayPlan = { ...base[i], date: ds };
       // Peruskunto (matala-tehoinen aerobinen pohja): to + su vaiheissa 1-2, vain su vaiheessa 3; ei testipäivänä eikä sitä edeltävänä päivänä
-      // Putti Vaihe 4 (12 vk, alkaen 12.10.): ti, ke, to, la, ja pe 26.10. alkaen. Ke ja pe putti ENNEN voimaharjoitusta.
+      // Putti Vaihe 4 (16 vk, alkaen 12.10.): ti, ke, to, la, ja pe 26.10. alkaen. Ke ja pe putti ENNEN voimaharjoitusta.
       const wsDs = dateStr(weekDates[0]);
       const puttiProgWeek = (isOffseasonP1 || isOffseasonP2) && wsDs >= '2026-10-12' && wsDs <= '2027-01-25';
       if(puttiProgWeek && !dayPlan.sessions.includes('putti') && !dayPlan.sessions.includes('lepo')){
         const ndp = new Date(weekDates[i]); ndp.setDate(ndp.getDate()+1);
-        const testNearP = (get('events')||[]).some(e => e.type==='testi' && (e.date===ds || e.date===dateStr(ndp)));
+        const testNearP = (getRO('events')||[]).some(e => e.type==='testi' && (e.date===ds || e.date===dateStr(ndp)));
         const addPutti = (i===1) || (i===2) || (i===4 && wsDs >= '2026-10-26');
         if(addPutti && !testNearP){
           const before = (i===2 || i===4) ? (dayPlan.sessions.some(s=>s==='voima_a'||s==='voima_b') ? ' (ennen voimaa)' : dayPlan.sessions.includes('teho') ? ' (ennen tehoa)' : '') : '';
@@ -2524,7 +2535,7 @@ function buildWeekPlan(weekDates) {
       const pkDay = (i===6) || (i===3 && !isOffseasonP3);
       if(pkPhase && pkDay && dateStr(weekDates[0])>=pkStart()){
         const nd = new Date(weekDates[i]); nd.setDate(nd.getDate()+1);
-        const testNear = (get('events')||[]).some(e => e.type==='testi' && (e.date===ds || e.date===dateStr(nd)));
+        const testNear = (getRO('events')||[]).some(e => e.type==='testi' && (e.date===ds || e.date===dateStr(nd)));
         if(!testNear){
           dayPlan = { ...dayPlan, sessions:[...dayPlan.sessions,'peruskunto'], note: dayPlan.note+' + peruskunto '+pkTargetMin(ds)+' min' };
         }
@@ -3010,7 +3021,7 @@ const STR_DATA=[
     {id:'sy8',name:'Ulkokierto (kaapeli tai kuminauha)',detail:'Olkapäät · rotaattorit, nivelterveys',reps:'15 / käsi',lo:15,hi:15,sets:[2,2,2,2,2,2,2,2],step:1,hint:'Kyynärpää kiinni kyljessä.'}
   ]},
   {id:'strN',name:'Nopeustreeni',note:'Nopeusliikkeet alle 6 toistoa/sarja · lepo 90–120 s (rinnalleveto 2–3 min) · laatu ennen väsymystä, lopeta sarja kun korkeus tai nopeus laskee. Nopeusliikkeiden jälkeen kevyt kyykky ja penkki (toinen viikkokerta, ~10 min), lopuksi pakollinen ydinlohko (~12 min). Lajinopeutta harjoitellaan heittotreeneissä.',exercises:[
-    {id:'sn0',sp:true,prog:'q',noW:false,name:'Rinnalleveto (hang power clean)',detail:'Nopeus · lonkan räjähtävä ojennus',reps:'3',lo:3,hi:3,sets:[2,3,4,4,4,4,4,2],step:2.5,load:{type:'fixed',text:'Vk 1–2 kevyt tekniikkapaino, vk 3–7 noin 70–80 % maksimista'},hint:'Nosto polven/reiden puolivälistä, räjähtävä lonkanojennus. Lepo 2–3 min. Jos ranne tai leikattu käsi kipeytyy kiinniotossa → vaihda hang high pull (ei kiinniottoa).'},
+    {id:'sn0',sp:true,prog:'q',noW:false,name:'Rinnalleveto (hang power clean)',detail:'Nopeus · lonkan räjähtävä ojennus',reps:'3',lo:3,hi:3,sets:[2,3,4,4,4,4,4,2],step:2.5,load:{type:'fixed',text:'Vk 1–2 kevyt tekniikkapaino, vk 3–7 noin 70–80 % maksimista'},hint:'Nosto polven/reiden puolivälistä, räjähtävä lonkanojennus. Lepo 2–3 min. Jos ranne tai käsi kipeytyy kiinniotossa → vaihda hang high pull (ei kiinniottoa).'},
     {id:'sn1',sp:true,name:'Boxi yhdellä jalalla',detail:'Nopeus · yhden jalan voima',reps:'3 / jalka',lo:3,hi:3,sets:[2,3,3,3,3,3,3,2],load:{type:'box',base:30,cap:55},wlabel:'Boxin korkeus (cm)',wunit:'cm',hint:'Pehmeä alastulo, polvi ei sisäänpäin. Tauko jokaisen toiston välillä.'},
     {id:'sn2',sp:true,noW:true,name:'Boxi yhdellä jalalla, toistuva',detail:'Nopeus · reaktiivinen voima',reps:'5 / jalka',lo:5,hi:5,sets:[2,2,2,2,2,2,2,1],load:{type:'fixed',text:'Matala boxi 20–25 cm, lyhyt kontakti'},hint:'Reaktiivinen: ponnista heti alastulosta, ei taukoa.'},
     {id:'sn3',sp:true,name:'Boxi molemmilla jaloilla',detail:'Nopeus · pystysuuntainen teho',reps:'4',lo:4,hi:4,sets:[2,3,3,3,3,3,3,2],load:{type:'box',base:40,cap:70},wlabel:'Boxin korkeus (cm)',wunit:'cm',hint:'Hyppää ylös, astu alas (ei hyppyä alas).'},
@@ -3038,19 +3049,6 @@ const STR_DATA=[
 
 // PTDISTS defined above
 
-const MOB_EX=[
-  {id:'m1',name:'90/90 lonkan avaus',desc:'Istu 90/90. Nojaa eteen etujalan yli, selkä suorana.',reps:'30 sek/puoli',area:'a-lo'},
-  {id:'m2',name:'Rintakehän kierto lattialla',desc:'Kyljelläsi, polvet 90°. Vie käsi auki taaksepäin.',reps:'8 toistoa/puoli',area:'a-se'},
-  {id:'m3',name:'Kissalehmä',desc:'Nelinkontin. Pyöristä ja laske selkä hengityksen rytmissä.',reps:'10 toistoa',area:'a-se'},
-  {id:'m4',name:'Lonkan koukistajan venytys',desc:'Yhden polven polvistuminen. Eteen kunnes tuntuu etupuolella.',reps:'30–40 sek/puoli',area:'a-lo'},
-  {id:'m5',name:"World's greatest stretch",desc:'Askelkyykky + rintakehän avaus kiertämällä ylös.',reps:'5 toistoa/puoli',area:'a-ko'},
-  {id:'m6',name:'Thoracic extension',desc:'Kädet niskan taakse, kyynärpäät taaksepäin.',reps:'8–10 toistoa',area:'a-se'},
-  {id:'m7',name:'Diaphragm breathing',desc:'Selällään. Nenän kautta sisään, vatsa nousee.',reps:'10 hengitystä',area:'a-co'},
-  {id:'m8',name:'Olkapään kierto lattialla',desc:'Selällään 90°. Ulko- ja sisäkierto hitaasti.',reps:'10 toistoa/puoli',area:'a-ol'},
-  {id:'m9',name:'Hamstring venytys selinmakuulla',desc:'Jalka ylös, polvi suorana. Kädet takareiden taakse.',reps:'30–40 sek/jalka',area:'a-lo'},
-  {id:'m10',name:'Lapapumppaus seisaaltaan',desc:'Kädet eteen – lapaluut etääntyy. Vedä takaisin.',reps:'10 toistoa',area:'a-ol'}
-];
-const AREA_LBLS={'a-lo':'Lonkka','a-se':'Selkä','a-ol':'Olkapää','a-ko':'Koko keho','a-co':'Core'};
 
 function getSets(k){
   // Uusi: fp_complete_v1.throw_sets
@@ -3384,20 +3382,6 @@ function strProgressHtml(sp){
 function strRepsSet(key,val){set(key,strParseReps(val).join(','));renderStr();}
 function strWeightSet(key,val){set(key,val);renderStr();}
 
-function strFeelMult(feel){
-  if(feel==='kevyt') return 1.05;
-  if(feel==='sopiva') return 1.025;
-  if(feel==='raskas') return 1.0;
-  return null;
-}
-function suggestedStrWeight(prevWeight, feel){
-  const mult=strFeelMult(feel);
-  if(mult==null||!prevWeight) return null;
-  const raw=parseFloat(prevWeight)*mult;
-  if(isNaN(raw)) return null;
-  return Math.round(raw*2)/2; // pyöristys lähimpään 0.5kg
-}
-function setStrFeel(key,feel){set(key,feel);renderStr()}
 
 function renderStr(){
   const cont=document.getElementById('train-content');
@@ -3469,7 +3453,6 @@ function renderStr(){
   mkWkTabs('str-wk',sp.wk,sp.weeks,'setStrWk');
 }
 function setStrWk(w){strWk=w;strManualWk=w;localStorage.setItem('fp_str_wk',w);renderStr()}
-function setMobWk(w){mobWk=w;localStorage.setItem('fp_mob_wk',w);renderMob()}
 
 function renderPuttiTrain(){
   const cont=document.getElementById('train-content');
@@ -3498,7 +3481,6 @@ function renderPuttiTrain(){
   const todayKey='putti_today_'+dateStr(new Date());
   const todayDone=get(todayKey)||0;
   const todayTarget=puttiPhase===1?50:puttiPhase===2?60:puttiPhase===4?Object.values(puttiDataFor(pageDate(),putWk).mix).reduce((a,b)=>a+b,0):30;
-  const pct_today=Math.min(100,Math.round(todayDone/todayTarget*100));
 
   const steps=[['ASETU','Takajalka linjaan kohteeseen'],['KATSO','Ketjun alareuna – ei koko koria'],['HENGITÄ','Sisään 4s, ULOS 6-8s (pidempi uloshengitys aktivoi rauhoittavan hermoston)'],['RYTMI','Vakio tahti – ei liian hidas eikä nopea'],['SEURAA LÄPI','Käsi jatkuu kohti ketjua irrotuksen jälkeen']];
   const phases=PUTTI_PHASES;
@@ -3523,7 +3505,7 @@ function renderPuttiTrain(){
   h+='</div></div>';
 
   // Vaihevalinnat (esikatselu - ei tallennu ennen vahvistusta)
-  h+='<div class=\"sect\">Treeniohjelma – '+(viewPhase===4?'12 viikon off-season-progressio':'6 viikon protokolla')+'</div>';
+  h+='<div class=\"sect\">Treeniohjelma – '+(viewPhase===4?'16 viikon off-season-progressio':'6 viikon protokolla')+'</div>';
   h+='<div style=\"display:flex;gap:5px;margin-bottom:10px\">';
   phases.forEach(p=>{
     const sel=p.n===viewPhase;
@@ -3985,7 +3967,7 @@ const MOB_QUICK_DAILY=[
   {id:'mq1',name:'Avoin kirja – dynaaminen + staattinen pito',desc:'Kyljelläsi, polvet koukussa. Vie yläkäsi auki taaksepäin 6 toistoa, jää viimeiseen toistoon ja PIDÄ ääriasennossa. Staattinen pito kasvattaa liikelaajuutta paremmin kuin pelkkä dynaaminen liike.',reps:'6 toistoa + 30–45 sek pito / puoli'},
   {id:'mq2',name:'Thoracic extension',desc:'Istu tuolilla tai makaa foam rullan päällä lapojen alla. Kädet niskan taakse (tue päätä), ojenna rintarankaa taaksepäin rullan tai selkänojan yli. Älä notkota alaselkää.',reps:'8–10 toistoa'},
   {id:'mq3',name:'Lapapumppaus seisaaltaan',desc:'Kädet eteen – lapaluut loittonee. Vedä takaisin.',reps:'10 toistoa'},
-  {id:'mq5',name:'Ranteen liikkuvuus',desc:'Nelinkontin, sormet taaksepäin. Kallista keho varovasti eteen. Jos leikattu käsi oireilee, kevennä.',reps:'20 sek + 10 toistoa'}
+  {id:'mq5',name:'Ranteen liikkuvuus',desc:'Nelinkontin, sormet taaksepäin. Kallista keho varovasti eteen. Jos käsi tai ranne oireilee, kevennä.',reps:'20 sek + 10 toistoa'}
 ];
 
 
@@ -4591,10 +4573,7 @@ function renderKierros(){
     {id:'k4',text:'Puhelin äänettömälle kierroksen ajaksi'},
     {id:'k5',text:'Puttausrutiini mielessä: asetu → katso → hengitä → rytmi → seuraa läpi'},
   ];
-  const FOCUS_OPTIONS=['Puttausrutiini joka putilla – ei poikkeuksia','Pre-shot rutiini joka heittoon','BH-tekniikka – hyzer ja irrotus','FH-tekniikka – wobble alle 5°','Henkinen peli – bogey-recovery','Reitti-IQ – A ja B-linja joka väylällä','Vapaa kierros – ei paineita'];
   const checks=saved.checks||{};
-  const focus=saved.focus||'';
-  const donePre=CHECKLIST.filter(c=>checks[c.id]).length;
   let h='<div style="background:linear-gradient(135deg,#085041,#1D9E75);border-radius:var(--r);padding:16px;margin-bottom:12px;color:#fff">';
   h+='<div style="font-size:11px;font-weight:600;opacity:.8;text-transform:uppercase">Kenttäkierros</div>';
   h+='<div style="font-size:20px;font-weight:700;margin-top:2px">'+today+'</div>';
@@ -5292,7 +5271,6 @@ function renderRatingDev(){
       const kisaLate=kisaComps.slice(kisaHalf);
       const avgEarly=Math.round(kisaEarly.reduce((a,c)=>a+c.mrating,0)/kisaEarly.length);
       const avgLate=Math.round(kisaLate.reduce((a,c)=>a+c.mrating,0)/kisaLate.length);
-      const trend=avgLate-avgEarly;
       const viikkoHalf=Math.floor(viikkoComps.length/2);
       const viikkoEarly=viikkoComps.slice(0,Math.max(1,viikkoHalf));
       const viikkoLate=viikkoComps.slice(viikkoHalf);
@@ -5354,7 +5332,6 @@ function renderRatingDev(){
     const yF=p=>PT3+cH3-((p-mn3)/rng3*cH3);
     const line=c1comps.map((c,i)=>(i===0?'M':'L')+xF(c.date).toFixed(1)+','+yF(c.c1_pct).toFixed(1)).join(' ');
     const avg=Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length);
-    const avgY=yF(avg);
     const target70Y=yF(70);
     let svg3='<div class="chart-wrap" style="padding:12px 14px;margin-top:8px">';
     svg3+='<div style="font-size:13px;font-weight:600;margin-bottom:8px">🎯 C1-puttaustrendi kisatuloksissa</div>';
@@ -6015,6 +5992,19 @@ function setDarkMode(on){
         c.c1_pct = Math.round(c.c1_made / c.c1_att * 100);
         changed = true;
       }
+    });
+  }
+
+  // 4. Testit – poista täysin tyhjät testitulosmerkinnät (jäänne tyhjennetyistä kentistä)
+  if(d.test_results && typeof d.test_results==='object') {
+    const hasVal=function(o){
+      if(o===null||o===undefined)return false;
+      if(Array.isArray(o))return o.some(hasVal);
+      if(typeof o==='object')return Object.keys(o).some(function(k){return hasVal(o[k]);});
+      return String(o).trim()!=='';
+    };
+    Object.keys(d.test_results).forEach(function(k){
+      if(!hasVal(d.test_results[k])){ delete d.test_results[k]; changed = true; }
     });
   }
 
