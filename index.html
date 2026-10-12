@@ -1272,7 +1272,7 @@ function renderProfile(){
   </div>`;
 
   // Puttitilastokortti
-  const puttiSessions=(get('putti_sessions')||[]).sort((a,b)=>a.date.localeCompare(b.date));
+  const puttiSessions=getPuttiSessions().sort((a,b)=>a.date.localeCompare(b.date));
   if(puttiSessions.length>=1){
     // Laske prosentit etäisyyksittäin viimeisistä sessioista
     const DIST_GROUPS=[
@@ -1392,7 +1392,7 @@ function buildCtx(){
   const PTDISTS2=['d4','d6','d8','d10','d12','d14'];
   const PLBLS2={d4:'C1·4m',d6:'C1·6m',d8:'C1·8m',d10:'C1·10m',d12:'C2·12m',d14:'C2·14m'};
   const pt={};PTDISTS2.forEach(k=>{pt[k]={m:0,a:0}});
-  (get('putti_sessions')||[]).forEach(s=>PTDISTS2.forEach(k=>{if(s[k]){pt[k].m+=s[k].m;pt[k].a+=s[k].a}}));
+  const ptT=puttiTotalsOf(getPuttiSessions()); PTDISTS2.forEach(k=>{pt[k]=ptT[k]||{m:0,a:0}});
   const puttiRows=PTDISTS2.map(k=>pt[k].a>0?`  ${PLBLS2[k]}: ${Math.round(pt[k].m/pt[k].a*100)}% (${pt[k].m}/${pt[k].a})`:'').filter(Boolean).join('\n');
   const today=new Date().toLocaleDateString('fi',{day:'numeric',month:'numeric',year:'numeric'});
   let txt=`═══ CLAUDE: LUE TÄMÄ ENSIN ═══
@@ -1425,6 +1425,12 @@ LÄHTÖNOPEUS (paras)
   }
 
   if(puttiRows)txt+=`\n\nPUTTAUSPROSENTIT\n${puttiRows}`;
+  const kausiRows=(get('putti_kaudet')||[]).map(function(x){
+    const pc=function(o){return o&&o.a?Math.round(100*o.m/o.a)+' %':'–';};
+    const ds=Object.keys(x.dist).map(Number).sort(function(a,b){return a-b;}).map(function(d){const v=x.dist[d];return d+' m '+pc({m:v.n.m+v.h.m,a:v.n.a+v.h.a});}).join(', ');
+    return '  Kausi '+x.kausi+' ('+fiDate(x.from)+'–'+fiDate(x.to)+'): '+x.sessioita+' sessiota, '+x.puttia+' puttia, '+String(x.pct).replace('.',',')+' % ('+ds+'; normaali '+pc(x.normaali)+', haara '+pc(x.haara)+')';
+  }).join('\n');
+  if(kausiRows)txt+=`\n\nEDELLISET PUTTIKAUDET\n${kausiRows}`;
 
   const recentComps=comps.slice(0,5).map(c=>`  ${c.date} ${c.name}: Metrix ${c.mrating||'–'}${c.rrating?' / PDGA '+c.rrating:''}${c.place?' sija '+c.place:''}`).join('\n');
   if(recentComps)txt+=`\n\nVIIMEISIMMÄT KISAT\n${recentComps}`;
@@ -3461,7 +3467,7 @@ function setStrWk(w){strWk=w;strManualWk=w;localStorage.setItem('fp_str_wk',w);r
 
 function renderPuttiTrain(){
   const cont=document.getElementById('train-content');
-  const sessions=get('putti_sessions')||[];
+  const sessions=getPuttiSessions();
   const totals={};
   PTDISTS.forEach(d=>{totals[d.key]={m:0,a:0}});
   sessions.forEach(s=>{
@@ -3694,6 +3700,7 @@ function renderPuttiTrain(){
   h+='<div style="font-size:10px;font-weight:600;color:var(--pd);margin-top:8px;margin-bottom:6px">C2 – Circle 2</div>';
   h+=renderDistGrid(c2dists, totShow);
 
+  h+=puttiKaudetHtml();
   if(sessions.length){
     h+='<div class="sect">Sessiohistoria</div>';
     sessions.slice().reverse().slice(0,8).forEach(s=>{
@@ -3720,7 +3727,7 @@ function renderPuttiTrain(){
       h+='</div>';
     });
   }else{
-    h+='<div class="empty"><div class="ei">🎯</div><div class="et">Ei sessioita vielä.<br>Aloita tänään: C1, 50 puttia, rutiini joka putilla.</div></div>';
+    h+='<div class="empty"><div class="ei">🎯</div><div class="et">Ei sessioita tällä kaudella vielä.<br>Aloita tänään: ohjelman ruudukko, normaali ja haara joka matkalla.</div></div>';
   }
 
   div.innerHTML=h;
@@ -3965,6 +3972,58 @@ function puttiRuudukkoSave(day){
   const ss=get('putti_sessions')||[]; ss.push(sess); set('putti_sessions',ss);
   const all=get('putti_ruudukko')||{}; all[day]={}; set('putti_ruudukko',all);
   setPuttiSarjat(day,[]); setDone(day,1); renderTrain();
+}
+// ===== Putti: kausiarkisto =====
+// Arkistoidut sessiot merkitään kentällä kausi ('2026') eivätkä näy tilastoissa tai historiassa; raakadata säilyy (poisto palaisi toisen laitteen synkronoinnista).
+function getPuttiSessions(){return (get('putti_sessions')||[]).filter(function(s){return !s.kausi;});}
+function puttiTotalsOf(sessions){
+  const t={}; PTDISTS.forEach(function(d){t[d.key]={m:0,a:0};});
+  sessions.forEach(function(s){
+    if(s.sarjat&&s.sarjat.length>0){
+      s.sarjat.forEach(function(sj){const dk=PTDISTS.find(function(d){return d.dist===(sj.dist||3);});if(!dk)return;t[dk.key].m+=sj.made||0;t[dk.key].a+=10;});
+    }else{
+      PTDISTS.forEach(function(d){if(s[d.key]){t[d.key].m+=s[d.key].m;t[d.key].a+=s[d.key].a;}});
+    }
+  });
+  return t;
+}
+function puttiArkistoiKausi(kausi){
+  const all=get('putti_sessions')||[]; const act=all.filter(function(s){return !s.kausi;});
+  if(!act.length)return null;
+  const dist={}; let sarjoja=0,made=0,att=0,nm=0,na=0,hm=0,ha=0; const dates=[];
+  const add=function(d,st,m,a){
+    const e=dist[d]||(dist[d]={n:{m:0,a:0},h:{m:0,a:0}}); const x=st==='h'?e.h:e.n;
+    x.m+=m;x.a+=a;made+=m;att+=a; if(st==='h'){hm+=m;ha+=a;}else{nm+=m;na+=a;}
+  };
+  act.forEach(function(s){
+    dates.push(s.date);
+    if(s.sarjat&&s.sarjat.length>0){
+      s.sarjat.forEach(function(sj){add(sj.dist||3,(sj.tyyli||s.tyyli)==='haara'?'h':'n',sj.made||0,10);sarjoja++;});
+    }else{
+      Object.keys(s).forEach(function(k){if(/^d\d+$/.test(k)&&s[k]&&s[k].a>0){add(parseInt(k.slice(1),10),s.tyyli==='haara'?'h':'n',s[k].m,s[k].a);sarjoja+=Math.round(s[k].a/10);}});
+    }
+  });
+  dates.sort();
+  const row={id:Date.now(),kausi:String(kausi),from:dates[0],to:dates[dates.length-1],sessioita:act.length,sarjoja:sarjoja,puttia:att,made:made,
+    pct:att?Math.round(1000*made/att)/10:0,normaali:{m:nm,a:na},haara:{m:hm,a:ha},dist:dist,luotu:dateStr(new Date())};
+  const kaudet=get('putti_kaudet')||[]; kaudet.push(row); set('putti_kaudet',kaudet);
+  set('putti_sessions',all.map(function(s){return s.kausi?s:Object.assign({},s,{kausi:String(kausi)});}));
+  return row;
+}
+function puttiKaudetHtml(){
+  const k=get('putti_kaudet')||[]; if(!k.length)return '';
+  const pc=function(o){return o&&o.a?Math.round(100*o.m/o.a)+' %':'–';};
+  let h='<div class="sect">Edelliset kaudet</div>';
+  k.slice().sort(function(a,b){return String(b.luotu).localeCompare(String(a.luotu));}).forEach(function(x){
+    const ds=Object.keys(x.dist).map(Number).sort(function(a,b){return a-b;}).map(function(d){const v=x.dist[d];return d+' m '+pc({m:v.n.m+v.h.m,a:v.n.a+v.h.a});}).join(' · ');
+    h+='<div class="card card-p" style="margin-bottom:8px">';
+    h+='<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:13px;font-weight:600">Kausi '+x.kausi+'</span><span style="font-size:14px;font-weight:700;color:var(--g)">'+String(x.pct).replace('.',',')+' %</span></div>';
+    h+='<div style="font-size:11px;color:var(--t2);margin-top:2px">'+fiDate(x.from)+'–'+fiDate(x.to)+' · '+x.sessioita+' sessiota · '+x.puttia+' puttia ('+x.made+' sisään)</div>';
+    h+='<div style="font-size:11px;color:var(--t2);margin-top:2px">'+ds+'</div>';
+    h+='<div style="font-size:11px;color:var(--t3);margin-top:2px">🧍 Normaali '+pc(x.normaali)+' · 🦵 Haara '+pc(x.haara)+'</div>';
+    h+='</div>';
+  });
+  return h;
 }
 function savePutti(){
   const sess={id:Date.now(),date:v('pt-date')};
@@ -5548,9 +5607,8 @@ function renderSpeedDev(){
 }
 
 function renderPuttiDev(){
-  const sessions=get('putti_sessions')||[];
-  const totals={};PTDISTS.forEach(d=>{totals[d.key]={m:0,a:0}});
-  sessions.forEach(s=>PTDISTS.forEach(d=>{if(s[d.key]){totals[d.key].m+=s[d.key].m;totals[d.key].a+=s[d.key].a}}));
+  const sessions=getPuttiSessions();
+  const totals=puttiTotalsOf(sessions);
   let h='<button class=\"btn btn-out btn-sm\" onclick=\"openM(\'m-putti-sess\')\" style=\"margin-bottom:12px\">+ Lisää sessio</button>';
   h+='<div class=\"putti-grid\">';
   PTDISTS.forEach(d=>{
@@ -5562,6 +5620,7 @@ function renderPuttiDev(){
     h+='<div class=\"pd-sub\">'+(t.a>0?t.m+'/'+t.a:'Ei dataa')+' · '+d.goal+'%</div></div>';
   });
   h+='</div>';
+  h+=puttiKaudetHtml();
   h+='<div class="page-spacer"></div>';document.getElementById('dev-content').innerHTML=h;
 }
 
@@ -5975,6 +6034,7 @@ function syncAllCompsToCalendar(){
     d.putti_sessions = d.putti_sessions.map(function(s) {
       if(s.sarjat && s.sarjat.length > 0) {
         var clean = {id:s.id, date:s.date, tyyli:s.tyyli||'normaali', sarjat:s.sarjat};
+        if(s.kausi)clean.kausi=s.kausi;
         return clean;
       }
       return s;
