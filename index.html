@@ -2,7 +2,7 @@
 <!--
   ===== FRISBEEPRO – SISÄLLYSLUETTELO =====
   Yksi tiedosto (CSS+HTML+JS). Rivinumerot suuntaa-antavia, päivity tätä jos rakenne muuttuu paljon.
-  Viimeisin sisältömuutos: Putti Vaihe 4 (4–5 sessiota/vk, 50→80 puttia/sessio), 7.10.2026
+  Viimeisin sisältömuutos: Putti – jokainen matka sekä normaalilla että haaralla (100–160 puttia/sessio), kirjausruudukko ohjelman riveillä, 12.10.2026
 
   CSS
     61    [style]-lohko alkaa (värit, layout, komponenttityylit)
@@ -1015,7 +1015,7 @@ const PUTTI_PHASES=[
   {n:1,title:'Vaihe 1 – Rutiinin oppiminen',short:'Rutiinin oppiminen',weeks:'Vk 1–2',freq:'3x viikossa · 20 min',focus:'Vain 4 metriä · 50 puttia · Rutiini joka putilla · Ei väliä meneekö sisään',col:'var(--gl)',tcol:'var(--gd)'},
   {n:2,title:'Vaihe 2 – Vakiinnus',short:'Vakiinnus',weeks:'Vk 3–4',freq:'3x viikossa · 25 min',focus:'4 m ja 8 m vuorotellen · 60 puttia · Kirjaa C1X% · Tavoite yli 85%',col:'var(--bl)',tcol:'var(--bd)'},
   {n:3,title:'Vaihe 3 – Kisapaine',short:'Kisapaine',weeks:'Vk 5–6',freq:'2x viikossa · 20 min',focus:'6 m:stä, 5 puttia sisään peräkkäin ennen lopetusta · Jos missaat → aloita alusta',col:'var(--al)',tcol:'var(--ad)'},
-  {n:4,title:'Vaihe 4 – Range-laajennus (off-season)',short:'Range-laajennus',weeks:'Off-season, 16 vk progressio',freq:'4–5x viikossa · 15–35 min',focus:'Progressiivinen 16 viikon ohjelma (12 vk progressio + 4 vk paine-sarjat) – katso viikkotavoite alta. TÄRKEÄÄ: sekoita etäisyydet satunnaiseen järjestykseen (älä lyö kaikkia 4m ensin, sitten 8m jne) – tuntuu vaikeammalta mutta tuottaa tutkitusti pysyvämmän oppimisen. 4 m tehdään aina viimeisenä sarjana (pakko-sisään väsyneenä).',col:'var(--rl)',tcol:'var(--rd)'}
+  {n:4,title:'Vaihe 4 – Range-laajennus (off-season)',short:'Range-laajennus',weeks:'Off-season, 16 vk progressio',freq:'4–5x viikossa · 30–70 min',focus:'Progressiivinen 16 viikon ohjelma (12 vk progressio + 4 vk paine-sarjat) – katso viikkotavoite alta. Joka matka tehdään sekä normaalilla että haaralla (putteja kaksinkertainen määrä). TÄRKEÄÄ: sekoita etäisyydet satunnaiseen järjestykseen (älä lyö kaikkia 4m ensin, sitten 8m jne) – tuntuu vaikeammalta mutta tuottaa tutkitusti pysyvämmän oppimisen. 4 m tehdään aina viimeisenä sarjana (pakko-sisään väsyneenä).',col:'var(--rl)',tcol:'var(--rd)'}
 ];
 
 // Vaihe 4 (off-season) viikkokohtainen progressio, 12 viikkoa 2x6vk-lohkoina (samalla periaatteella kuin Merelän tuotteissa):
@@ -1039,12 +1039,19 @@ const PUTTI_P4_WEEKS=[
   {jakso:'Jakso 3 – vakiinnutus + paine', sessions:5, mix:{4:10,6:10,8:20,10:20,12:10,14:10}, pressure:true}  // Vk16
 ];
 // Putti helmi–toukokuu: ylläpito (nopeusjakso) ja toukokuun alku (kisakuntoon), molemmissa paine-sarja
+// Putti-ohjelma: jokainen matka tehdään sekä normaalilla että haaralla. perStyle = yhden tyylin putit / matka (ohjelmataulukon arvo),
+// mix = kokonaismäärä (perStyle × 2), joten kaikki sessio- ja viikkosummat kaksinkertaistuvat automaattisesti.
+function puttiBoth(d){
+  const per=Object.assign({},d.mix), tot={};
+  Object.keys(per).forEach(function(k){tot[k]=per[k]*2;});
+  return Object.assign({},d,{perStyle:per,mix:tot,both:true});
+}
 function puttiDataFor(ds,wk){
   const ph=offseasonPhaseOf(weekStartOf(ds));
-  if(ph===3)return{jakso:'Vaihe 3 – ylläpito (nopeusjakso)',label:'3 sessiota/vk',sessions:3,mix:{4:10,6:10,8:20,10:20},pressure:true};
-  if(ph===4)return{jakso:'Vaihe 4 – kisakuntoon',label:'testiviikko: to testi (putti 120) + la',sessions:1,mix:{4:10,6:10,8:10,10:10,12:10},pressure:true};
+  if(ph===3)return puttiBoth({jakso:'Vaihe 3 – ylläpito (nopeusjakso)',label:'3 sessiota/vk',sessions:3,mix:{4:10,6:10,8:20,10:20},pressure:true});
+  if(ph===4)return puttiBoth({jakso:'Vaihe 4 – kisakuntoon',label:'testiviikko: to testi (putti 120) + la',sessions:1,mix:{4:10,6:10,8:10,10:10,12:10},pressure:true});
   const w=Math.max(1,Math.min(16,wk));
-  return Object.assign({},PUTTI_P4_WEEKS[w-1],{label:'Viikko '+w});
+  return puttiBoth(Object.assign({},PUTTI_P4_WEEKS[w-1],{label:'Viikko '+w}));
 }
 
 // Migraatio vanhoista avaimista → uudet C1/C2 avaimet
@@ -3525,10 +3532,10 @@ function renderPuttiTrain(){
   if(viewPhase===4){
     const pd=puttiDataFor(pageDate(),putWk);
     const perSess=Object.values(pd.mix).reduce((a,b)=>a+b,0);
-    const mixStr=Object.entries(pd.mix).filter(([d,n])=>n>0).map(([d,n])=>n+' × '+d+' m').join(' + ');
+    const mixStr=Object.entries(pd.perStyle).filter(([d,n])=>n>0).map(([d,n])=>n+' × '+d+' m').join(' + ');
     h+=`<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,.1)">`;
     h+=`<div style="font-size:11px;font-weight:700;color:${ph.tcol}">${pd.jakso} – ${pd.label}</div>`;
-    h+=`<div style="font-size:12px;color:${ph.tcol};margin-top:2px">${mixStr} = <b>${perSess} puttia/sessio</b> · ${pd.sessions} sessiota/vk = <b>${pd.sessions*perSess} puttia/vk</b></div>`;
+    h+=`<div style="font-size:12px;color:${ph.tcol};margin-top:2px">${mixStr}, kumpikin sekä normaalilla että haaralla = <b>${perSess} puttia/sessio</b> · ${pd.sessions} sessiota/vk = <b>${pd.sessions*perSess} puttia/vk</b></div>`;
     if(pd.pressure)h+=`<div style="font-size:11px;color:${ph.tcol};margin-top:6px;line-height:1.5">🔥 <b>Paine-sarja</b> joka sessioon: portaat 4 → 8 → 10 m, ohi = alusta (max 3 yritystä). Kirjaa tulos alla olevaan Paine-sarja-korttiin.</div>`;
     h+=`</div>`;
   }
@@ -3549,6 +3556,11 @@ function renderPuttiTrain(){
   // Puttiasento-valinta
   const puttiTyyli=get('putti_tyyli')||'normaali';
 
+  const useGrid=viewPhase===4&&(get('putti_kirjaus_tila')||'ruudukko')!=='vapaa';
+  if(useGrid){
+    h+=puttiRuudukkoHtml(today2,puttiDataFor(pageDate(),putWk));
+  }else{
+  if(viewPhase===4)h+='<button id="putti-tila-ruudukko" class="btn btn-out btn-sm" style="width:100%;margin-bottom:8px">↩ Ohjelman ruudukko</button>';
   h+='<div class="card card-p" style="margin-bottom:10px">';
   h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
   h+='<div style="font-size:13px;font-weight:600">Tänään – sarjat</div>';
@@ -3614,6 +3626,7 @@ function renderPuttiTrain(){
   }
   h+='</div>';
   h+='</div>';
+  }
   if(viewPhase===4&&puttiDataFor(pageDate(),putWk).pressure)h+=puttiPaineHtml(today2);
 
   // Prosentit C1/C2 jaoteltuna
@@ -3698,7 +3711,7 @@ function renderPuttiTrain(){
       // Also check sarjat format
       const sarjaDistLabels=s.sarjat?[...new Set(s.sarjat.map(sj=>sj.dist+'m'))].join(', '):'';
       const distInfo=distLabels||sarjaDistLabels;
-      const tyyliLabel=s.tyyli==='haara'?'🦵 Haara':'🧍 Normaali';
+      const tyyliLabel=s.tyyli==='haara'?'🦵 Haara':s.tyyli==='molemmat'?'🧍🦵 Normaali + haara':'🧍 Normaali';
       h+='<div class="row" style="flex-direction:column;align-items:flex-start;padding:8px 0">';
       h+='<div style="display:flex;width:100%;align-items:center"><span class="rl">'+s.date+' · '+tot+' putausta · '+tyyliLabel+'</span>';
       h+='<span class="rv" style="color:'+(pct>=70?'var(--g)':'var(--t2)')+'">'+pct+'%</span>';
@@ -3810,6 +3823,23 @@ function renderPuttiTrain(){
     sarjaSaveSessBtn.addEventListener('touchend',saveSessFromSarjat);
   }
 
+  // Ohjelman ruudukko: tallennus ruutu kerrallaan, summat päivittyvät suoraan
+  cont.querySelectorAll('.pr-cell').forEach(function(inp){
+    inp.addEventListener('input',function(){
+      let v=parseInt(inp.value,10);
+      if(!isNaN(v)){if(v>10){v=10;inp.value=10;}if(v<0){v=0;inp.value=0;}}
+      puttiRuutuSet(today3,inp.dataset.d+'|'+inp.dataset.s+'|'+inp.dataset.i,isNaN(v)?null:v);
+      puttiRuudukkoRecalc(cont);
+    });
+  });
+  const ruSave=cont.querySelector('#putti-ruudukko-save');
+  if(ruSave)ruSave.addEventListener('click',function(e){e.preventDefault();puttiRuudukkoSave(today3);});
+  const ruVapaa=cont.querySelector('#putti-tila-vapaa');
+  if(ruVapaa)ruVapaa.addEventListener('click',function(e){e.preventDefault();set('putti_kirjaus_tila','vapaa');renderTrain();});
+  const ruTakaisin=cont.querySelector('#putti-tila-ruudukko');
+  if(ruTakaisin)ruTakaisin.addEventListener('click',function(e){e.preventDefault();set('putti_kirjaus_tila','ruudukko');renderTrain();});
+  puttiRuudukkoRecalc(cont);
+
   // Delete buttons
   cont.querySelectorAll('[data-del-putti]').forEach(btn=>{
     btn.addEventListener('click',()=>delPutti(parseInt(btn.dataset.delPutti)));
@@ -3854,6 +3884,87 @@ function puttiPaineHtml(ds){
   }
   h+='</div>';
   return h;
+}
+// ===== Putti-ruudukko: ohjelman rivit, jokaiselle matkalle sarjat normaalilla ja haaralla =====
+// Tila: putti_ruudukko[pvm] = {'matka|n/h|indeksi': osumat 0–10}. Tallennus-napilla ruudut muunnetaan putti_sessions-sessioksi (sarjat {made,dist,tyyli}).
+function puttiRuudukkoRows(pd){
+  return Object.keys(pd.perStyle).map(Number).filter(function(d){return pd.perStyle[d]>0;}).sort(function(a,b){if(a===4)return 1;if(b===4)return -1;return a-b;})
+    .map(function(d){return {dist:d,n:Math.max(1,Math.round(pd.perStyle[d]/10)),circle:d<=10?'C1':'C2'};});
+}
+function puttiRuutuSet(day,key,val){
+  const all=get('putti_ruudukko')||{}; const dd=Object.assign({},all[day]||{});
+  if(val===null||val===undefined)delete dd[key]; else dd[key]=val;
+  all[day]=dd; set('putti_ruudukko',all);
+}
+function puttiRuudukkoHtml(day,pd){
+  const rows=puttiRuudukkoRows(pd), cells=(get('putti_ruudukko')||{})[day]||{};
+  const planned=rows.reduce(function(a,r){return a+r.n*2;},0);
+  const inp=function(d,s,i){
+    const v=cells[d+'|'+s+'|'+i];
+    return '<input class="pr-cell" type="number" min="0" max="10" placeholder="/10" inputmode="numeric" data-d="'+d+'" data-s="'+s+'" data-i="'+i+'" value="'+((v===undefined||v===null)?'':v)+'" style="flex:1;min-width:0;width:100%;max-width:64px;padding:8px 2px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:16px;font-weight:700;text-align:center;background:var(--bg);color:var(--text)">';
+  };
+  const grp=function(d,s,n){let g='<div style="display:flex;gap:4px;justify-content:center">';for(let i=0;i<n;i++)g+=inp(d,s,i);return g+'</div>';};
+  let h='<div class="card card-p" id="putti-ruudukko" data-planned="'+planned+'" style="margin-bottom:10px">';
+  h+='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px"><div style="font-size:13px;font-weight:600">Tänään – ohjelman sarjat</div><div style="font-size:12px;color:var(--t2)">'+(pd.mix?Object.values(pd.mix).reduce(function(a,b){return a+b;},0):0)+' puttia · '+planned+' sarjaa</div></div>';
+  h+='<div style="font-size:11px;color:var(--t3);margin-bottom:8px">Kirjaa osumat kymmenestä. Jokainen matka sekä normaalilla että haaralla.</div>';
+  h+='<div style="display:grid;grid-template-columns:44px 1fr 1fr;gap:8px;margin-bottom:4px"><span></span><span style="font-size:11px;color:var(--t2);text-align:center">🧍 Normaali</span><span style="font-size:11px;color:var(--t2);text-align:center">🦵 Haara</span></div>';
+  rows.forEach(function(r,idx){
+    const c1=r.circle==='C1';
+    h+='<div class="pr-row" data-d="'+r.dist+'" data-c="'+r.circle+'" style="padding:8px 0;border-top:0.5px solid var(--border)">';
+    h+='<div style="display:grid;grid-template-columns:44px 1fr 1fr;gap:8px;align-items:center">';
+    h+='<div><div style="font-size:15px;font-weight:700">'+r.dist+' m</div><span style="font-size:9px;padding:1px 6px;border-radius:10px;background:'+(c1?'var(--gl)':'var(--pl)')+';color:'+(c1?'var(--gd)':'var(--pd)')+'">'+r.circle+'</span></div>';
+    h+=grp(r.dist,'n',r.n)+grp(r.dist,'h',r.n);
+    h+='</div>';
+    h+='<div style="display:grid;grid-template-columns:44px 1fr 1fr;gap:8px;margin-top:3px"><span></span><span class="pr-tn" style="font-size:11px;color:var(--t2);text-align:center">–</span><span class="pr-th" style="font-size:11px;color:var(--t2);text-align:center">–</span></div>';
+    if(r.dist===4&&idx===rows.length-1)h+='<div style="font-size:10px;color:var(--t3);margin-top:2px">Viimeisenä, väsyneenä: pakko sisään</div>';
+    h+='</div>';
+  });
+  h+='<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:10px 0 6px;border-top:0.5px solid var(--border);padding-top:10px">';
+  [['pr-sets','Sarjat'],['pr-n','Normaali'],['pr-h','Haara'],['pr-d','Ero']].forEach(function(t){
+    h+='<div style="background:var(--bg);border-radius:var(--rs);padding:7px 8px"><div style="font-size:10px;color:var(--t2)">'+t[1]+'</div><div id="'+t[0]+'" style="font-size:15px;font-weight:700">–</div></div>';
+  });
+  h+='</div>';
+  h+='<div id="pr-all" style="font-size:12px;color:var(--t2);margin-bottom:10px">–</div>';
+  h+='<div style="display:flex;gap:6px"><button id="putti-ruudukko-save" class="btn" style="flex:1">💾 Tallenna sessio</button><button id="putti-tila-vapaa" class="btn btn-out btn-sm">Vapaa kirjaus</button></div>';
+  h+='</div>';
+  return h;
+}
+function puttiRuudukkoRecalc(cont){
+  const card=(cont||document).querySelector('#putti-ruudukko'); if(!card)return;
+  const pct=function(m,n){return n?Math.round(100*m/n)+' %':'–';};
+  let nm=0,nn=0,hm=0,hn=0,c1m=0,c1n=0,c2m=0,c2n=0,sets=0;
+  card.querySelectorAll('.pr-row').forEach(function(row){
+    let a=0,an=0,b=0,bn=0;
+    row.querySelectorAll('.pr-cell').forEach(function(i){
+      const v=parseInt(i.value,10); if(isNaN(v))return;
+      sets++; if(i.dataset.s==='h'){b+=v;bn+=10;}else{a+=v;an+=10;}
+    });
+    row.querySelector('.pr-tn').textContent=an?(a+'/'+an+' · '+pct(a,an)):'–';
+    row.querySelector('.pr-th').textContent=bn?(b+'/'+bn+' · '+pct(b,bn)):'–';
+    nm+=a;nn+=an;hm+=b;hn+=bn;
+    if(row.dataset.c==='C1'){c1m+=a+b;c1n+=an+bn;}else{c2m+=a+b;c2n+=an+bn;}
+  });
+  const planned=parseInt(card.dataset.planned,10)||0;
+  const set=function(id,t){const e=card.querySelector('#'+id);if(e)e.textContent=t;};
+  set('pr-sets',sets+' / '+planned);
+  set('pr-n',pct(nm,nn)); set('pr-h',pct(hm,hn));
+  set('pr-d',(nn&&hn)?((Math.round(100*hm/hn-100*nm/nn)>0?'+':'')+Math.round(100*hm/hn-100*nm/nn)+' %-yks.'):'–');
+  set('pr-all',(nn+hn)?('Yhteensä '+(nm+hm)+'/'+(nn+hn)+' · '+pct(nm+hm,nn+hn)+' · C1 '+pct(c1m,c1n)+', C2 '+pct(c2m,c2n)+(sets>=planned&&planned>0?' · ✓ kaikki sarjat tehty':'')):'Täytä ensimmäinen sarja');
+}
+function puttiRuudukkoSave(day){
+  const cells=(get('putti_ruudukko')||{})[day]||{};
+  const order=function(d){return d===4?99:d;};
+  const sarjat=Object.keys(cells).map(function(k){const p=k.split('|');return {d:parseInt(p[0],10),s:p[1],i:parseInt(p[2],10),v:cells[k]};})
+    .filter(function(x){return x.v!==null&&x.v!==undefined&&!isNaN(x.v);})
+    .sort(function(a,b){return order(a.d)-order(b.d)||(a.s===b.s?0:(a.s==='n'?-1:1))||a.i-b.i;})
+    .map(function(x){return {made:x.v,dist:x.d,tyyli:x.s==='h'?'haara':'normaali'};});
+  (getPuttiSarjat(day)||[]).forEach(function(s){if(s&&typeof s==='object')sarjat.push(s);});
+  if(!sarjat.length){alert('Kirjaa ainakin yksi sarja');return;}
+  const hasN=sarjat.some(function(s){return s.tyyli!=='haara';}), hasH=sarjat.some(function(s){return s.tyyli==='haara';});
+  const sess={id:Date.now(),date:day,tyyli:(hasN&&hasH)?'molemmat':(hasH?'haara':'normaali'),sarjat:sarjat};
+  const ss=get('putti_sessions')||[]; ss.push(sess); set('putti_sessions',ss);
+  const all=get('putti_ruudukko')||{}; all[day]={}; set('putti_ruudukko',all);
+  setPuttiSarjat(day,[]); setDone(day,1); renderTrain();
 }
 function savePutti(){
   const sess={id:Date.now(),date:v('pt-date')};
