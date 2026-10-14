@@ -998,7 +998,7 @@ const DEF={name:'Jesse Virtanen',pdga:'252010',rating:919,metrix:939,target:940,
 let calY=new Date().getFullYear(),calM=new Date().getMonth();
 let compTab='upcoming',devTabCur='rating',trainTabCur='week',kierrosPvm=null,trainCtxDate=null,trainCtxSession=null,throwManualWk=null,throwShowAll=false,strShowAll=false,strManualWk=null,mobTypeSel=null;
 let throwWk=parseInt(localStorage.getItem('fp_throw_wk')||'1')||1,strWk=parseInt(localStorage.getItem('fp_str_wk')||'1')||1,mobWk=parseInt(localStorage.getItem('fp_mob_wk')||'1')||1,putWk=parseInt(localStorage.getItem('fp_put_wk')||'1')||1;
-function setPutWk(w){putWk=w;localStorage.setItem('fp_put_wk',w);renderTrain()}
+function setPutWk(w){putWk=w;localStorage.setItem('fp_put_wk',w);localStorage.setItem('fp_put_wk_manual',dateStr(new Date()));renderTrain()}
 
 
 // ===== CONSTANTS =====
@@ -3511,6 +3511,11 @@ function setStrWk(w){strWk=w;strManualWk=w;localStorage.setItem('fp_str_wk',w);r
 
 function renderPuttiTrain(){
   const cont=document.getElementById('train-content');
+  // Ohjelmaviikko on laitekohtainen asetus: ilman päiväkorttia se päivitetään kalenterin mukaan, ellei viikkoa ole valittu käsin tänään
+  if(!trainCtxDate&&localStorage.getItem('fp_put_wk_manual')!==dateStr(new Date())){
+    const nAuto=offWeekN(dateStr(new Date()));
+    if(nAuto>=1&&nAuto<=16&&putWk!==nAuto){putWk=nAuto;localStorage.setItem('fp_put_wk',nAuto);}
+  }
   const sessions=getPuttiSessions();
   const totals={};
   PTDISTS.forEach(d=>{totals[d.key]={m:0,a:0}});
@@ -3608,6 +3613,7 @@ function renderPuttiTrain(){
 
   const useGrid=viewPhase===4&&(get('putti_kirjaus_tila')||'ruudukko')!=='vapaa';
   if(useGrid){
+    h+=puttiLuonnosHtml(today2);
     h+=puttiRuudukkoHtml(today2,puttiDataFor(pageDate(),putWk));
   }else{
   if(viewPhase===4)h+='<button id="putti-tila-ruudukko" class="btn btn-out btn-sm" style="width:100%;margin-bottom:8px">↩ Ohjelman ruudukko</button>';
@@ -3885,6 +3891,7 @@ function renderPuttiTrain(){
   });
   const ruSave=cont.querySelector('#putti-ruudukko-save');
   if(ruSave)ruSave.addEventListener('click',function(e){e.preventDefault();puttiRuudukkoSave(today3);});
+  cont.querySelectorAll('.pr-save-old').forEach(function(b){b.addEventListener('click',function(e){e.preventDefault();puttiRuudukkoSave(b.dataset.day);});});
   const ruVapaa=cont.querySelector('#putti-tila-vapaa');
   if(ruVapaa)ruVapaa.addEventListener('click',function(e){e.preventDefault();set('putti_kirjaus_tila','vapaa');renderTrain();});
   const ruTakaisin=cont.querySelector('#putti-tila-ruudukko');
@@ -3938,9 +3945,16 @@ function puttiPaineHtml(ds){
 }
 // ===== Putti-ruudukko: ohjelman rivit, jokaiselle matkalle sarjat normaalilla ja haaralla =====
 // Tila: putti_ruudukko[pvm] = {'matka|n/h|indeksi': osumat 0–10}. Tallennus-napilla ruudut muunnetaan putti_sessions-sessioksi (sarjat {made,dist,tyyli}).
-function puttiRuudukkoRows(pd){
-  return Object.keys(pd.perStyle).map(Number).filter(function(d){return pd.perStyle[d]>0;}).sort(function(a,b){if(a===4)return 1;if(b===4)return -1;return a-b;})
-    .map(function(d){return {dist:d,n:Math.max(1,Math.round(pd.perStyle[d]/10)),circle:d<=10?'C1':'C2'};});
+function puttiRuudukkoRows(pd,cells){
+  const rows={};
+  Object.keys(pd.perStyle).map(Number).filter(function(d){return pd.perStyle[d]>0;}).forEach(function(d){rows[d]={dist:d,n:Math.max(1,Math.round(pd.perStyle[d]/10)),circle:d<=10?'C1':'C2',extra:false};});
+  // tallennetut ruudut näkyvät aina, vaikka ne eivät kuuluisi valitun viikon ohjelmaan (laitteiden viikkovalinnat voivat poiketa)
+  Object.keys(cells||{}).forEach(function(k){
+    const p=k.split('|'); const d=parseInt(p[0],10), i=parseInt(p[2],10); if(isNaN(d)||isNaN(i))return;
+    if(!rows[d])rows[d]={dist:d,n:i+1,circle:d<=10?'C1':'C2',extra:true};
+    else if(i+1>rows[d].n)rows[d].n=i+1;
+  });
+  return Object.keys(rows).map(Number).sort(function(a,b){if(a===4)return 1;if(b===4)return -1;return a-b;}).map(function(d){return rows[d];});
 }
 function puttiRuutuSet(day,key,val){
   const all=get('putti_ruudukko')||{}; const dd=Object.assign({},all[day]||{});
@@ -3948,8 +3962,8 @@ function puttiRuutuSet(day,key,val){
   all[day]=dd; set('putti_ruudukko',all);
 }
 function puttiRuudukkoHtml(day,pd){
-  const rows=puttiRuudukkoRows(pd), cells=(get('putti_ruudukko')||{})[day]||{};
-  const planned=rows.reduce(function(a,r){return a+r.n*2;},0);
+  const cells=(get('putti_ruudukko')||{})[day]||{}; const rows=puttiRuudukkoRows(pd,cells);
+  const planned=rows.filter(function(r){return !r.extra;}).reduce(function(a,r){return a+r.n*2;},0);
   const inp=function(d,s,i){
     const v=cells[d+'|'+s+'|'+i];
     return '<input class="pr-cell" type="number" min="0" max="10" placeholder="/10" inputmode="numeric" data-d="'+d+'" data-s="'+s+'" data-i="'+i+'" value="'+((v===undefined||v===null)?'':v)+'" style="flex:1;min-width:0;width:100%;max-width:64px;padding:8px 2px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:16px;font-weight:700;text-align:center;background:var(--bg);color:var(--text)">';
@@ -3967,7 +3981,8 @@ function puttiRuudukkoHtml(day,pd){
     h+=grp(r.dist,'n',r.n)+grp(r.dist,'h',r.n);
     h+='</div>';
     h+='<div style="display:grid;grid-template-columns:44px 1fr 1fr;gap:8px;margin-top:3px"><span></span><span class="pr-tn" style="font-size:11px;color:var(--t2);text-align:center">–</span><span class="pr-th" style="font-size:11px;color:var(--t2);text-align:center">–</span></div>';
-    if(r.dist===4&&idx===rows.length-1)h+='<div style="font-size:10px;color:var(--t3);margin-top:2px">Viimeisenä, väsyneenä: pakko sisään</div>';
+    if(r.extra)h+='<div style="font-size:10px;color:var(--t3);margin-top:2px">Ei valitun viikon ohjelmassa (tallennettu kirjaus)</div>';
+    else if(r.dist===4&&idx===rows.length-1)h+='<div style="font-size:10px;color:var(--t3);margin-top:2px">Viimeisenä, väsyneenä: pakko sisään</div>';
     h+='</div>';
   });
   h+='<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:10px 0 6px;border-top:0.5px solid var(--border);padding-top:10px">';
@@ -4001,6 +4016,16 @@ function puttiRuudukkoRecalc(cont){
   set('pr-n',pct(nm,nn)); set('pr-h',pct(hm,hn));
   set('pr-d',(nn&&hn)?((Math.round(100*hm/hn-100*nm/nn)>0?'+':'')+Math.round(100*hm/hn-100*nm/nn)+' %-yks.'):'–');
   set('pr-all',(nn+hn)?('Yhteensä '+(nm+hm)+'/'+(nn+hn)+' · '+pct(nm+hm,nn+hn)+' · C1 '+pct(c1m,c1n)+', C2 '+pct(c2m,c2n)+(sets>=planned&&planned>0?' · ✓ kaikki sarjat tehty':'')):'Täytä ensimmäinen sarja');
+}
+function puttiLuonnosHtml(today){
+  const all=get('putti_ruudukko')||{}; let h='';
+  Object.keys(all).sort().forEach(function(day){
+    if(day>=today)return;
+    const n=Object.keys(all[day]||{}).filter(function(k){const v=all[day][k];return v!==null&&v!==undefined;}).length;
+    if(!n)return;
+    h+='<div class="card card-p" style="margin-bottom:8px;border-left:3px solid var(--pd)"><div style="font-size:13px;font-weight:600">Tallentamaton kirjaus '+fiDate(day)+'</div><div style="font-size:11px;color:var(--t2);margin:2px 0 8px">'+n+' sarjaa on kirjattu ruudukkoon, mutta sessiota ei ole tallennettu, joten ne eivät näy tilastoissa.</div><button class="btn btn-sm pr-save-old" data-day="'+day+'">💾 Tallenna sessiona</button></div>';
+  });
+  return h;
 }
 function puttiRuudukkoSave(day){
   const cells=(get('putti_ruudukko')||{})[day]||{};
