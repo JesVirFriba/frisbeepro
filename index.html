@@ -1289,7 +1289,7 @@ function renderProfile(){
         g.keys.forEach(k=>{if(s[k]){made+=s[k].m||0;total+=s[k].a||0;}});
         if(s.sarjat){
           s.sarjat.forEach(sj=>{
-            if(g.dists.includes(sj.dist||0)){made+=sj.made||0;total+=10;}
+            if(g.dists.includes(sj.dist||0)){made+=sj.made||0;total+=sjN(sj);}
           });
         }
       });
@@ -1303,13 +1303,13 @@ function renderProfile(){
       const avgRecent=recent.length?Math.round(recent.map(s=>{
         let m=0,a=0;
         Object.keys(s).forEach(k=>{if(k.startsWith('d')&&s[k]){m+=s[k].m||0;a+=s[k].a||0;}});
-        if(s.sarjat)s.sarjat.forEach(sj=>{m+=sj.made||0;a+=10;});
+        if(s.sarjat)s.sarjat.forEach(sj=>{m+=sj.made||0;a+=sjN(sj);});
         return a>0?m/a*100:null;
       }).filter(Boolean).reduce((a,b)=>a+b,0)/recent.length):null;
       const avgOlder=older.length?Math.round(older.map(s=>{
         let m=0,a=0;
         Object.keys(s).forEach(k=>{if(k.startsWith('d')&&s[k]){m+=s[k].m||0;a+=s[k].a||0;}});
-        if(s.sarjat)s.sarjat.forEach(sj=>{m+=sj.made||0;a+=10;});
+        if(s.sarjat)s.sarjat.forEach(sj=>{m+=sj.made||0;a+=sjN(sj);});
         return a>0?m/a*100:null;
       }).filter(Boolean).reduce((a,b)=>a+b,0)/older.length):null;
       const trendText=avgRecent&&avgOlder?(avgRecent>avgOlder?`↑ +${Math.round(avgRecent-avgOlder)}%`:avgRecent<avgOlder?`↓ ${Math.round(avgRecent-avgOlder)}%`:'→ Tasainen'):null;
@@ -3527,7 +3527,7 @@ function renderPuttiTrain(){
         const dk=PTDISTS.find(d=>d.dist===dist);
         if(!dk)return;
         totals[dk.key].m+=sj.made||0;
-        totals[dk.key].a+=10;
+        totals[dk.key].a+=sjN(sj);
       });
     } else {
       // Vanha muoto: s.d6, s.d8 jne – käytetään vain jos sarjat puuttuu
@@ -3613,10 +3613,10 @@ function renderPuttiTrain(){
 
   const useGrid=viewPhase===4&&(get('putti_kirjaus_tila')||'ruudukko')!=='vapaa';
   if(useGrid){
-    h+=puttiLuonnosHtml(today2);
-    h+=puttiRuudukkoHtml(today2,puttiDataFor(pageDate(),putWk));
+    h+=puttiTallyLuonnosHtml(today2);
+    h+=puttiTallyHtml(today2,puttiDataFor(pageDate(),putWk));
   }else{
-  if(viewPhase===4)h+='<button id="putti-tila-ruudukko" class="btn btn-out btn-sm" style="width:100%;margin-bottom:8px">↩ Ohjelman ruudukko</button>';
+  if(viewPhase===4)h+='<button id="putti-tila-ruudukko" class="btn btn-out btn-sm" style="width:100%;margin-bottom:8px">↩ Putti kerrallaan</button>';
   h+='<div class="card card-p" style="margin-bottom:10px">';
   h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
   h+='<div style="font-size:13px;font-weight:600">Tänään – sarjat</div>';
@@ -3700,8 +3700,8 @@ function renderPuttiTrain(){
         const dk=PTDISTS.find(d=>d.dist===dist);
         if(!dk)return;
         const t2=sj.tyyli||tyyli;
-        if(t2==='haara'){totalsH[dk.key].m+=sj.made||0;totalsH[dk.key].a+=10;}
-        else{totalsN[dk.key].m+=sj.made||0;totalsN[dk.key].a+=10;}
+        if(t2==='haara'){totalsH[dk.key].m+=sj.made||0;totalsH[dk.key].a+=sjN(sj);}
+        else{totalsN[dk.key].m+=sj.made||0;totalsN[dk.key].a+=sjN(sj);}
       });
     } else {
       // Vanha muoto: d6, d8 jne
@@ -3756,7 +3756,7 @@ function renderPuttiTrain(){
     sessions.slice().reverse().slice(0,8).forEach(s=>{
       let tot, made;
       if(s.sarjat && s.sarjat.length > 0){
-        tot = s.sarjat.length * 10;
+        tot = s.sarjat.reduce((a,sj)=>a+sjN(sj),0);
         made = s.sarjat.reduce((a,sj)=>a+(sj.made||0), 0);
       } else {
         tot = PTDISTS.reduce((a,d)=>s[d.key]?a+s[d.key].a:a, 0);
@@ -3777,7 +3777,7 @@ function renderPuttiTrain(){
       h+='</div>';
     });
   }else{
-    h+='<div class="empty"><div class="ei">🎯</div><div class="et">Ei sessioita tällä kaudella vielä.<br>Aloita tänään: ohjelman ruudukko, normaali ja haara joka matkalla.</div></div>';
+    h+='<div class="empty"><div class="ei">🎯</div><div class="et">Ei sessioita tällä kaudella vielä.<br>Aloita tänään: napauta putit matka kerrallaan, normaali ja haara.</div></div>';
   }
 
   div.innerHTML=h;
@@ -3880,23 +3880,30 @@ function renderPuttiTrain(){
     sarjaSaveSessBtn.addEventListener('touchend',saveSessFromSarjat);
   }
 
-  // Ohjelman ruudukko: tallennus ruutu kerrallaan, summat päivittyvät suoraan
-  cont.querySelectorAll('.pr-cell').forEach(function(inp){
+  // Putti kerrallaan: napautus per putti, 4 m numeroruutu
+  cont.querySelectorAll('.pt-row').forEach(function(row){
+    const hb=row.querySelector('.pt-hit'), mb=row.querySelector('.pt-miss'), ub=row.querySelector('.pt-undo');
+    if(hb)hb.addEventListener('click',function(e){e.preventDefault();puttiTallyTap(row,'hit');});
+    if(mb)mb.addEventListener('click',function(e){e.preventDefault();puttiTallyTap(row,'miss');});
+    if(ub)ub.addEventListener('click',function(e){e.preventDefault();puttiTallyTap(row,'undo');});
+  });
+  cont.querySelectorAll('.pt-seg').forEach(function(b){b.addEventListener('click',function(e){e.preventDefault();localStorage.setItem('fp_putti_nyt',b.dataset.s);puttiTallyUpdate(cont);});});
+  cont.querySelectorAll('.pt-four').forEach(function(inp){
     inp.addEventListener('input',function(){
-      let v=parseInt(inp.value,10);
-      if(!isNaN(v)){if(v>10){v=10;inp.value=10;}if(v<0){v=0;inp.value=0;}}
-      puttiRuutuSet(today3,inp.dataset.d+'|'+inp.dataset.s+'|'+inp.dataset.i,isNaN(v)?null:v);
-      puttiRuudukkoRecalc(cont);
+      let v=parseInt(inp.value,10); if(!isNaN(v)){if(v>10){v=10;inp.value=10;}if(v<0){v=0;inp.value=0;}}
+      const day=cont.querySelector('#putti-tally').dataset.day;
+      puttiTSet(day,4,inp.dataset.s,isNaN(v)?'':('1'.repeat(v)+'0'.repeat(10-v)));
+      puttiTallyUpdate(cont);
     });
   });
-  const ruSave=cont.querySelector('#putti-ruudukko-save');
-  if(ruSave)ruSave.addEventListener('click',function(e){e.preventDefault();puttiRuudukkoSave(today3);});
-  cont.querySelectorAll('.pr-save-old').forEach(function(b){b.addEventListener('click',function(e){e.preventDefault();puttiRuudukkoSave(b.dataset.day);});});
+  const ptSave=cont.querySelector('#putti-tally-save');
+  if(ptSave)ptSave.addEventListener('click',function(e){e.preventDefault();puttiTallySave(today3);});
+  cont.querySelectorAll('.pt-save-old').forEach(function(b){b.addEventListener('click',function(e){e.preventDefault();puttiTallySave(b.dataset.day);});});
   const ruVapaa=cont.querySelector('#putti-tila-vapaa');
   if(ruVapaa)ruVapaa.addEventListener('click',function(e){e.preventDefault();set('putti_kirjaus_tila','vapaa');renderTrain();});
   const ruTakaisin=cont.querySelector('#putti-tila-ruudukko');
   if(ruTakaisin)ruTakaisin.addEventListener('click',function(e){e.preventDefault();set('putti_kirjaus_tila','ruudukko');renderTrain();});
-  puttiRuudukkoRecalc(cont);
+  puttiTallyUpdate(cont);
 
   // Delete buttons
   cont.querySelectorAll('[data-del-putti]').forEach(btn=>{
@@ -3943,103 +3950,136 @@ function puttiPaineHtml(ds){
   h+='</div>';
   return h;
 }
-// ===== Putti-ruudukko: ohjelman rivit, jokaiselle matkalle sarjat normaalilla ja haaralla =====
-// Tila: putti_ruudukko[pvm] = {'matka|n/h|indeksi': osumat 0–10}. Tallennus-napilla ruudut muunnetaan putti_sessions-sessioksi (sarjat {made,dist,tyyli}).
-function puttiRuudukkoRows(pd,cells){
+// ===== Putti: napautus per putti =====
+// Sarjan putit (oletus 10; viimeinen lohko voi olla lyhyempi ja silloin sarjalla on kenttä n)
+function sjN(sj){return sj&&sj.n>0?sj.n:10;}
+// Luonnos: putti_tally[pvm] = {'[s<jakso>:]matka|n/h': '1101…'} (1 = sisään, 0 = ohi, järjestyksessä).
+// putti_tally_seq[pvm] = montako sessiota päivältä on jo tallennettu. Avaimen etuliite estää vanhentunutta laitetta palauttamasta jo tallennettua luonnosta.
+function puttiSeq(day){return parseInt((get('putti_tally_seq')||{})[day],10)||0;}
+function puttiTKey(day,d,s){const q=puttiSeq(day);return (q?'s'+q+':':'')+d+'|'+s;}
+function puttiTallyOf(day){
+  const all=(get('putti_tally')||{})[day]||{}; const q=puttiSeq(day); const pre=q?'s'+q+':':''; const out={};
+  Object.keys(all).forEach(function(k){
+    if(q){if(k.indexOf(pre)!==0)return;out[k.slice(pre.length)]=all[k];}
+    else{if(/^s\d+:/.test(k))return;out[k]=all[k];}
+  });
+  return out;
+}
+function puttiTSet(day,d,s,str){
+  const all=get('putti_tally')||{}; const dd=Object.assign({},all[day]||{}); const k=puttiTKey(day,d,s);
+  if(str)dd[k]=str; else delete dd[k];
+  all[day]=dd; set('putti_tally',all);
+}
+function puttiTRows(pd,tally){
   const rows={};
-  Object.keys(pd.perStyle).map(Number).filter(function(d){return pd.perStyle[d]>0;}).forEach(function(d){rows[d]={dist:d,n:Math.max(1,Math.round(pd.perStyle[d]/10)),circle:d<=10?'C1':'C2',extra:false};});
-  // tallennetut ruudut näkyvät aina, vaikka ne eivät kuuluisi valitun viikon ohjelmaan (laitteiden viikkovalinnat voivat poiketa)
-  Object.keys(cells||{}).forEach(function(k){
-    const p=k.split('|'); const d=parseInt(p[0],10), i=parseInt(p[2],10); if(isNaN(d)||isNaN(i))return;
-    if(!rows[d])rows[d]={dist:d,n:i+1,circle:d<=10?'C1':'C2',extra:true};
-    else if(i+1>rows[d].n)rows[d].n=i+1;
+  Object.keys(pd.perStyle).map(Number).filter(function(d){return pd.perStyle[d]>0;}).forEach(function(d){rows[d]={dist:d,plan:pd.perStyle[d],circle:d<=10?'C1':'C2',extra:false};});
+  Object.keys(tally||{}).forEach(function(k){
+    const d=parseInt(k.split('|')[0],10); if(isNaN(d)||!String(tally[k]).length)return;
+    if(!rows[d])rows[d]={dist:d,plan:0,circle:d<=10?'C1':'C2',extra:true};
   });
   return Object.keys(rows).map(Number).sort(function(a,b){if(a===4)return 1;if(b===4)return -1;return a-b;}).map(function(d){return rows[d];});
 }
-function puttiRuutuSet(day,key,val){
-  const all=get('putti_ruudukko')||{}; const dd=Object.assign({},all[day]||{});
-  if(val===null||val===undefined)delete dd[key]; else dd[key]=val;
-  all[day]=dd; set('putti_ruudukko',all);
-}
-function puttiRuudukkoHtml(day,pd){
-  const cells=(get('putti_ruudukko')||{})[day]||{}; const rows=puttiRuudukkoRows(pd,cells);
-  const planned=rows.filter(function(r){return !r.extra;}).reduce(function(a,r){return a+r.n*2;},0);
-  const inp=function(d,s,i){
-    const v=cells[d+'|'+s+'|'+i];
-    return '<input class="pr-cell" type="number" min="0" max="10" placeholder="/10" inputmode="numeric" data-d="'+d+'" data-s="'+s+'" data-i="'+i+'" value="'+((v===undefined||v===null)?'':v)+'" style="flex:1;min-width:0;width:100%;max-width:64px;padding:8px 2px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:16px;font-weight:700;text-align:center;background:var(--bg);color:var(--text)">';
-  };
-  const grp=function(d,s,n){let g='<div style="display:flex;gap:4px;justify-content:center">';for(let i=0;i<n;i++)g+=inp(d,s,i);return g+'</div>';};
-  let h='<div class="card card-p" id="putti-ruudukko" data-planned="'+planned+'" style="margin-bottom:10px">';
-  h+='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px"><div style="font-size:13px;font-weight:600">Tänään – ohjelman sarjat</div><div style="font-size:12px;color:var(--t2)">'+(pd.mix?Object.values(pd.mix).reduce(function(a,b){return a+b;},0):0)+' puttia · '+planned+' sarjaa</div></div>';
-  h+='<div style="font-size:11px;color:var(--t3);margin-bottom:8px">Kirjaa osumat kymmenestä. Jokainen matka sekä normaalilla että haaralla.</div>';
-  h+='<div style="display:grid;grid-template-columns:44px 1fr 1fr;gap:8px;margin-bottom:4px"><span></span><span style="font-size:11px;color:var(--t2);text-align:center">🧍 Normaali</span><span style="font-size:11px;color:var(--t2);text-align:center">🦵 Haara</span></div>';
+function puttiTCount(s){let m=0;s=String(s||'');for(let i=0;i<s.length;i++)if(s[i]==='1')m++;return m;}
+function puttiTallyHtml(day,pd){
+  const tally=puttiTallyOf(day), rows=puttiTRows(pd,tally);
+  const cur=localStorage.getItem('fp_putti_nyt')==='h'?'h':'n';
+  const planTotal=rows.filter(function(r){return !r.extra;}).reduce(function(a,r){return a+r.plan*2;},0);
+  const tag=function(r){const c1=r.circle==='C1';return '<span style="font-size:9px;padding:1px 6px;border-radius:10px;background:'+(c1?'var(--gl)':'var(--pl)')+';color:'+(c1?'var(--gd)':'var(--pd)')+'">'+r.circle+'</span>';};
+  const segBtn=function(s,label){const on=cur===s;return '<button class="pt-seg" data-s="'+s+'" style="flex:1;padding:9px 6px;border-radius:var(--rs);border:1.5px solid '+(on?'var(--g)':'var(--border)')+';background:'+(on?'var(--gl)':'var(--bg)')+';color:'+(on?'var(--gd)':'var(--t2)')+';font-size:13px;font-weight:'+(on?'700':'500')+';cursor:pointer;font-family:inherit">'+label+'</button>';};
+  let h='<div class="card card-p" id="putti-tally" data-plan="'+planTotal+'" data-day="'+day+'" style="margin-bottom:10px">';
+  h+='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px"><div style="font-size:13px;font-weight:600">Tänään – putti kerrallaan</div><div style="font-size:12px;color:var(--t2)">'+Object.values(pd.mix).reduce(function(a,b){return a+b;},0)+' puttia</div></div>';
+  h+='<div style="font-size:11px;color:var(--t3);margin-bottom:8px">Napauta jokaisen putin jälkeen. Tyyli valitaan tästä:</div>';
+  h+='<div style="display:flex;gap:6px;margin-bottom:4px">'+segBtn('n','🧍 Normaali')+segBtn('h','🦵 Haara')+'</div>';
   rows.forEach(function(r,idx){
-    const c1=r.circle==='C1';
-    h+='<div class="pr-row" data-d="'+r.dist+'" data-c="'+r.circle+'" style="padding:8px 0;border-top:0.5px solid var(--border)">';
-    h+='<div style="display:grid;grid-template-columns:44px 1fr 1fr;gap:8px;align-items:center">';
-    h+='<div><div style="font-size:15px;font-weight:700">'+r.dist+' m</div><span style="font-size:9px;padding:1px 6px;border-radius:10px;background:'+(c1?'var(--gl)':'var(--pl)')+';color:'+(c1?'var(--gd)':'var(--pd)')+'">'+r.circle+'</span></div>';
-    h+=grp(r.dist,'n',r.n)+grp(r.dist,'h',r.n);
-    h+='</div>';
-    h+='<div style="display:grid;grid-template-columns:44px 1fr 1fr;gap:8px;margin-top:3px"><span></span><span class="pr-tn" style="font-size:11px;color:var(--t2);text-align:center">–</span><span class="pr-th" style="font-size:11px;color:var(--t2);text-align:center">–</span></div>';
-    if(r.extra)h+='<div style="font-size:10px;color:var(--t3);margin-top:2px">Ei valitun viikon ohjelmassa (tallennettu kirjaus)</div>';
-    else if(r.dist===4&&idx===rows.length-1)h+='<div style="font-size:10px;color:var(--t3);margin-top:2px">Viimeisenä, väsyneenä: pakko sisään</div>';
+    if(r.dist===4&&!r.extra){
+      const vN=tally['4|n']&&String(tally['4|n']).length===10?puttiTCount(tally['4|n']):'', vH=tally['4|h']&&String(tally['4|h']).length===10?puttiTCount(tally['4|h']):'';
+      const box=function(s,label,v){return '<div style="text-align:center"><div style="font-size:11px;color:var(--t2);margin-bottom:2px">'+label+'</div><input class="weight-in pt-four" data-s="'+s+'" type="number" min="0" max="10" inputmode="numeric" placeholder="/10" value="'+v+'" style="width:72px;box-sizing:border-box"></div>';};
+      h+='<div class="pt-row4" data-d="4" style="padding:10px 0;border-top:0.5px solid var(--border);border-bottom:0.5px solid var(--border)"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:15px;font-weight:700;min-width:40px">4 m</span>'+tag(r)+'<span style="font-size:11px;color:var(--t3)">10 putin putki, viimeisenä</span></div><div style="display:flex;gap:14px">'+box('n','🧍 Normaali',vN)+box('h','🦵 Haara',vH)+'</div></div>';
+      return;
+    }
+    h+='<div class="pt-row" data-d="'+r.dist+'" data-c="'+r.circle+'" data-plan="'+r.plan+'" style="padding:10px 0;border-top:0.5px solid var(--border)">';
+    h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:15px;font-weight:700;min-width:40px">'+r.dist+' m</span>'+tag(r)+'<span style="flex:1"></span><span class="pt-cnt" style="font-size:11px;color:var(--t2)"></span></div>';
+    if(r.extra)h+='<div style="font-size:10px;color:var(--t3);margin-bottom:4px">Ei valitun viikon ohjelmassa (tallennettu kirjaus)</div>';
+    h+='<div class="pt-dots" style="display:flex;flex-wrap:wrap;gap:4px"></div>';
+    h+='<div style="display:flex;gap:8px;margin-top:8px"><button class="pt-hit" style="flex:1;height:44px;border-radius:var(--rs);border:1.5px solid var(--g);background:var(--gl);color:var(--gd);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">✓ Sisään</button><button class="pt-miss" style="flex:1;height:44px;border-radius:var(--rs);border:1.5px solid #E24B4A;background:transparent;color:#E24B4A;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">✗ Ohi</button><button class="pt-undo" aria-label="Kumoa viimeisin" style="width:44px;height:44px;border-radius:var(--rs);border:1px solid var(--border);background:var(--bg);color:var(--t2);font-size:18px;cursor:pointer">↶</button></div>';
     h+='</div>';
   });
-  h+='<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:10px 0 6px;border-top:0.5px solid var(--border);padding-top:10px">';
-  [['pr-sets','Sarjat'],['pr-n','Normaali'],['pr-h','Haara'],['pr-d','Ero']].forEach(function(t){
+  h+='<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:10px 0 6px;padding-top:10px">';
+  [['pt-p','Putit'],['pt-n','Normaali'],['pt-h','Haara'],['pt-d','Ero']].forEach(function(t){
     h+='<div style="background:var(--bg);border-radius:var(--rs);padding:7px 8px"><div style="font-size:10px;color:var(--t2)">'+t[1]+'</div><div id="'+t[0]+'" style="font-size:15px;font-weight:700">–</div></div>';
   });
-  h+='</div>';
-  h+='<div id="pr-all" style="font-size:12px;color:var(--t2);margin-bottom:10px">–</div>';
-  h+='<div style="display:flex;gap:6px"><button id="putti-ruudukko-save" class="btn" style="flex:1">💾 Tallenna sessio</button><button id="putti-tila-vapaa" class="btn btn-out btn-sm">Vapaa kirjaus</button></div>';
+  h+='</div><div id="pt-all" style="font-size:12px;color:var(--t2);margin-bottom:10px">–</div>';
+  h+='<div style="display:flex;gap:6px"><button id="putti-tally-save" class="btn" style="flex:1">💾 Tallenna sessio</button><button id="putti-tila-vapaa" class="btn btn-out btn-sm">Vapaa kirjaus</button></div>';
   h+='</div>';
   return h;
 }
-function puttiRuudukkoRecalc(cont){
-  const card=(cont||document).querySelector('#putti-ruudukko'); if(!card)return;
+// Päivittää pallot, laskurit ja yhteenvedon tallennetusta luonnoksesta (ei piirrä korttia uudelleen)
+function puttiTallyUpdate(cont){
+  const card=(cont||document).querySelector('#putti-tally'); if(!card)return;
+  const day=card.dataset.day, tally=puttiTallyOf(day); const cur=localStorage.getItem('fp_putti_nyt')==='h'?'h':'n';
   const pct=function(m,n){return n?Math.round(100*m/n)+' %':'–';};
-  let nm=0,nn=0,hm=0,hn=0,c1m=0,c1n=0,c2m=0,c2n=0,sets=0;
-  card.querySelectorAll('.pr-row').forEach(function(row){
-    let a=0,an=0,b=0,bn=0;
-    row.querySelectorAll('.pr-cell').forEach(function(i){
-      const v=parseInt(i.value,10); if(isNaN(v))return;
-      sets++; if(i.dataset.s==='h'){b+=v;bn+=10;}else{a+=v;an+=10;}
-    });
-    row.querySelector('.pr-tn').textContent=an?(a+'/'+an+' · '+pct(a,an)):'–';
-    row.querySelector('.pr-th').textContent=bn?(b+'/'+bn+' · '+pct(b,bn)):'–';
-    nm+=a;nn+=an;hm+=b;hn+=bn;
-    if(row.dataset.c==='C1'){c1m+=a+b;c1n+=an+bn;}else{c2m+=a+b;c2n+=an+bn;}
+  let nm=0,na=0,hm=0,ha=0,c1m=0,c1n=0,c2m=0,c2n=0;
+  Object.keys(tally).forEach(function(k){
+    const p=k.split('|'); const d=parseInt(p[0],10), s=String(tally[k]||''); if(!s.length)return;
+    const m=puttiTCount(s), a=s.length;
+    if(p[1]==='h'){hm+=m;ha+=a;}else{nm+=m;na+=a;}
+    if(d<=10){c1m+=m;c1n+=a;}else{c2m+=m;c2n+=a;}
   });
-  const planned=parseInt(card.dataset.planned,10)||0;
+  card.querySelectorAll('.pt-row').forEach(function(row){
+    const d=row.dataset.d, plan=parseInt(row.dataset.plan,10)||0, sN=String(tally[d+'|n']||''), sH=String(tally[d+'|h']||''), s=cur==='h'?sH:sN;
+    const total=Math.max(plan,s.length); let dots='';
+    for(let i=0;i<total;i++){const ch=s[i];dots+='<span style="width:14px;height:14px;border-radius:50%;box-sizing:border-box;display:inline-block;'+(ch==='1'?'background:var(--g);border:1.5px solid var(--g)':ch==='0'?'background:#E24B4A;border:1.5px solid #E24B4A':'border:1.5px solid var(--border)')+'"></span>';}
+    row.querySelector('.pt-dots').innerHTML=dots;
+    row.querySelector('.pt-cnt').textContent='Normaali '+(sN.length?puttiTCount(sN)+'/'+sN.length:'–')+' · Haara '+(sH.length?puttiTCount(sH)+'/'+sH.length:'–')+(plan?' · tavoite '+plan:'');
+  });
+  card.querySelectorAll('.pt-four').forEach(function(i){
+    if(document.activeElement===i)return;
+    const s=String(tally['4|'+i.dataset.s]||''); i.value=s.length===10?puttiTCount(s):'';
+  });
+  const planTotal=parseInt(card.dataset.plan,10)||0;
   const set=function(id,t){const e=card.querySelector('#'+id);if(e)e.textContent=t;};
-  set('pr-sets',sets+' / '+planned);
-  set('pr-n',pct(nm,nn)); set('pr-h',pct(hm,hn));
-  set('pr-d',(nn&&hn)?((Math.round(100*hm/hn-100*nm/nn)>0?'+':'')+Math.round(100*hm/hn-100*nm/nn)+' %-yks.'):'–');
-  set('pr-all',(nn+hn)?('Yhteensä '+(nm+hm)+'/'+(nn+hn)+' · '+pct(nm+hm,nn+hn)+' · C1 '+pct(c1m,c1n)+', C2 '+pct(c2m,c2n)+(sets>=planned&&planned>0?' · ✓ kaikki sarjat tehty':'')):'Täytä ensimmäinen sarja');
+  set('pt-p',(na+ha)+' / '+planTotal); set('pt-n',pct(nm,na)); set('pt-h',pct(hm,ha));
+  const df=(na&&ha)?Math.round(100*hm/ha-100*nm/na):null; set('pt-d',df===null?'–':((df>0?'+':'')+df+' %-yks.'));
+  set('pt-all',(na+ha)?('Yhteensä '+(nm+hm)+'/'+(na+ha)+' · '+pct(nm+hm,na+ha)+' · C1 '+pct(c1m,c1n)+', C2 '+pct(c2m,c2n)+((na+ha)>=planTotal&&planTotal>0?' · ✓ kaikki putit tehty':'')):'Napauta ensimmäinen putti');
+  card.querySelectorAll('.pt-seg').forEach(function(b){
+    const on=b.dataset.s===cur;
+    b.style.borderColor=on?'var(--g)':'var(--border)'; b.style.background=on?'var(--gl)':'var(--bg)'; b.style.color=on?'var(--gd)':'var(--t2)'; b.style.fontWeight=on?'700':'500';
+  });
 }
-function puttiLuonnosHtml(today){
-  const all=get('putti_ruudukko')||{}; let h='';
+function puttiTallyTap(row,kind){
+  const card=row.closest('#putti-tally'); const day=card.dataset.day; const d=row.dataset.d, plan=parseInt(row.dataset.plan,10)||0;
+  const cur=localStorage.getItem('fp_putti_nyt')==='h'?'h':'n'; const tally=puttiTallyOf(day); const s=String(tally[d+'|'+cur]||'');
+  if(kind==='undo')puttiTSet(day,d,cur,s.slice(0,-1));
+  else if(s.length<(plan||20)+10)puttiTSet(day,d,cur,s+(kind==='hit'?'1':'0'));
+  puttiTallyUpdate(card.parentNode||document);
+}
+function puttiTallyLuonnosHtml(today){
+  const all=get('putti_tally')||{}; let h='';
   Object.keys(all).sort().forEach(function(day){
     if(day>=today)return;
-    const n=Object.keys(all[day]||{}).filter(function(k){const v=all[day][k];return v!==null&&v!==undefined;}).length;
+    const t=puttiTallyOf(day); const n=Object.keys(t).reduce(function(a,k){return a+String(t[k]||'').length;},0);
     if(!n)return;
-    h+='<div class="card card-p" style="margin-bottom:8px;border-left:3px solid var(--pd)"><div style="font-size:13px;font-weight:600">Tallentamaton kirjaus '+fiDate(day)+'</div><div style="font-size:11px;color:var(--t2);margin:2px 0 8px">'+n+' sarjaa on kirjattu ruudukkoon, mutta sessiota ei ole tallennettu, joten ne eivät näy tilastoissa.</div><button class="btn btn-sm pr-save-old" data-day="'+day+'">💾 Tallenna sessiona</button></div>';
+    h+='<div class="card card-p" style="margin-bottom:8px;border-left:3px solid var(--pd)"><div style="font-size:13px;font-weight:600">Tallentamaton kirjaus '+fiDate(day)+'</div><div style="font-size:11px;color:var(--t2);margin:2px 0 8px">'+n+' puttia on kirjattu, mutta sessiota ei ole tallennettu, joten ne eivät näy tilastoissa.</div><button class="btn btn-sm pt-save-old" data-day="'+day+'">💾 Tallenna sessiona</button></div>';
   });
   return h;
 }
-function puttiRuudukkoSave(day){
-  const cells=(get('putti_ruudukko')||{})[day]||{};
-  const order=function(d){return d===4?99:d;};
-  const sarjat=Object.keys(cells).map(function(k){const p=k.split('|');return {d:parseInt(p[0],10),s:p[1],i:parseInt(p[2],10),v:cells[k]};})
-    .filter(function(x){return x.v!==null&&x.v!==undefined&&!isNaN(x.v);})
-    .sort(function(a,b){return order(a.d)-order(b.d)||(a.s===b.s?0:(a.s==='n'?-1:1))||a.i-b.i;})
-    .map(function(x){return {made:x.v,dist:x.d,tyyli:x.s==='h'?'haara':'normaali'};});
+function puttiTallySave(day){
+  const tally=puttiTallyOf(day); const order=function(d){return d===4?99:d;};
+  const keys=Object.keys(tally).filter(function(k){return String(tally[k]||'').length>0;}).sort(function(a,b){const pa=a.split('|'),pb=b.split('|');return order(+pa[0])-order(+pb[0])||(pa[1]===pb[1]?0:(pa[1]==='n'?-1:1));});
+  const sarjat=[];
+  keys.forEach(function(k){
+    const p=k.split('|'), d=parseInt(p[0],10), st=p[1]==='h'?'haara':'normaali', s=String(tally[k]);
+    for(let i=0;i<s.length;i+=10){
+      const chunk=s.slice(i,i+10); const e={made:puttiTCount(chunk),dist:d,tyyli:st}; if(chunk.length<10)e.n=chunk.length; sarjat.push(e);
+    }
+  });
   (getPuttiSarjat(day)||[]).forEach(function(s){if(s&&typeof s==='object')sarjat.push(s);});
-  if(!sarjat.length){alert('Kirjaa ainakin yksi sarja');return;}
+  if(!sarjat.length){alert('Kirjaa ainakin yksi putti');return;}
   const hasN=sarjat.some(function(s){return s.tyyli!=='haara';}), hasH=sarjat.some(function(s){return s.tyyli==='haara';});
   const sess={id:Date.now(),date:day,tyyli:(hasN&&hasH)?'molemmat':(hasH?'haara':'normaali'),sarjat:sarjat};
   const ss=get('putti_sessions')||[]; ss.push(sess); set('putti_sessions',ss);
-  const all=get('putti_ruudukko')||{}; all[day]={}; set('putti_ruudukko',all);
+  keys.forEach(function(k){const p=k.split('|');puttiTSet(day,p[0],p[1],'');});
+  const sq=get('putti_tally_seq')||{}; sq[day]=puttiSeq(day)+1; set('putti_tally_seq',sq);
   setPuttiSarjat(day,[]); setDone(day,1); renderTrain();
 }
 // ===== Putti: kausiarkisto =====
@@ -4049,7 +4089,7 @@ function puttiTotalsOf(sessions){
   const t={}; PTDISTS.forEach(function(d){t[d.key]={m:0,a:0};});
   sessions.forEach(function(s){
     if(s.sarjat&&s.sarjat.length>0){
-      s.sarjat.forEach(function(sj){const dk=PTDISTS.find(function(d){return d.dist===(sj.dist||3);});if(!dk)return;t[dk.key].m+=sj.made||0;t[dk.key].a+=10;});
+      s.sarjat.forEach(function(sj){const dk=PTDISTS.find(function(d){return d.dist===(sj.dist||3);});if(!dk)return;t[dk.key].m+=sj.made||0;t[dk.key].a+=sjN(sj);});
     }else{
       PTDISTS.forEach(function(d){if(s[d.key]){t[d.key].m+=s[d.key].m;t[d.key].a+=s[d.key].a;}});
     }
@@ -4067,7 +4107,7 @@ function puttiArkistoiKausi(kausi){
   act.forEach(function(s){
     dates.push(s.date);
     if(s.sarjat&&s.sarjat.length>0){
-      s.sarjat.forEach(function(sj){add(sj.dist||3,(sj.tyyli||s.tyyli)==='haara'?'h':'n',sj.made||0,10);sarjoja++;});
+      s.sarjat.forEach(function(sj){add(sj.dist||3,(sj.tyyli||s.tyyli)==='haara'?'h':'n',sj.made||0,sjN(sj));sarjoja++;});
     }else{
       Object.keys(s).forEach(function(k){if(/^d\d+$/.test(k)&&s[k]&&s[k].a>0){add(parseInt(k.slice(1),10),s.tyyli==='haara'?'h':'n',s[k].m,s[k].a);sarjoja+=Math.round(s[k].a/10);}});
     }
