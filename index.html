@@ -1050,7 +1050,7 @@ const PUTTI_P4_WEEKS=[
   {jakso:'Jakso 1 – volyymipainotus', sessions:5, mix:{4:10,6:10,8:20,10:10,12:10}}, // Vk5: 5×60
   {jakso:'Jakso 1 – volyymipainotus', sessions:5, mix:{4:10,6:10,8:20,10:10,12:10}}, // Vk6: 5×60
   {jakso:'Jakso 2 – etäisyyspainotus', sessions:5, mix:{4:10,8:20,10:20,12:10,14:10}}, // Vk7: 5×70
-  {jakso:'Jakso 2 – etäisyyspainotus', sessions:5, mix:{4:10,8:20,10:20,12:10,14:10}}, // Vk8: 5×70
+  {jakso:'Jakso 2 – etäisyyspainotus', sessions:4, mix:{4:10,8:10,10:10,12:5,14:5}, taper:true}, // Vk8: testiviikon kevennys (4 sessiota, 80 puttia/sessio; pe 4.12. vain 40)
   {jakso:'Jakso 2 – etäisyyspainotus', sessions:5, mix:{4:10,8:20,10:20,12:10,14:10}}, // Vk9: 5×70
   {jakso:'Jakso 2 – etäisyyspainotus', sessions:5, mix:{4:10,6:10,8:20,10:20,12:10,14:10}}, // Vk10: 5×80
   {jakso:'Jakso 2 – etäisyyspainotus', sessions:5, mix:{4:10,6:10,8:20,10:20,12:10,14:10}}, // Vk11: 5×80
@@ -1058,7 +1058,7 @@ const PUTTI_P4_WEEKS=[
   {jakso:'Jakso 3 – vakiinnutus + paine', sessions:5, mix:{4:10,6:10,8:20,10:20,12:10,14:10}, pressure:true}, // Vk13: 5×80
   {jakso:'Jakso 3 – vakiinnutus + paine', sessions:5, mix:{4:10,6:10,8:20,10:20,12:10,14:10}, pressure:true}, // Vk14
   {jakso:'Jakso 3 – vakiinnutus + paine', sessions:5, mix:{4:10,6:10,8:20,10:20,12:10,14:10}, pressure:true}, // Vk15
-  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:5, mix:{4:10,6:10,8:20,10:20,12:10,14:10}, pressure:true}  // Vk16
+  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:5, mix:{4:10,6:5,8:10,10:10,12:5,14:5}, pressure:true, taper:true}  // Vk16: kevennys (90 puttia/sessio, paine-sarja säilyy)
 ];
 // Putti helmi–toukokuu: ylläpito (nopeusjakso) ja toukokuun alku (kisakuntoon), molemmissa paine-sarja
 // Putti-ohjelma: jokainen matka tehdään sekä normaalilla että haaralla. perStyle = yhden tyylin putit / matka (ohjelmataulukon arvo),
@@ -1073,7 +1073,10 @@ function puttiDataFor(ds,wk){
   if(ph===3)return puttiBoth({jakso:'Vaihe 3 – ylläpito (nopeusjakso)',label:'3 sessiota/vk',sessions:3,mix:{4:10,6:10,8:20,10:20},pressure:true});
   if(ph===4)return puttiBoth({jakso:'Vaihe 4 – kisakuntoon',label:'testiviikko: to testi (putti 120) + la',sessions:1,mix:{4:10,6:10,8:10,10:10,12:10},pressure:true});
   const w=Math.max(1,Math.min(16,wk));
-  return puttiBoth(Object.assign({},PUTTI_P4_WEEKS[w-1],{label:'Viikko '+w}));
+  const row=PUTTI_P4_WEEKS[w-1];
+  // testiviikon perjantai (2 vrk ennen testiä): vain lyhyt tuntuma testimatkoilta
+  if(ds==='2026-12-04'&&w===8)return puttiBoth(Object.assign({},row,{mix:{4:10,12:5,14:5},label:'Viikko 8 · testiviikko, pe kevyt (testi su 6.12.)'}));
+  return puttiBoth(Object.assign({},row,{label:'Viikko '+w+(row.taper?' · kevennys (volyymi −45 %, teho ennallaan)':'')}));
 }
 
 // Migraatio vanhoista avaimista → uudet C1/C2 avaimet
@@ -2344,6 +2347,7 @@ function throwProgramFor(ds,mode){
   let extra='';
   if(effMode==='tek'&&ph<=2&&n<=2)extra+=' Vk 1–2: nopeusheitot noin 80 % teholla (käden palautuminen).';
   if(effMode==='tek'&&ph===2)extra+=' Vaihe 2: nopeusheitot molempina päivinä (ti ja la), harjoitevolyymi pienempi.';
+  if(effMode==='tek'&&ph<=2&&(n===8||n===16))extra+=' KEVENNYSVIIKKO: sarjat −45 %, teho ennallaan'+(n===8?' (testi su 6.12.)':'')+'.';
   return {cw,ns,title,pick,note:note+extra,n,ph,effMode};
 }
 // Mukauta session sisältö vaiheen ja viikon mukaan (80 % teho vk 1–2, Vaihe 2: nopeusheitot molempina päivinä)
@@ -2358,6 +2362,10 @@ function thAdapt(sess,prog){
     const t1=(THROW_SESSIONS[prog.cw]||[]).find(function(s){return baseId(s.id)==='t1';});
     const sp=t1&&t1.exercises.find(isSpeed);
     if(sp)exs.push(Object.assign({},sp,{id:sp.id+'p2'}));
+  }
+  // Kevennysviikko (vk 8: testiviikko, vk 16: Vaihe 2:n päätös): sarjat −45 %, teho ennallaan
+  if(prog.n===8||prog.n===16){
+    exs=exs.map(function(e){return e.totalSets?Object.assign({},e,{totalSets:Math.max(2,Math.round(e.totalSets*0.55)),detail:(e.detail||'')+' · kevennys −45 %'}):e;});
   }
   return Object.assign({},sess,{exercises:exs});
 }
