@@ -256,6 +256,9 @@ textarea{resize:none;min-height:65px}
 /* ===== Mobiilikäytettävyys: kosketusalueet vähintään 44 px, luettavat fontit ===== */
 @media (max-width:600px),(pointer:coarse){
   .tb,.wk-btn,.btn,.ni,.weight-in,button,select{min-height:44px}
+  button,.si-btn,.rep-add,.cal-nav-btn{min-width:44px}
+  input:not([type=checkbox]):not([type=radio]){min-height:44px;box-sizing:border-box}
+  .sess-chip,.done-chip{display:inline-flex !important;align-items:center;padding:9px 12px !important;min-height:40px;box-sizing:border-box;margin:2px 0}
   .tb{font-size:13px;padding:7px 12px}
   .wk-btn{min-width:48px;font-size:13px}
   .mob-row,.ak-row,.comp-step-row{min-height:48px}
@@ -2793,7 +2796,7 @@ function renderWeekView() {
       const lbl = sessionChipLabel(s, day.date);
       if(pillsMode && sessionRoute[s]){
         const sd = !!subDone[s] || (isDone && !isCompDay && Object.keys(subDone).length===0);
-        return `<span onclick="event.stopPropagation();toggleSubCheck('${day.date}','${s}')" style="font-size:10px;padding:2px 8px;border-radius:20px;cursor:pointer;flex-shrink:0;font-weight:${sd?600:500};background:${sd?'var(--gl)':ssc.bg};color:${sd?'var(--gd)':ssc.col};border:1px solid ${sd?'var(--g)':'transparent'}">${sd?'✓':'○'} ${lbl}</span>`;
+        return `<span class="sess-chip" onclick="event.stopPropagation();toggleSubCheck('${day.date}','${s}')" style="font-size:10px;padding:2px 8px;border-radius:20px;cursor:pointer;flex-shrink:0;font-weight:${sd?600:500};background:${sd?'var(--gl)':ssc.bg};color:${sd?'var(--gd)':ssc.col};border:1px solid ${sd?'var(--g)':'transparent'}">${sd?'✓':'○'} ${lbl}</span>`;
       }
       return `<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:${ssc.bg};color:${ssc.col};font-weight:500;flex-shrink:0">${lbl}</span>`;
     }).join('');
@@ -2810,7 +2813,7 @@ function renderWeekView() {
     h += '<div style="display:flex;gap:3px;flex-wrap:wrap">'+badges+'</div>';
     h += '</div>';
     if(isDone && !isCompDay){
-      h += '<div onclick="event.stopPropagation();setDone(\''+day.date+'\',null);renderTrain()" style="font-size:10px;color:var(--gd);cursor:pointer;flex-shrink:0;padding:3px 7px;border:1px solid var(--g);border-radius:20px">✓ Tehty</div>';
+      h += '<div class="done-chip" onclick="event.stopPropagation();setDone(\''+day.date+'\',null);renderTrain()" style="font-size:10px;color:var(--gd);cursor:pointer;flex-shrink:0;padding:3px 7px;border:1px solid var(--g);border-radius:20px">✓ Tehty</div>';
     } else if(compDone){
       h += '<div style="font-size:10px;color:var(--gd);flex-shrink:0;padding:3px 7px;border:1px solid var(--g);border-radius:20px">✓ Kisattu</div>';
     } else if(isPast && day.intensity !== 'rest' && !isCompDay){
