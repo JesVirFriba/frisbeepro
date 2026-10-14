@@ -3391,6 +3391,32 @@ function strProgressHtml(sp){
   return h;
 }
 function strRepsSet(key,val){set(key,strParseReps(val).join(','));renderStr();}
+// Arvioitu 1RM -rivin sisältö (tyhjä, jos painoa tai toistoja ei ole)
+function strE1Html(w,rr,pe){
+  if(!(w>0)||!rr.length)return '';
+  const e1=strE1rm(w,rr); if(!e1)return '';
+  return 'Arvioitu 1RM (Epley): <b>'+e1+' kg</b>'+(pe?' · edellinen vk '+pe+' kg ('+(e1-pe>0?'+':'')+(e1-pe)+' kg)':'');
+}
+// Sarjakohtaiset toistoruudut: tallennus heti (pilkkulista säilyy muotona), laskurit päivittyvät ilman uudelleenpiirtoa
+function strRepIn(inp){
+  const grp=inp.closest('.ex-reps'); if(!grp)return;
+  const n=parseInt(grp.dataset.sets,10)||0;
+  const v=parseInt(inp.value,10); if(!isNaN(v)){if(v<0)inp.value=0;if(v>999)inp.value=999;}
+  const vals=Array.prototype.slice.call(grp.querySelectorAll('.rep-in')).map(function(i){return parseInt(i.value,10);}).filter(function(x){return !isNaN(x);});
+  set(grp.dataset.rkey,vals.join(','));
+  const cnt=grp.querySelector('.rep-cnt'); if(cnt)cnt.textContent=vals.length+'/'+n+' sarjaa';
+  const blk=grp.closest('.ex-block'); if(!blk)return;
+  const nm=blk.querySelector('.ex-name'); if(nm){const done=vals.length>=n; nm.textContent=nm.textContent.replace(/ ✓$/,'')+(done?' ✓':''); nm.style.color=done?'var(--g)':'';}
+  const e=blk.querySelector('.ex-e1rm'); const wi=blk.querySelector('input.weight-in:not(.rep-in)');
+  if(e)e.innerHTML=strE1Html(wi?parseFloat(wi.value):0,vals,parseFloat(e.dataset.prev)||null);
+}
+function strRepAdd(btn){
+  const grp=btn.closest('.ex-reps'); if(!grp)return;
+  const row=grp.querySelector('.rep-row'); const k=row.querySelectorAll('.rep-in').length+1;
+  const d=document.createElement('div'); d.style.cssText='flex:1 1 0;min-width:44px;max-width:80px;text-align:center';
+  d.innerHTML='<div style="font-size:10px;color:var(--t3);margin-bottom:2px">'+k+'</div><input class="weight-in rep-in" style="width:100%;box-sizing:border-box;padding:8px 2px" type="number" inputmode="numeric" min="0" max="999" placeholder="">';
+  row.appendChild(d); const inp=d.querySelector('input'); inp.addEventListener('input',function(){strRepIn(inp);}); inp.focus();
+}
 function strWeightSet(key,val){set(key,val);renderStr();}
 
 
@@ -3402,7 +3428,7 @@ function renderStr(){
   const ctxSessId=(mappedSess&&sp.data.some(x=>x.id===mappedSess))?mappedSess:null;
   const strFiltered=!!(ctxSessId&&!strShowAll);
   if(trainCtxDate){h+=`<div style="font-size:11px;color:var(--t2);margin:-4px 0 8px">📅 ${fiDate(trainCtxDate)} · off-season viikko ${Math.max(1,offWeekN(trainCtxDate))}</div>`;}
-  h+=`<div style="font-size:11px;color:var(--t2);margin:0 0 8px">Kirjaa paino ja jokaisen sarjan toistot (esim. 10,9,8). Kun kaikki sarjat yltävät toistoalueen ylärajalle, sovellus ehdottaa seuraavalle viikolle painon nostoa.</div>`;
+  h+=`<div style="font-size:11px;color:var(--t2);margin:0 0 8px">Kirjaa paino ja jokaisen sarjan toistot omaan ruutuunsa. Kun kaikki sarjat yltävät toistoalueen ylärajalle, sovellus ehdottaa seuraavalle viikolle painon nostoa.</div>`;
   sp.data.forEach(sess=>{
     if(strFiltered&&sess.id!==ctxSessId)return;
     const nSets=(ex)=>sp.cfg(ex).sets;
@@ -3443,14 +3469,21 @@ function renderStr(){
           <span style="font-size:12px;color:var(--t3)">${ex.wunit||'kg'}</span>
         </div>`;
       }
-      h+=`<div class="weight-row">
-          <span style="font-size:12px;color:var(--t2);flex:1">${ex.time?'Sekunnit / sarja':'Toistot / sarja'} · ${rr.length}/${c.sets} sarjaa</span>
-          <input class="weight-in" style="width:132px;text-align:center" type="text" inputmode="numeric" placeholder="${Array(Math.min(c.sets,5)).fill(ex.hi).join(',')}" value="${repsStr}" onchange="strRepsSet('${rKey}',this.value)">
+      {
+        const nCells=Math.max(c.sets,rr.length);
+        let cells='';
+        for(let i=0;i<nCells;i++){
+          cells+=`<div style="flex:1 1 0;min-width:44px;max-width:80px;text-align:center"><div style="font-size:10px;color:var(--t3);margin-bottom:2px">${i+1}</div><input class="weight-in rep-in" style="width:100%;box-sizing:border-box;padding:8px 2px" type="number" inputmode="numeric" min="0" max="999" placeholder="${ex.hi}" value="${rr[i]!==undefined?rr[i]:''}"></div>`;
+        }
+        h+=`<div class="weight-row ex-reps" data-rkey="${rKey}" data-sets="${c.sets}" style="flex-direction:column;align-items:stretch;gap:6px">
+          <div style="display:flex;align-items:center;gap:7px"><span style="font-size:12px;color:var(--t2);flex:1">${ex.time?'Sekunnit / sarja':'Toistot / sarja'} · <span class="rep-cnt">${rr.length}/${c.sets} sarjaa</span></span><button class="rep-add" type="button" aria-label="Lisää sarja" style="border:1px solid var(--border);background:var(--card);color:var(--t2);border-radius:var(--rs);font-size:14px;line-height:1;padding:4px 9px;cursor:pointer">+</button></div>
+          <div class="rep-row" style="display:flex;flex-wrap:wrap;gap:6px">${cells}</div>
         </div>`;
+      }
       if(sug)h+=`<div style="font-size:11px;color:var(--gd);background:var(--gl);border-radius:var(--rs);padding:5px 8px;margin-bottom:7px">💡 ${sug.text}</div>`;
-      if(ex.e1rm&&parseFloat(curW)>0&&rr.length){
-        const e1=strE1rm(parseFloat(curW),rr); const pe=prev?strE1rm(prev.pw,prev.rr):null;
-        h+=`<div style="font-size:11px;color:var(--t2);margin-bottom:6px">Arvioitu 1RM (Epley): <b>${e1} kg</b>${pe?` · edellinen vk ${pe} kg (${e1-pe>0?'+':''}${e1-pe} kg)`:''}</div>`;
+      if(ex.e1rm){
+        const pe=prev?strE1rm(prev.pw,prev.rr):null;
+        h+=`<div class="ex-e1rm" data-prev="${pe||''}" style="font-size:11px;color:var(--t2);margin-bottom:6px">${strE1Html(parseFloat(curW),rr,pe)}</div>`;
       }
       h+=`</div>`;
     });
@@ -3462,6 +3495,17 @@ function renderStr(){
   h+=strProgressHtml(sp);
   h+='<div class="page-spacer"></div>';cont.innerHTML=h;
   mkWkTabs('str-wk',sp.wk,sp.weeks,'setStrWk');
+  cont.querySelectorAll('.rep-in').forEach(function(i){i.addEventListener('input',function(){strRepIn(i);});});
+  cont.querySelectorAll('.rep-add').forEach(function(b){b.addEventListener('click',function(){strRepAdd(b);});});
+  // kun poistutaan ruuduista muualle kuin toiseen syöttökenttään, päivitä koko sivu (yhteenvedot, kehitystaulukko)
+  cont.querySelectorAll('.ex-reps').forEach(function(g){
+    g.addEventListener('focusout',function(){
+      setTimeout(function(){
+        const a=document.activeElement;
+        if(trainTabCur==='str'&&document.querySelector('#train-content .rep-in')&&!(a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA')))renderStr();
+      },300);
+    });
+  });
 }
 function setStrWk(w){strWk=w;strManualWk=w;localStorage.setItem('fp_str_wk',w);renderStr()}
 
