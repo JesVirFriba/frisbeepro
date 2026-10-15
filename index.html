@@ -2347,7 +2347,7 @@ function throwProgramFor(ds,mode){
   let extra='';
   if(effMode==='tek'&&ph<=2&&n<=2)extra+=' Vk 1–2: nopeusheitot noin 80 % teholla (käden palautuminen).';
   if(effMode==='tek'&&ph===2)extra+=' Vaihe 2: nopeusheitot molempina päivinä (ti ja la), harjoitevolyymi pienempi.';
-  if(effMode==='tek'&&ph<=2&&(n===8||n===16))extra+=' KEVENNYSVIIKKO: sarjat −45 %, teho ennallaan'+(n===8?' (testi su 6.12.)':'')+'.';
+  if(effMode==='tek'&&ph<=2&&(n===8||n===16))extra+=' KEVENNYSVIIKKO: sarjat −45 %, teho ennallaan'+(n===8?' (testi su 6.12.)':'')+'.'+(n===8?' Tiistaina lyhyt terävöitys: 2 × 4 nopeaa heittoa.':'');
   return {cw,ns,title,pick,note:note+extra,n,ph,effMode};
 }
 // Mukauta session sisältö vaiheen ja viikon mukaan (80 % teho vk 1–2, Vaihe 2: nopeusheitot molempina päivinä)
@@ -2366,6 +2366,10 @@ function thAdapt(sess,prog){
   // Kevennysviikko (vk 8: testiviikko, vk 16: Vaihe 2:n päätös): sarjat −45 %, teho ennallaan
   if(prog.n===8||prog.n===16){
     exs=exs.map(function(e){return e.totalSets?Object.assign({},e,{totalSets:Math.max(2,Math.round(e.totalSets*0.55)),detail:(e.detail||'')+' · kevennys −45 %'}):e;});
+  }
+  // Testiviikon terävöitys (vk 8, tiistai): lyhyt nopeusannos pitää intensiteetin yllä ennen su 6.12. testiä
+  if(prog.n===8&&baseId(sess.id)==='t2'){
+    exs.push({id:'sharp8',name:'Terävöitys: nopeusheitot BH+FH',totalSets:2,rpe:'high',detail:'4/sarja · noin 90 % teholla, pitkä lepo (1–2 min) · testiviikon terävöitys, ei väsytä'});
   }
   return Object.assign({},sess,{exercises:exs});
 }
