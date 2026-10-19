@@ -2276,7 +2276,6 @@ const SESSION_COLORS = {
   voima_a:    {bg:'#FCEBEB', col:'#791F1F', lbl:'Jalat'},
   voima_b:    {bg:'#FAECE7', col:'#712B13', lbl:'Yläkroppa'},
   voima_c:    {bg:'#FAEEDA', col:'#633806', lbl:'Nivelterveys'},
-  mob_quick:  {bg:'#E8F5E9', col:'#1B5E20', lbl:'Yläselkä'},
   teho:       {bg:'#FFF3E0', col:'#E65100', lbl:'Nopeus'},
   hermosto:   {bg:'#E1F5EE', col:'#085041', lbl:'Hermosto'},
   peruskunto: {bg:'#E3F2FD', col:'#0D47A1', lbl:'Peruskunto'},
@@ -2388,9 +2387,9 @@ function openSession(target,date,sess){
 }
 
 // ===== Päiväkortin ja etusivun apufunktiot =====
-// Karsitaan otsikosta apuharjoitteet (merkit näyttävät ne jo): "Voima A + yläselkäpika + hermosto" -> "Voima A"
+// Karsitaan otsikosta apuharjoitteet (merkit näyttävät ne jo): "Voima A + iltaliikkuvuus (…) + hermosto" -> "Voima A"
 function shortDayTitle(note){
-  const s=String(note||'').replace(/\s*\+\s*(yläselkäpika|hermosto|peruskunto\s*\d+\s*min|täysi liikkuvuus|iltaliikkuvuus(\s*\([^)]*\))?)/gi,'').trim();
+  const s=String(note||'').replace(/\s*\+\s*(hermosto|peruskunto\s*\d+\s*min|täysi liikkuvuus|iltaliikkuvuus(\s*\([^)]*\))?)/gi,'').trim();
   return s||String(note||'');
 }
 function sessionChipLabel(s,ds){
@@ -2782,7 +2781,7 @@ function renderWeekView() {
     const textCol = isToday ? sc.col : 'var(--text)';
     const dayCol = isToday ? sc.col : 'var(--t3)';
     const opacity = isPast && !isToday ? '.55' : '1';
-    const sessionRoute = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',voima_c:'str',putti:'putti',mob:'mob',mob_quick:'mob_quick',teho:'str',hermosto:'hermosto',peruskunto:'peruskunto',testi:'testi',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros',kisa:'comp_day',lepo:'rest_day'};
+    const sessionRoute = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',voima_c:'str',putti:'putti',mob:'mob',teho:'str',hermosto:'hermosto',peruskunto:'peruskunto',testi:'testi',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros',kisa:'comp_day',lepo:'rest_day'};
     const routableSessions = sessions.filter(s=>sessionRoute[s]);
     // Kisa ja lepo ovat aina klikattavia
     const isCompDay = day.intensity === 'comp' && !vkDates.has(day.date);
@@ -3114,7 +3113,7 @@ function trainTab(tab,el){
   if(el)el.classList.add('on');
   else{
     // avattaessa kortista: korosta vastaava ylävalikon välilehti
-    const alias=({throw_tek:'throw',throw_nop:'throw',mob_quick:'mob',teho:'str'})[tab]||tab;
+    const alias=({throw_tek:'throw',throw_nop:'throw',teho:'str'})[tab]||tab;
     const btn=Array.from(document.querySelectorAll('#pg-train .tb')).find(function(x){return (x.getAttribute('onclick')||'').indexOf("trainTab('"+alias+"'")===0;});
     if(btn)btn.classList.add('on');
   }
@@ -3135,11 +3134,11 @@ function trainTabPick(pickDataStr){
 
 function renderSessionPick(){
   const cont = document.getElementById('train-content');
-  const SESSION_ROUTE = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',voima_c:'str',putti:'putti',mob:'mob',mob_quick:'mob_quick',teho:'str',hermosto:'hermosto',peruskunto:'peruskunto',testi:'testi',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros'};
+  const SESSION_ROUTE = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',voima_c:'str',putti:'putti',mob:'mob',teho:'str',hermosto:'hermosto',peruskunto:'peruskunto',testi:'testi',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros'};
   const SESSION_NAMES = {
     heitto_tek:'🥏 Tekniikan ylläpito', heitto_nop:'⚡ Nopeusheitto',
     voima_a:'💪 Jalkapäivä', voima_b:'💪 Yläkroppa', voima_c:'🧩 Nivelterveys', teho:'⚡ Nopeustreeni', hermosto:'🧘 Hermosto', peruskunto:'🚶 Peruskunto', testi:'📏 Testipäivä',
-    putti:'🎯 Puttausrutiini', mob:'🧘 Liikkuvuus', mob_quick:'🧩 Yläselkäpika',
+    putti:'🎯 Puttausrutiini', mob:'🧘 Liikkuvuus',
     aktivointi:'⚡ Aktivointi', comp_day:'🏆 Kisapäivä',
     kierros:'🏃 Kenttäkierros'
   };
@@ -3154,8 +3153,7 @@ function renderSessionPick(){
     peruskunto:'Matala teho · 30–45 min · kävely tai pyöräily',
     testi:'Putti 120 kpl (3 × 10 / etäisyys) + BH/FH-nopeus · tulokset ja vertailu',
     putti:'C1-rutiini · Joka putilla samat 5 vaihetta',
-    mob:'Ti/ke: lonkka, nilkka & rintakehä · su: olkapää, kyynärvarsi & palautuminen · ~12–13 min',
-    mob_quick:'4 liikettä · ~8 min · Yläselkä, rintaranka ja ranne',
+    mob:'Ma/to: lonkka, nilkka & rintakehä · ti/su: olkapää, rintakehä, kyynärvarsi & palautuminen · ~13 min',
     aktivointi:'Kevyt herättely ennen kisaa',
     kierros:'Kenttäkierros'
   };
@@ -3190,7 +3188,6 @@ function renderTrain(){
   else if(trainTabCur==='str')renderStr();
   else if(trainTabCur==='putti')renderPuttiTrain();
   else if(trainTabCur==='mob')renderMob();
-  else if(trainTabCur==='mob_quick')renderMobQuick();
   else if(trainTabCur==='teho')renderTeho();
   else if(trainTabCur==='hermosto')renderHermosto();
   else if(trainTabCur==='peruskunto')renderPeruskunto();
@@ -4186,7 +4183,6 @@ function savePutti(){
 function delPutti(id){set('putti_sessions',(get('putti_sessions')||[]).filter(s=>s.id!==id));renderTrain()}
 
 // Täysi liikkuvuus: kaksi eri sessiota, iltaliikkuvuus 4×/vk. HT = Lonkka & rintakehä (ma, to), OP = Olkapää & palautuminen (ti, su).
-// Rintakehän kierto, thoracic extension ja lapapumppaus ovat päivittäisessä pikarutiinissa, joten ne eivät toistu täällä.
 const MOB_SETS={
   HT:{label:'Lonkka & rintakehä',mins:13,subtitle:'Heittoliikkeen perusta: lonkka, nilkka ja rintakehä · ~13 min',color:'var(--gl)',tcol:'var(--gd)',exercises:[
     {id:'h1',name:'90/90 lonkan avaus',desc:'Istu 90/90. Nojaa eteen etujalan yli, selkä suorana.',reps:'45 sek / puoli',area:'a-lo',st:true},
@@ -4256,7 +4252,7 @@ function renderMob(){
     h+='</div></div>';
   });
   h+='</div>';
-  h+='<div style="font-size:11px;color:var(--t3);margin:8px 0 0">Päivittäinen yläselkärutiini (pika) on erillinen ja sen liikkeet eivät toistu tässä.</div>';
+  h+='<div style="font-size:11px;color:var(--t3);margin:8px 0 0">Iltaliikkuvuus 4 × viikossa: ma ja to Lonkka &amp; rintakehä, ti ja su Olkapää &amp; palautuminen. Noin 10 min viikossa per alue riittää.</div>';
   if(done===total&&total>0){
     h+='<div style="text-align:center;padding:14px;background:var(--gl);border-radius:var(--r);margin-top:8px"><div style="font-size:28px">🎉</div><div style="font-size:14px;font-weight:600;color:var(--gd);margin-top:4px">Kaikki liikkeet tehty!</div></div>';
   }
@@ -4276,58 +4272,6 @@ function toggleMob(key){
   const cur=getSets(key);
   setSets(key, cur>0 ? 0 : 1);
   renderTrain();
-}
-
-const MOB_QUICK_DAILY=[
-  {id:'mq1',name:'Avoin kirja – dynaaminen + staattinen pito',desc:'Kyljelläsi, polvet koukussa. Vie yläkäsi auki taaksepäin 6 toistoa, jää viimeiseen toistoon ja PIDÄ ääriasennossa. Staattinen pito kasvattaa liikelaajuutta paremmin kuin pelkkä dynaaminen liike.',reps:'6 toistoa + 30–45 sek pito / puoli'},
-  {id:'mq2',name:'Thoracic extension',desc:'Istu tuolilla tai makaa foam rullan päällä lapojen alla. Kädet niskan taakse (tue päätä), ojenna rintarankaa taaksepäin rullan tai selkänojan yli. Älä notkota alaselkää.',reps:'8–10 toistoa'},
-  {id:'mq3',name:'Lapapumppaus seisaaltaan',desc:'Kädet eteen – lapaluut loittonee. Vedä takaisin.',reps:'10 toistoa'},
-  {id:'mq5',name:'Ranteen liikkuvuus',desc:'Nelinkontin, sormet taaksepäin. Kallista keho varovasti eteen. Jos käsi tai ranne oireilee, kevennä.',reps:'20 sek + 10 toistoa'}
-];
-
-
-function toggleMobQuick(key){
-  const cur=getSets(key);
-  setSets(key, cur>0 ? 0 : 1);
-  renderTrain();
-}
-
-function renderMobQuick(){
-  const cont=document.getElementById('train-content');
-  const today=pageDate();
-  const done=MOB_QUICK_DAILY.filter(ex=>getSets('mobq_'+today+'_'+ex.id)>0).length;
-  const total=MOB_QUICK_DAILY.length;
-  const pct=Math.round(done/total*100);
-
-  let h='<div style="background:var(--gl);border-radius:var(--r);padding:12px 14px;margin-bottom:12px">';
-  h+='<div style="font-size:14px;font-weight:700;color:var(--gd)">🧩 Yläselkärutiini – pika</div>';
-  h+='<div style="font-size:11px;color:var(--gd);opacity:.8;margin-top:3px">4 liikettä · ~8 min · Sama joka päivä off-seasonin perusvaiheessa</div>';
-  h+='</div>';
-  h+='<div class="prog-bar" style="margin-bottom:14px"><div class="prog-fill" style="width:'+pct+'%;background:var(--g)"></div></div>';
-  h+='<div class="card card-p" id="mobq-ex-list">';
-  MOB_QUICK_DAILY.forEach(function(ex){
-    const key='mobq_'+today+'_'+ex.id;
-    const ck=getSets(key)>0;
-    h+='<div class="mob-row" data-mobqkey="'+key+'">';
-    h+='<div class="mob-cb'+(ck?' c':'')+'">'+(ck?'✓':'')+'</div>';
-    h+='<div style="flex:1">';
-    h+='<div style="font-size:13px;font-weight:600">'+ex.name+'</div>';
-    h+='<div style="font-size:11px;color:var(--t2);margin-top:1px;line-height:1.4">'+ex.desc+'</div>';
-    h+='<div style="font-size:10px;color:var(--gd);font-weight:500;margin-top:2px">'+ex.reps+'</div>';
-    h+='</div></div>';
-  });
-  h+='</div>';
-  cont.innerHTML=h;
-
-  const exList=cont.querySelector('#mobq-ex-list');
-  if(exList){
-    function handleMobQToggle(e){
-      const cb=e.target.closest('.mob-cb');
-      const row=cb&&cb.closest('[data-mobqkey]');
-      if(row){e.preventDefault();toggleMobQuick(row.dataset.mobqkey);}
-    }
-    exList.addEventListener('click',handleMobQToggle);
-  }
 }
 
 // ===== TESTIPÄIVÄ (lähtötaso ja vertailutestit) =====
