@@ -1043,23 +1043,25 @@ const PUTTI_PHASES=[
 // Vaihe 4 (off-season) viikkokohtainen progressio, 12 viikkoa 2x6vk-lohkoina (samalla periaatteella kuin Merelän tuotteissa):
 // Jakso 1 (Vk1-6): volyymipainotus, painotus lähietäisyyksillä. Jakso 2 (Vk7-12): etäisyyspainotus, pidemmät matkat mukaan.
 const PUTTI_P4_WEEKS=[
-  {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:20,10:10}}, // Vk1: 4×50
-  {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:20,10:10}}, // Vk2: 4×50
-  {jakso:'Jakso 1 – volyymipainotus', sessions:5, mix:{4:10,6:10,8:10,10:10,12:10}}, // Vk3: 5×50
-  {jakso:'Jakso 1 – volyymipainotus', sessions:5, mix:{4:10,6:10,8:20,10:10,12:10}}, // Vk4: 5×60
-  {jakso:'Jakso 1 – volyymipainotus', sessions:5, mix:{4:10,6:10,8:20,10:10,12:10}}, // Vk5: 5×60
-  {jakso:'Jakso 1 – volyymipainotus', sessions:5, mix:{4:10,6:10,8:20,10:10,12:10}}, // Vk6: 5×60
-  {jakso:'Jakso 2 – etäisyyspainotus', sessions:5, mix:{4:10,8:20,10:20,12:10,14:10}}, // Vk7: 5×70
-  {jakso:'Jakso 2 – etäisyyspainotus', sessions:4, mix:{4:10,8:10,10:10,12:5,14:5}, taper:true}, // Vk8: testiviikon kevennys (4 sessiota, 80 puttia/sessio; pe 4.12. vain 40)
-  {jakso:'Jakso 2 – etäisyyspainotus', sessions:5, mix:{4:10,8:20,10:20,12:10,14:10}}, // Vk9: 5×70
-  {jakso:'Jakso 2 – etäisyyspainotus', sessions:5, mix:{4:10,6:10,8:20,10:20,12:10,14:10}}, // Vk10: 5×80
-  {jakso:'Jakso 2 – etäisyyspainotus', sessions:5, mix:{4:10,6:10,8:20,10:20,12:10,14:10}}, // Vk11: 5×80
-  {jakso:'Jakso 2 – etäisyyspainotus', sessions:5, mix:{4:10,6:10,8:20,10:20,12:10,14:10}}, // Vk12: 5×80
-  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:5, mix:{4:10,6:10,8:20,10:20,12:10,14:10}, pressure:true}, // Vk13: 5×80
-  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:5, mix:{4:10,6:10,8:20,10:20,12:10,14:10}, pressure:true}, // Vk14
-  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:5, mix:{4:10,6:10,8:20,10:20,12:10,14:10}, pressure:true}, // Vk15
-  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:5, mix:{4:10,6:5,8:10,10:10,12:5,14:5}, pressure:true, taper:true}  // Vk16: kevennys (90 puttia/sessio, paine-sarja säilyy)
+  // sessions = sisäsessioiden määrä (4–10 m); c2 = viikon yksi C2-sessio ulkona (12/14 m), oletuksena lauantaina (c2dow 6)
+  {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:20,10:10}}, // Vk1: 4×50 (ei C2:ta)
+  {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:20,10:10}}, // Vk2: 4×50 (ei C2:ta)
+  {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:10,10:20}, c2:{10:10,12:20}}, // Vk3: 4×50 + C2 30
+  {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:20,10:20}, c2:{10:10,12:30}}, // Vk4: 4×60 + C2 40
+  {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:20,10:20}, c2:{10:10,12:30}}, // Vk5
+  {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:20,10:20}, c2:{10:10,12:30}}, // Vk6
+  {jakso:'Jakso 2 – etäisyyspainotus', sessions:4, mix:{4:10,8:20,10:30}, c2:{10:10,12:20,14:20}}, // Vk7: 4×60 + C2 50
+  {jakso:'Jakso 2 – etäisyyspainotus', sessions:3, mix:{4:10,8:15,10:15}, c2:{10:5,12:10,14:10}, c2dow:4, weekTotal:250, taper:true}, // Vk8: testiviikon kevennys; C2 to (la lepo), pe vain 40 puttia sisällä
+  {jakso:'Jakso 2 – etäisyyspainotus', sessions:4, mix:{4:10,8:20,10:30}, c2:{10:10,12:20,14:20}}, // Vk9
+  {jakso:'Jakso 2 – etäisyyspainotus', sessions:4, mix:{4:10,6:10,8:20,10:30}, c2:{10:10,12:25,14:25}}, // Vk10: 4×70 + C2 60
+  {jakso:'Jakso 2 – etäisyyspainotus', sessions:4, mix:{4:10,6:10,8:20,10:30}, c2:{10:10,12:25,14:25}}, // Vk11
+  {jakso:'Jakso 2 – etäisyyspainotus', sessions:4, mix:{4:10,6:10,8:20,10:30}, c2:{10:10,12:25,14:25}}, // Vk12
+  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:4, mix:{4:10,6:10,8:20,10:30}, c2:{10:10,12:25,14:25}, pressure:true}, // Vk13
+  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:4, mix:{4:10,6:10,8:20,10:30}, c2:{10:10,12:25,14:25}, pressure:true}, // Vk14
+  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:4, mix:{4:10,6:10,8:20,10:30}, c2:{10:10,12:25,14:25}, pressure:true}, // Vk15
+  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:4, mix:{4:10,6:5,8:10,10:15}, c2:{10:5,12:5,14:5}, pressure:true, taper:true}  // Vk16: kevennys
 ];
+
 // Putti helmi–toukokuu: ylläpito (nopeusjakso) ja toukokuun alku (kisakuntoon), molemmissa paine-sarja
 // Putti-ohjelma: jokainen matka tehdään sekä normaalilla että haaralla. perStyle = yhden tyylin putit / matka (ohjelmataulukon arvo),
 // mix = kokonaismäärä (perStyle × 2), joten kaikki sessio- ja viikkosummat kaksinkertaistuvat automaattisesti.
@@ -1068,15 +1070,33 @@ function puttiBoth(d){
   Object.keys(per).forEach(function(k){tot[k]=per[k]*2;});
   return Object.assign({},d,{perStyle:per,mix:tot,both:true});
 }
+// C2-sessio (12/14 m) tehdään ulkona: oletuksena lauantaina (viikolla 8 torstaina). Päivän voi vaihtaa käsin Putti-sivun valitsimella (fp_putti_c2_<pvm> = 1 tai 0).
+function puttiC2Day(ds,row){
+  const ov=localStorage.getItem('fp_putti_c2_'+ds); if(ov==='1')return true; if(ov==='0')return false;
+  const dow=new Date(ds+'T12:00:00').getDay(); return !!(row&&row.c2)&&dow===(row.c2dow!==undefined?row.c2dow:6);
+}
 function puttiDataFor(ds,wk){
   const ph=offseasonPhaseOf(weekStartOf(ds));
-  if(ph===3)return puttiBoth({jakso:'Vaihe 3 – ylläpito (nopeusjakso)',label:'3 sessiota/vk',sessions:3,mix:{4:10,6:10,8:20,10:20},pressure:true});
+  if(ph===3){
+    const pr={c2:true}; const c2=puttiC2Day(ds,pr);
+    const tot=function(m){return Object.values(m).reduce(function(a,b){return a+b;},0)*2;};
+    const weekTotal=2*tot({4:10,6:10,8:20,10:20})+tot({10:10,12:20,14:10});
+    if(c2)return puttiBoth({jakso:'Vaihe 3 – ylläpito (nopeusjakso)',label:'C2-sessio ulkona (12/14 m) · vk yht. '+weekTotal+' puttia',sessions:3,mix:{10:10,12:20,14:10},c2:true,weekTotal:weekTotal});
+    return puttiBoth({jakso:'Vaihe 3 – ylläpito (nopeusjakso)',label:'sisällä 4–10 m · 2 sisäsessiota + 1 C2-sessio ulkona',sessions:3,mix:{4:10,6:10,8:20,10:20},pressure:true,weekTotal:weekTotal});
+  }
   if(ph===4)return puttiBoth({jakso:'Vaihe 4 – kisakuntoon',label:'testiviikko: to testi (putti 120) + la',sessions:1,mix:{4:10,6:10,8:10,10:10,12:10},pressure:true});
   const w=Math.max(1,Math.min(16,wk));
   const row=PUTTI_P4_WEEKS[w-1];
-  // testiviikon perjantai (2 vrk ennen testiä): vain lyhyt tuntuma testimatkoilta
-  if(ds==='2026-12-04'&&w===8)return puttiBoth(Object.assign({},row,{mix:{4:10,12:5,14:5},label:'Viikko 8 · testiviikko, pe kevyt (testi su 6.12.)'}));
-  return puttiBoth(Object.assign({},row,{label:'Viikko '+w+(row.taper?' · kevennys (volyymi −45 %, teho ennallaan)':'')}));
+  const tot=function(m){return Object.values(m).reduce(function(a,b){return a+b;},0)*2;};
+  const weekTotal=row.weekTotal||(row.sessions*tot(row.mix)+(row.c2?tot(row.c2):0));
+  const tag=row.taper?' · kevennys (volyymi −45 %, teho ennallaan)':'';
+  if(puttiC2Day(ds,row)){
+    const c2=row.c2||{10:10,12:20};
+    return puttiBoth(Object.assign({},row,{mix:c2,c2:true,weekTotal:weekTotal,label:'Viikko '+w+' · C2-sessio ulkona (12/14 m)'+tag}));
+  }
+  // testiviikon perjantai (2 vrk ennen testiä): vain lyhyt tuntuma sisällä
+  if(ds==='2026-12-04'&&w===8)return puttiBoth(Object.assign({},row,{mix:{4:10,10:10},c2:false,weekTotal:weekTotal,label:'Viikko 8 · testiviikko, pe kevyt (testi su 6.12.)'}));
+  return puttiBoth(Object.assign({},row,{c2:false,weekTotal:weekTotal,label:'Viikko '+w+(row.c2?' · sisällä 4–10 m':'')+tag}));
 }
 
 // Migraatio vanhoista avaimista → uudet C1/C2 avaimet
@@ -2219,7 +2239,7 @@ const WEEK_STRUCTURE = {
     {day:'Ke', label:'Keskiviikko',sessions:['voima_b','hermosto'],icon:'💪', intensity:'medium', note:'Yläkroppa + hermosto'},
     {day:'To', label:'Torstai',  sessions:['putti','mob','hermosto'],    icon:'🎯', intensity:'low',    note:'Puttaus + iltaliikkuvuus (lonkka & rintakehä) + hermosto'},
     {day:'Pe', label:'Perjantai', sessions:['teho','hermosto'], icon:'⚡', intensity:'medium', note:'Nopeustreeni + hermosto'},
-    {day:'La', label:'Lauantai',  sessions:['heitto_tek','putti','hermosto'], icon:'🥏', intensity:'medium', note:'Tekniikka + putti + hermosto'},
+    {day:'La', label:'Lauantai',  sessions:['heitto_tek','putti','hermosto'], icon:'🥏', intensity:'medium', note:'Tekniikka + C2-putti ulkona + hermosto'},
     {day:'Su', label:'Sunnuntai', sessions:['lepo','mob','hermosto'],          icon:'😴', intensity:'rest',   note:'Lepo + iltaliikkuvuus (olkapää & palautuminen) + hermosto'},
   ],
   // Off-season Vaihe 2 (joulu-tammi): voima->teho-silta - vähemmän voimaa, teho/plyo mukaan, kasvava heittovolyymi
@@ -2229,7 +2249,7 @@ const WEEK_STRUCTURE = {
     {day:'Ke', label:'Keskiviikko',sessions:['teho'],   icon:'⚡', intensity:'medium', note:'Nopeustreeni'},
     {day:'To', label:'Torstai',  sessions:['putti','mob'],    icon:'🎯', intensity:'low',    note:'Puttaus + iltaliikkuvuus (lonkka & rintakehä)'},
     {day:'Pe', label:'Perjantai', sessions:['voima_b'], icon:'💪', intensity:'medium', note:'Yläkroppa (kevyempi, nopea tempo)'},
-    {day:'La', label:'Lauantai',  sessions:['heitto_tek','putti'], icon:'🥏', intensity:'medium', note:'Tekniikka + putti'},
+    {day:'La', label:'Lauantai',  sessions:['heitto_tek','putti'], icon:'🥏', intensity:'medium', note:'Tekniikka + C2-putti ulkona'},
     {day:'Su', label:'Sunnuntai', sessions:['lepo','mob'],          icon:'😴', intensity:'rest',   note:'Lepo + iltaliikkuvuus (olkapää & palautuminen)'},
   ],
   // Off-season Vaihe 3 (helmi-maalis): nopeuden rakennus - heittonopeus pääosaan, voima ylläpitoon
@@ -2239,7 +2259,7 @@ const WEEK_STRUCTURE = {
     {day:'Ke', label:'Keskiviikko',sessions:['putti'],        icon:'🎯', intensity:'low',    note:'Kevyt putti'},
     {day:'To', label:'Torstai',  sessions:['heitto_tek','putti','mob'], icon:'🥏', intensity:'low', note:'Tekniikka + putti + iltaliikkuvuus (lonkka & rintakehä)'},
     {day:'Pe', label:'Perjantai', sessions:['lepo'],                icon:'😴', intensity:'rest',   note:'Lepo – palautuminen nopeuspäivien välissä'},
-    {day:'La', label:'Lauantai',  sessions:['heitto_nop','putti'], icon:'⚡', intensity:'high', note:'Nopeusheitto – ali/ylikuormakiekko + putti'},
+    {day:'La', label:'Lauantai',  sessions:['heitto_nop','putti'], icon:'⚡', intensity:'high', note:'Nopeusheitto – ali/ylikuormakiekko + C2-putti ulkona'},
     {day:'Su', label:'Sunnuntai', sessions:['lepo','mob'],          icon:'😴', intensity:'rest',   note:'Lepo + iltaliikkuvuus (olkapää & palautuminen)'},
   ],
   // Off-season Vaihe 4 (touko alku, 1.-8.5.): kisakuntoon - kaikki yhteen, harjoitus-kisa-simulaatio
@@ -3633,7 +3653,7 @@ function renderPuttiTrain(){
     const mixStr=Object.entries(pd.perStyle).filter(([d,n])=>n>0).map(([d,n])=>n+' × '+d+' m').join(' + ');
     h+=`<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,.1)">`;
     h+=`<div style="font-size:11px;font-weight:700;color:${ph.tcol}">${pd.jakso} – ${pd.label}</div>`;
-    h+=`<div style="font-size:12px;color:${ph.tcol};margin-top:2px">${mixStr}, kumpikin sekä normaalilla että haaralla = <b>${perSess} puttia/sessio</b> · ${pd.sessions} sessiota/vk = <b>${pd.sessions*perSess} puttia/vk</b></div>`;
+    h+=`<div style="font-size:12px;color:${ph.tcol};margin-top:2px">${mixStr}, kumpikin sekä normaalilla että haaralla = <b>${perSess} puttia/sessio</b> · ${pd.weekTotal?(pd.sessions+(pd.c2?'':' sisäsessiota')+' + C2-sessio ulkona = <b>'+pd.weekTotal+' puttia/vk</b>'):(pd.sessions+' sessiota/vk = <b>'+pd.sessions*perSess+' puttia/vk</b>')}</div>`;
     if(pd.pressure)h+=`<div style="font-size:11px;color:${ph.tcol};margin-top:6px;line-height:1.5">🔥 <b>Paine-sarja</b> joka sessioon: portaat 4 → 8 → 10 m, ohi = alusta (max 3 yritystä). Kirjaa tulos alla olevaan Paine-sarja-korttiin.</div>`;
     h+=`</div>`;
   }
@@ -3657,7 +3677,9 @@ function renderPuttiTrain(){
   const useGrid=viewPhase===4&&(get('putti_kirjaus_tila')||'ruudukko')!=='vapaa';
   if(useGrid){
     h+=puttiTallyLuonnosHtml(today2);
-    h+=puttiTallyHtml(today2,puttiDataFor(pageDate(),putWk));
+    const pdNow=puttiDataFor(pageDate(),putWk);
+    h+=puttiC2ToggleHtml(pageDate(),pdNow);
+    h+=puttiTallyHtml(today2,pdNow);
   }else{
   if(viewPhase===4)h+='<button id="putti-tila-ruudukko" class="btn btn-out btn-sm" style="width:100%;margin-bottom:8px">↩ Putti kerrallaan</button>';
   h+='<div class="card card-p" style="margin-bottom:10px">';
@@ -3924,6 +3946,7 @@ function renderPuttiTrain(){
     if(mb)mb.addEventListener('click',function(e){e.preventDefault();puttiTallyTap(row,'miss');});
     if(ub)ub.addEventListener('click',function(e){e.preventDefault();puttiTallyTap(row,'undo');});
   });
+  cont.querySelectorAll('.pt-c2').forEach(function(b){b.addEventListener('click',function(e){e.preventDefault();localStorage.setItem('fp_putti_c2_'+pageDate(),b.dataset.v);renderTrain();});});
   cont.querySelectorAll('.pt-seg').forEach(function(b){b.addEventListener('click',function(e){e.preventDefault();localStorage.setItem('fp_putti_nyt',b.dataset.s);puttiTallyUpdate(cont);});});
   cont.querySelectorAll('.pt-four').forEach(function(inp){
     inp.addEventListener('input',function(){
@@ -4024,7 +4047,7 @@ function puttiTallyHtml(day,pd){
   const tag=function(r){const c1=r.circle==='C1';return '<span style="font-size:9px;padding:1px 6px;border-radius:10px;background:'+(c1?'var(--gl)':'var(--pl)')+';color:'+(c1?'var(--gd)':'var(--pd)')+'">'+r.circle+'</span>';};
   const segBtn=function(s,label){const on=cur===s;return '<button class="pt-seg" data-s="'+s+'" style="flex:1;padding:9px 6px;border-radius:var(--rs);border:1.5px solid '+(on?'var(--g)':'var(--border)')+';background:'+(on?'var(--gl)':'var(--bg)')+';color:'+(on?'var(--gd)':'var(--t2)')+';font-size:13px;font-weight:'+(on?'700':'500')+';cursor:pointer;font-family:inherit">'+label+'</button>';};
   let h='<div class="card card-p" id="putti-tally" data-plan="'+planTotal+'" data-day="'+day+'" style="margin-bottom:10px">';
-  h+='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px"><div style="font-size:13px;font-weight:600">Tänään – putti kerrallaan</div><div style="font-size:12px;color:var(--t2)">'+Object.values(pd.mix).reduce(function(a,b){return a+b;},0)+' puttia</div></div>';
+  h+='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px"><div style="font-size:13px;font-weight:600">Tänään – putti kerrallaan'+(pd.c2?' · C2 ulkona':'')+'</div><div style="font-size:12px;color:var(--t2)">'+Object.values(pd.mix).reduce(function(a,b){return a+b;},0)+' puttia</div></div>';
   h+='<div style="font-size:11px;color:var(--t3);margin-bottom:8px">Napauta jokaisen putin jälkeen. Tyyli valitaan tästä:</div>';
   h+='<div style="display:flex;gap:6px;margin-bottom:4px">'+segBtn('n','🧍 Normaali')+segBtn('h','🦵 Haara')+'</div>';
   rows.forEach(function(r,idx){
@@ -4089,6 +4112,12 @@ function puttiTallyTap(row,kind){
   if(kind==='undo')puttiTSet(day,d,cur,s.slice(0,-1));
   else if(s.length<(plan||20)+10)puttiTSet(day,d,cur,s+(kind==='hit'?'1':'0'));
   puttiTallyUpdate(card.parentNode||document);
+}
+// Valitsin: tänään sisällä (4–10 m) vai ulkona C2 (12/14 m). Oletus päivän mukaan (la); valinta tallentuu vain tälle laitteelle.
+function puttiC2ToggleHtml(ds,pd){
+  const on=!!pd.c2;
+  const btn=function(v,label,act){return '<button class="pt-c2" data-v="'+v+'" style="flex:1;padding:10px 6px;border-radius:var(--rs);border:1.5px solid '+(act?'var(--g)':'var(--border)')+';background:'+(act?'var(--gl)':'var(--bg)')+';color:'+(act?'var(--gd)':'var(--t2)')+';font-size:13px;font-weight:'+(act?'700':'500')+';cursor:pointer;font-family:inherit">'+label+'</button>';};
+  return '<div class="card card-p" style="margin-bottom:8px;padding:8px 10px"><div style="font-size:11px;color:var(--t2);margin-bottom:6px">Tänään tehdään</div><div style="display:flex;gap:6px">'+btn('0','🏠 Sisällä 4–10 m',!on)+btn('1','🌲 Ulkona C2 (12/14 m)',on)+'</div></div>';
 }
 function puttiTallyLuonnosHtml(today){
   const all=get('putti_tally')||{}; let h='';
