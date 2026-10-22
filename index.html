@@ -1068,7 +1068,8 @@ const PROGRAM={
   testWeekFri:'2026-12-04',                        // testi 2 (6.12.): perjantai
   lomaStrWk1:'2027-01-04',                         // loman ensimmäinen salivoimaviikko
   reentry:{from:'2027-01-19',to:'2027-01-24'},      // paluuviikko lomalta
-  vacations:[{from:'2027-01-01',to:'2027-01-18',name:'Loma – ylläpito',icon:'🏖️'}]
+  vacations:[{from:'2027-01-01',to:'2027-01-18',name:'Loma – ylläpito',icon:'🏖️'}],
+  season:{from:'2027-05-09',name:'Kisakausi 2027'}      // off-seasonin jälkeen: ylläpitopohja, kunnes kausiohjelma on suunniteltu
 };
 // ===== LOMA (ylläpito): 1.–18.1.2027 – kevyt salivoima (ma, to), aerobinen (ti, pe, su), vapaa (ke, la); heitto ja putti tauolla =====
 const VACATIONS=PROGRAM.vacations;
@@ -1445,7 +1446,7 @@ function renderProfile(){
   if(activeGoals.length){
     h+=`<div class="sect">Tavoitteet<\/div>`;
     activeGoals.forEach(g=>{
-      const from=parseFloat(g.from)||0,to=parseFloat(g.to)||1,cur=parseFloat(g.cur)||from;
+      const from=parseFloat(g.from)||0,to=parseFloat(g.to)||1,cur=Math.max(parseFloat(g.cur)||from,autoGoalCur(g));
       const pct=to!==from?Math.min(100,Math.max(0,Math.round((cur-from)/(to-from)*100))):0;
       const col=pct>=100?'#1D9E75':pct>=50?'#EF9F27':'#E24B4A';
       const icons={rating:'📊',metrix:'📊',speed:'⚡',speedfh:'⚡',putti:'🎯',kisa:'🏆',muu:'⭐'};
@@ -2778,6 +2779,12 @@ function renderWeekView() {
     </div>
     <button onclick="weekNext()" style="background:none;border:1px solid var(--border);border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center">›</button>
   </div>`;
+
+  // Kisakausi 2027: ylläpitopohja, kunnes kausiohjelma (tavoitteet, kisakalenteri, kuormitus) on suunniteltu
+  if(dateStr(weekDates[6]) >= PROGRAM.season.from){
+    const nComps=(get('events')||[]).filter(function(e){return (e.type==='kisa'||e.type==='viikkokisa')&&e.date>=dateStr(weekDates[0]);}).length;
+    h += `<div class="card card-p" id="season-banner" style="margin-bottom:12px;border-left:3px solid var(--g)"><div style="font-size:13px;font-weight:600">🏆 ${PROGRAM.season.name}</div><div style="font-size:12px;color:var(--t2);margin-top:2px;line-height:1.5">Käytössä on ylläpitopohja. Kausiohjelma (tavoitteet, kisakalenteri ja kuormitus) suunnitellaan erikseen: lisää kisat kalenteriin (tyyppi kisa), niin kisaviikon ohjelma mukautuu.${nComps?' Kalenterissa tulevia kisoja: <b>'+nComps+'</b>.':' Kalenterissa ei ole vielä tulevia kisoja.'}</div></div>`;
+  }
 
   // Week summary bar
   const compCount = plan.filter(d => d.intensity === 'comp').length;
@@ -4605,6 +4612,13 @@ const HERMOSTO_DAILY=[
   {id:'hs2',name:'Box breathing – ilta',desc:'Sama rytmi ennen nukkumaanmenoa',reps:'5 sykliä'}
 ];
 
+// Tavoitteen "Box breathing" edistyminen lasketaan kuitatuista päivistä (aamu + ilta molemmat tehty)
+function boxBreathingDays(){
+  const ts=get('throw_sets')||{}; let n=0; const seen={};
+  Object.keys(ts).forEach(function(k){const m=k.match(/^hermosto_(\d{4}-\d{2}-\d{2})_hs1$/); if(m&&!seen[m[1]]){seen[m[1]]=1; if(ts[k]>0&&ts['hermosto_'+m[1]+'_hs2']>0)n++;}});
+  return n;
+}
+function autoGoalCur(g){return /box breathing/i.test((g&&g.desc)||'')?boxBreathingDays():0;}
 function toggleHermosto(key){
   const cur=getSets(key);
   setSets(key, cur>0 ? 0 : 1);
@@ -4713,7 +4727,7 @@ function strJumpSuggest(sp,ex){
 function renderTeho(){trainCtxSession='teho';trainTabCur='str';renderStr();}
 
 function renderAktivointi(){
-  const cont=document.getElementById('train-content');
+  const cont=document.getElementById('train-content'); const akDay=pageDate();
   const STEPS=[
     {id:'ak1',time:'10 min',title:'Dynaaminen lämmittely',color:'var(--gl)',tcol:'var(--gd)',icon:'🔥',exercises:[
       {name:'Leg swing eteen-taakse',reps:'15 / jalka',desc:'Pidä käsi seinästä kiinni. Heiluta jalkaa suorana eteen ja taakse.'},
@@ -4724,7 +4738,7 @@ function renderAktivointi(){
     ]},
     {id:'ak2',time:'5 min',title:'Hengitys & hermosto',color:'var(--bl)',tcol:'var(--bd)',icon:'🧘',exercises:[
       {name:'Boksi-hengitys (4-4-4-4)',reps:'6 kierrosta',desc:'Sisään 4 sek → pidätys 4 sek → ulos 4 sek → pidätys 4 sek. Aktivoi parasympaattinen hermosto.'},
-      {name:'Fysiologinen huokaus',reps:'3 kertaa',desc:'Kaksoishengitys nenän kautta sisään (vatsa + rinta) → pitkä ulos suun kautta. Laskee cortisolia välittömästi.'},
+      {name:'Fysiologinen huokaus',reps:'3 kertaa',desc:'Kaksoishengitys nenän kautta sisään (vatsa + rinta) → pitkä ulos suun kautta. Rauhoittaa hengitystä ja vähentää jännitystä.'},
     ]},
     {id:'ak3',time:'8 min',title:'Heittoherääminen',color:'var(--pl)',tcol:'var(--pd)',icon:'🥏',exercises:[
       {name:'Miniheitto 10 m – BH',reps:'10 heittoa',desc:'Ei voimaa. Tunnustele ranteen ja olkapään liikerata. Puhdas irrotus.'},
@@ -4746,7 +4760,7 @@ function renderAktivointi(){
   h+='</div>';
 
   STEPS.forEach(function(step){
-    const done=step.exercises.filter((_,i)=>getSets('ak_'+step.id+'_'+i)>0).length;
+    const done=step.exercises.filter((_,i)=>getSets('ak_'+akDay+'_'+step.id+'_'+i)>0).length;
     const total=step.exercises.length;
     h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
     h+='<div style="background:'+step.color+';padding:10px 14px;display:flex;align-items:center;justify-content:space-between">';
@@ -4758,7 +4772,7 @@ function renderAktivointi(){
     h+='</div>';
     h+='<div style="padding:4px 14px 8px">';
     step.exercises.forEach(function(ex,i){
-      const key='ak_'+step.id+'_'+i;
+      const key='ak_'+akDay+'_'+step.id+'_'+i;
       const ck=getSets(key)>0;
       h+='<div class="ak-row" data-key="'+key+'" data-val="'+(ck?'0':'1')+'" style="display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:.5px solid var(--border)'+(i===step.exercises.length-1?';border:none':'')+'">';
       h+='<div class="chk-hit" style="width:22px;height:22px;border-radius:50%;border:2px solid '+(ck?'var(--g)':'var(--border)')+';background:'+(ck?'var(--g)':'transparent')+';display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">';
@@ -5954,7 +5968,7 @@ function renderGoalsDev(){
     h+='<div class=\"empty\"><div class=\"ei\">⭐</div><div class=\"et\">Ei tavoitteita</div></div>';
   }else{
     goals.forEach(function(g){
-      const from=parseFloat(g.from)||0,to=parseFloat(g.to)||1,cur=parseFloat(g.cur)||from;
+      const from=parseFloat(g.from)||0,to=parseFloat(g.to)||1,cur=Math.max(parseFloat(g.cur)||from,autoGoalCur(g));
       const pct=to!==from?Math.min(100,Math.max(0,Math.round((cur-from)/(to-from)*100))):0;
       const col=pct>=100?'#1D9E75':pct>=50?'#EF9F27':'#E24B4A';
       h+='<div class=\"goal-card\"><div style=\"display:flex;align-items:flex-start;gap:8px;margin-bottom:8px\">';
