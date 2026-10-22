@@ -1029,8 +1029,12 @@ const PTDISTS=[
   {key:'d6', label:'C1 · 6m',  goal:80, col:'#1D9E75', circle:'C1', dist:6},
   {key:'d8', label:'C1 · 8m',  goal:70, col:'#5DCAA5', circle:'C1', dist:8},
   {key:'d10',label:'C1 · 10m', goal:60, col:'#EF9F27', circle:'C1', dist:10},
+  {key:'d11',label:'C2 · 11m', goal:45, col:'#EF9F27', circle:'C2', dist:11},
   {key:'d12',label:'C2 · 12m', goal:50, col:'#EF9F27', circle:'C2', dist:12},
+  {key:'d13',label:'C2 · 13m', goal:45, col:'#D85A30', circle:'C2', dist:13},
   {key:'d14',label:'C2 · 14m', goal:40, col:'#D85A30', circle:'C2', dist:14},
+  {key:'d15',label:'C2 · 15m', goal:35, col:'#D85A30', circle:'C2', dist:15},
+  {key:'d16',label:'C2 · 16m', goal:30, col:'#C74A24', circle:'C2', dist:16},
 ];
 
 const PUTTI_PHASES=[
@@ -1065,20 +1069,20 @@ const PUTTI_P4_WEEKS=[
   // sessions = sisäsessioiden määrä (4–10 m); c2 = viikon yksi C2-sessio ulkona (12/14 m), oletuksena lauantaina (c2dow 6)
   {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:20,10:10}}, // Vk1: 4×50 (ei C2:ta)
   {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:20,10:10}}, // Vk2: 4×50 (ei C2:ta)
-  {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:10,10:20}, c2:{10:10,12:20}}, // Vk3: 4×50 + C2 30
-  {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:20,10:20}, c2:{10:10,12:30}}, // Vk4: 4×60 + C2 40
-  {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:20,10:20}, c2:{10:10,12:30}}, // Vk5
-  {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:20,10:20}, c2:{10:10,12:30}}, // Vk6
-  {jakso:'Jakso 2 – etäisyyspainotus', sessions:4, mix:{4:10,8:20,10:30}, c2:{10:10,12:20,14:20}}, // Vk7: 4×60 + C2 50
+  {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:10,10:20}, c2:{10:10,12:15,14:5}}, // Vk3: 4×50 + C2 30
+  {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:20,10:20}, c2:{10:10,12:15,14:10,16:5}}, // Vk4: 4×60 + C2 40
+  {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:20,10:20}, c2:{10:10,12:15,14:10,16:5}}, // Vk5
+  {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:20,10:20}, c2:{10:10,12:15,14:10,16:5}}, // Vk6
+  {jakso:'Jakso 2 – etäisyyspainotus', sessions:4, mix:{4:10,8:20,10:30}, c2:{10:10,12:15,14:15,16:10}}, // Vk7: 4×60 + C2 50
   {jakso:'Jakso 2 – etäisyyspainotus', sessions:3, mix:{4:10,8:15,10:15}, c2:{10:5,12:10,14:10}, c2dow:4, weekTotal:250, taper:true}, // Vk8: testiviikon kevennys; C2 to (la lepo), pe vain 40 puttia sisällä
-  {jakso:'Jakso 2 – etäisyyspainotus', sessions:4, mix:{4:10,8:20,10:30}, c2:{10:10,12:20,14:20}}, // Vk9
-  {jakso:'Jakso 2 – etäisyyspainotus', sessions:4, mix:{4:10,6:10,8:20,10:30}, c2:{10:10,12:25,14:25}}, // Vk10: 4×70 + C2 60
-  {jakso:'Jakso 2 – etäisyyspainotus', sessions:4, mix:{4:10,6:10,8:20,10:30}, c2:{10:10,12:25,14:25}}, // Vk11
-  {jakso:'Jakso 2 – etäisyyspainotus', sessions:4, mix:{4:10,6:10,8:20,10:30}, c2:{10:10,12:25,14:25}}, // Vk12
-  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:4, mix:{4:10,6:10,8:20,10:30}, c2:{10:10,12:25,14:25}, pressure:true}, // Vk13
-  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:4, mix:{4:10,6:10,8:20,10:30}, c2:{10:10,12:25,14:25}, pressure:true}, // Vk14
-  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:4, mix:{4:10,6:10,8:15,10:15}, c2:{10:10,12:15,14:15}, pressure:true, reentry:true}, // Vk15: paluu lomalta (~70 %)
-  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:4, mix:{4:10,6:10,8:15,10:20}, c2:{10:5,12:15,14:15}, pressure:true, taper:true, taperPct:25}  // Vk16: kevennys −25 % (loman jälkeen)
+  {jakso:'Jakso 2 – etäisyyspainotus', sessions:4, mix:{4:10,8:20,10:30}, c2:{10:10,12:15,14:15,16:10}}, // Vk9
+  {jakso:'Jakso 2 – etäisyyspainotus', sessions:4, mix:{4:10,6:10,8:20,10:30}, c2:{10:10,12:15,14:20,16:15}}, // Vk10: 4×70 + C2 60
+  {jakso:'Jakso 2 – etäisyyspainotus', sessions:4, mix:{4:10,6:10,8:20,10:30}, c2:{10:10,12:15,14:20,16:15}}, // Vk11
+  {jakso:'Jakso 2 – etäisyyspainotus', sessions:4, mix:{4:10,6:10,8:20,10:30}, c2:{10:10,12:15,14:20,16:15}}, // Vk12
+  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:4, mix:{4:10,6:10,8:20,10:30}, c2:{10:10,12:15,14:20,16:15}, pressure:true}, // Vk13
+  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:4, mix:{4:10,6:10,8:20,10:30}, c2:{10:10,12:15,14:20,16:15}, pressure:true}, // Vk14
+  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:4, mix:{4:10,6:10,8:15,10:15}, c2:{10:10,12:10,14:10,16:10}, pressure:true, reentry:true}, // Vk15: paluu lomalta (~70 %)
+  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:4, mix:{4:10,6:10,8:15,10:20}, c2:{10:5,12:10,14:10,16:10}, pressure:true, taper:true, taperPct:25}  // Vk16: kevennys −25 % (loman jälkeen)
 ];
 
 // Putti helmi–toukokuu: ylläpito (nopeusjakso) ja toukokuun alku (kisakuntoon), molemmissa paine-sarja
@@ -1094,14 +1098,24 @@ function puttiC2Day(ds,row){
   const ov=localStorage.getItem('fp_putti_c2_'+ds); if(ov==='1')return true; if(ov==='0')return false;
   const dow=new Date(ds+'T12:00:00').getDay(); return !!(row&&row.c2)&&dow===(row.c2dow!==undefined?row.c2dow:6);
 }
+// Putkisarja: jokaisen session lopuksi 10 puttia peräkkäin (sisällä 8 m, C2-sessiossa 12 m). Tyyli vaihtuu päivittäin (normaali/haara).
+// Sarja otetaan saman etäisyyden lohkosta (−5 / tyyli), joten session putti-määrä ei muutu.
+function puttiDayStyle(ds){const n=Math.floor(new Date(ds+'T12:00:00').getTime()/86400000);return n%2===0?'n':'h';}
+function puttiWithFinale(pd,ds,isC2){
+  if(!pd)return pd;
+  const dist=isC2?12:8; const ps=Object.assign({},pd.perStyle); let take=dist;
+  if(!(ps[take]>=5)){const alt=[10,8,12].find(function(k){return ps[k]>=5;}); if(alt===undefined)return pd; take=alt;}
+  ps[take]-=5; if(ps[take]<=0)delete ps[take];
+  return Object.assign({},pd,{perStyle:ps,finale:{dist:dist,n:10,style:puttiDayStyle(ds)}});
+}
 function puttiDataFor(ds,wk){
   const ph=offseasonPhaseOf(weekStartOf(ds));
   if(ph===3){
     const pr={c2:true}; const c2=puttiC2Day(ds,pr);
     const tot=function(m){return Object.values(m).reduce(function(a,b){return a+b;},0)*2;};
-    const weekTotal=2*tot({4:10,6:10,8:20,10:20})+tot({10:10,12:20,14:10});
-    if(c2)return puttiBoth({jakso:'Vaihe 3 – ylläpito (nopeusjakso)',label:'C2-sessio ulkona (12/14 m) · vk yht. '+weekTotal+' puttia',sessions:3,mix:{10:10,12:20,14:10},c2:true,weekTotal:weekTotal});
-    return puttiBoth({jakso:'Vaihe 3 – ylläpito (nopeusjakso)',label:'sisällä 4–10 m · 2 sisäsessiota + 1 C2-sessio ulkona',sessions:3,mix:{4:10,6:10,8:20,10:20},pressure:true,weekTotal:weekTotal});
+    const weekTotal=2*tot({4:10,6:10,8:20,10:20})+tot({10:10,12:15,14:10,16:5});
+    if(c2)return puttiWithFinale(puttiBoth({jakso:'Vaihe 3 – ylläpito (nopeusjakso)',label:'C2-sessio ulkona (10–16 m) · vk yht. '+weekTotal+' puttia',sessions:3,mix:{10:10,12:15,14:10,16:5},c2:true,weekTotal:weekTotal}),ds,true);
+    return puttiWithFinale(puttiBoth({jakso:'Vaihe 3 – ylläpito (nopeusjakso)',label:'sisällä 4–10 m · 2 sisäsessiota + 1 C2-sessio ulkona',sessions:3,mix:{4:10,6:10,8:20,10:20},pressure:true,weekTotal:weekTotal}),ds,false);
   }
   if(ph===4)return puttiBoth({jakso:'Vaihe 4 – kisakuntoon',label:'testiviikko: to testi (putti 120) + la',sessions:1,mix:{4:10,6:10,8:10,10:10,12:10},pressure:true});
   const w=Math.max(1,Math.min(16,wk));
@@ -1111,11 +1125,11 @@ function puttiDataFor(ds,wk){
   const tag=row.taper?' · kevennys (volyymi −'+(row.taperPct||45)+' %, teho ennallaan)':(row.reentry?' · paluu lomalta (~70 %)':'');
   if(puttiC2Day(ds,row)){
     const c2=row.c2||{10:10,12:20};
-    return puttiBoth(Object.assign({},row,{mix:c2,c2:true,weekTotal:weekTotal,label:'Viikko '+w+' · C2-sessio ulkona (12/14 m)'+tag}));
+    return puttiWithFinale(puttiBoth(Object.assign({},row,{mix:c2,c2:true,weekTotal:weekTotal,label:'Viikko '+w+' · C2-sessio ulkona (10–16 m)'+tag})),ds,true);
   }
   // testiviikon perjantai (2 vrk ennen testiä): vain lyhyt tuntuma sisällä
-  if(ds==='2026-12-04'&&w===8)return puttiBoth(Object.assign({},row,{mix:{4:10,10:10},c2:false,weekTotal:weekTotal,label:'Viikko 8 · testiviikko, pe kevyt (testi su 6.12.)'}));
-  return puttiBoth(Object.assign({},row,{c2:false,weekTotal:weekTotal,label:'Viikko '+w+(row.c2?' · sisällä 4–10 m':'')+tag}));
+  if(ds==='2026-12-04'&&w===8)return puttiWithFinale(puttiBoth(Object.assign({},row,{mix:{4:10,10:10},c2:false,weekTotal:weekTotal,label:'Viikko 8 · testiviikko, pe kevyt (testi su 6.12.)'})),ds,false);
+  return puttiWithFinale(puttiBoth(Object.assign({},row,{c2:false,weekTotal:weekTotal,label:'Viikko '+w+(row.c2?' · sisällä 4–10 m':'')+tag})),ds,false);
 }
 
 // Migraatio vanhoista avaimista → uudet C1/C2 avaimet
@@ -1453,8 +1467,8 @@ function buildCtx(){
   const fhSp=speeds.filter(s=>(s.fh5||s.fhAvg||0)>0);
   const bestBH=bhSp.length?Math.max(...bhSp.map(s=>s.bhMax||s.bh5||s.bhAvg||0)):null;
   const bestFH=fhSp.length?Math.max(...fhSp.map(s=>s.fhMax||s.fh5||s.fhAvg||0)):null;
-  const PTDISTS2=['d4','d6','d8','d10','d12','d14'];
-  const PLBLS2={d4:'C1·4m',d6:'C1·6m',d8:'C1·8m',d10:'C1·10m',d12:'C2·12m',d14:'C2·14m'};
+  const PTDISTS2=['d4','d6','d8','d10','d11','d12','d13','d14','d15','d16'];
+  const PLBLS2={d4:'C1·4m',d6:'C1·6m',d8:'C1·8m',d10:'C1·10m',d11:'C2·11m',d12:'C2·12m',d13:'C2·13m',d14:'C2·14m',d15:'C2·15m',d16:'C2·16m'};
   const pt={};PTDISTS2.forEach(k=>{pt[k]={m:0,a:0}});
   const ptT=puttiTotalsOf(getPuttiSessions()); PTDISTS2.forEach(k=>{pt[k]=ptT[k]||{m:0,a:0}});
   const puttiRows=PTDISTS2.map(k=>pt[k].a>0?`  ${PLBLS2[k]}: ${Math.round(pt[k].m/pt[k].a*100)}% (${pt[k].m}/${pt[k].a})`:'').filter(Boolean).join('\n');
@@ -3707,6 +3721,7 @@ function renderPuttiTrain(){
     h+=`<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,.1)">`;
     h+=`<div style="font-size:11px;font-weight:700;color:${ph.tcol}">${pd.jakso} – ${pd.label}</div>`;
     h+=`<div style="font-size:12px;color:${ph.tcol};margin-top:2px">${mixStr}, kumpikin sekä normaalilla että haaralla = <b>${perSess} puttia/sessio</b> · ${pd.weekTotal?(pd.sessions+(pd.c2?'':' sisäsessiota')+' + C2-sessio ulkona = <b>'+pd.weekTotal+' puttia/vk</b>'):(pd.sessions+' sessiota/vk = <b>'+pd.sessions*perSess+' puttia/vk</b>')}</div>`;
+    if(pd.finale)h+='<div style="font-size:12px;margin-top:4px">🔟 <b>Lopuksi putkisarja:</b> 10 puttia peräkkäin '+pd.finale.dist+' m ('+(pd.finale.style==='h'?'🦵 haara':'🧍 normaali')+'), osumat ja paras putki kirjautuvat. Sisältyy yllä oleviin puttimääriin.</div>';
     if(pd.pressure)h+=`<div style="font-size:11px;color:${ph.tcol};margin-top:6px;line-height:1.5">🔥 <b>Paine-sarja</b> joka sessioon: portaat 4 → 8 → 10 m, ohi = alusta (max 3 yritystä). Kirjaa tulos alla olevaan Paine-sarja-korttiin.</div>`;
     h+=`</div>`;
   }
@@ -3868,7 +3883,7 @@ function renderPuttiTrain(){
   h+='<div style="font-size:10px;font-weight:600;color:var(--pd);margin-top:8px;margin-bottom:6px">C2 – Circle 2</div>';
   h+=renderDistGrid(c2dists, totShow);
 
-  h+=puttiKaudetHtml();
+  h+=puttiPutkiHtml();h+=puttiKaudetHtml();
   if(sessions.length){
     h+='<div class="sect">Sessiohistoria</div>';
     sessions.slice().reverse().slice(0,8).forEach(s=>{
@@ -4090,13 +4105,16 @@ function puttiTRows(pd,tally){
     const d=parseInt(k.split('|')[0],10); if(isNaN(d)||!String(tally[k]).length)return;
     if(!rows[d])rows[d]={dist:d,plan:0,circle:d<=10?'C1':'C2',extra:true};
   });
-  return Object.keys(rows).map(Number).sort(function(a,b){if(a===4)return 1;if(b===4)return -1;return a-b;}).map(function(d){return rows[d];});
+  const out=Object.keys(rows).map(Number).sort(function(a,b){if(a===4)return 1;if(b===4)return -1;return a-b;}).map(function(d){return rows[d];});
+  if(pd.finale)out.push({dist:pd.finale.dist,plan:10,circle:pd.finale.dist<=10?'C1':'C2',extra:false,fin:true,style:pd.finale.style});
+  return out;
 }
+function puttiBestRun(s){let b=0,c=0;s=String(s||'');for(let i=0;i<s.length;i++){if(s[i]==='1'){c++;if(c>b)b=c;}else c=0;}return b;}
 function puttiTCount(s){let m=0;s=String(s||'');for(let i=0;i<s.length;i++)if(s[i]==='1')m++;return m;}
 function puttiTallyHtml(day,pd){
   const tally=puttiTallyOf(day), rows=puttiTRows(pd,tally);
   const cur=localStorage.getItem('fp_putti_nyt')==='h'?'h':'n';
-  const planTotal=rows.filter(function(r){return !r.extra;}).reduce(function(a,r){return a+r.plan*2;},0);
+  const planTotal=rows.filter(function(r){return !r.extra;}).reduce(function(a,r){return a+(r.fin?r.plan:r.plan*2);},0);
   const tag=function(r){const c1=r.circle==='C1';return '<span style="font-size:9px;padding:1px 6px;border-radius:10px;background:'+(c1?'var(--gl)':'var(--pl)')+';color:'+(c1?'var(--gd)':'var(--pd)')+'">'+r.circle+'</span>';};
   const segBtn=function(s,label){const on=cur===s;return '<button class="pt-seg" data-s="'+s+'" style="flex:1;padding:9px 6px;border-radius:var(--rs);border:1.5px solid '+(on?'var(--g)':'var(--border)')+';background:'+(on?'var(--gl)':'var(--bg)')+';color:'+(on?'var(--gd)':'var(--t2)')+';font-size:13px;font-weight:'+(on?'700':'500')+';cursor:pointer;font-family:inherit">'+label+'</button>';};
   let h='<div class="card card-p" id="putti-tally" data-plan="'+planTotal+'" data-day="'+day+'" style="margin-bottom:10px">';
@@ -4110,9 +4128,10 @@ function puttiTallyHtml(day,pd){
       h+='<div class="pt-row4" data-d="4" style="padding:10px 0;border-top:0.5px solid var(--border);border-bottom:0.5px solid var(--border)"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:15px;font-weight:700;min-width:40px">4 m</span>'+tag(r)+'<span style="font-size:11px;color:var(--t3)">10 putin putki, viimeisenä</span></div><div style="display:flex;gap:14px">'+box('n','🧍 Normaali',vN)+box('h','🦵 Haara',vH)+'</div></div>';
       return;
     }
-    h+='<div class="pt-row" data-d="'+r.dist+'" data-c="'+r.circle+'" data-plan="'+r.plan+'" style="padding:10px 0;border-top:0.5px solid var(--border)">';
-    h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:15px;font-weight:700;min-width:40px">'+r.dist+' m</span>'+tag(r)+'<span style="flex:1"></span><span class="pt-cnt" style="font-size:11px;color:var(--t2)"></span></div>';
+    h+='<div class="pt-row" data-d="'+(r.fin?'F':'')+r.dist+'"'+(r.fin?' data-fin="1" data-style="'+r.style+'"':'')+' data-c="'+r.circle+'" data-plan="'+r.plan+'" style="padding:10px 0;border-top:'+(r.fin?'2px solid var(--pd)':'0.5px solid var(--border)')+'">';
+    h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:15px;font-weight:700;min-width:40px">'+(r.fin?'🔟 Putkisarja · ':'')+r.dist+' m</span>'+tag(r)+(r.fin?'<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:var(--bg);color:var(--t2)">'+(r.style==='h'?'🦵 Haara':'🧍 Normaali')+'</span>':'')+'<span style="flex:1"></span><span class="pt-cnt" style="font-size:11px;color:var(--t2)"></span></div>';
     if(r.extra)h+='<div style="font-size:10px;color:var(--t3);margin-bottom:4px">Ei valitun viikon ohjelmassa (tallennettu kirjaus)</div>';
+    if(r.fin)h+='<div style="font-size:10px;color:var(--t3);margin-bottom:4px">10 puttia peräkkäin, tyyli vaihtuu päivittäin. Tavoite: mahdollisimman pitkä putki.</div>';
     h+='<div class="pt-dots" style="display:flex;flex-wrap:wrap;gap:4px"></div>';
     h+='<div style="display:flex;gap:8px;margin-top:8px"><button class="pt-hit" style="flex:1;height:44px;border-radius:var(--rs);border:1.5px solid var(--g);background:var(--gl);color:var(--gd);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">✓ Sisään</button><button class="pt-miss" style="flex:1;height:44px;border-radius:var(--rs);border:1.5px solid #E24B4A;background:transparent;color:#E24B4A;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">✗ Ohi</button><button class="pt-undo" aria-label="Kumoa viimeisin" style="width:44px;height:44px;border-radius:var(--rs);border:1px solid var(--border);background:var(--bg);color:var(--t2);font-size:18px;cursor:pointer">↶</button></div>';
     h+='</div>';
@@ -4133,17 +4152,17 @@ function puttiTallyUpdate(cont){
   const pct=function(m,n){return n?Math.round(100*m/n)+' %':'–';};
   let nm=0,na=0,hm=0,ha=0,c1m=0,c1n=0,c2m=0,c2n=0;
   Object.keys(tally).forEach(function(k){
-    const p=k.split('|'); const d=parseInt(p[0],10), s=String(tally[k]||''); if(!s.length)return;
+    const p=k.split('|'); const d=parseInt(String(p[0]).replace(/^F/,''),10), s=String(tally[k]||''); if(!s.length)return;
     const m=puttiTCount(s), a=s.length;
     if(p[1]==='h'){hm+=m;ha+=a;}else{nm+=m;na+=a;}
     if(d<=10){c1m+=m;c1n+=a;}else{c2m+=m;c2n+=a;}
   });
   card.querySelectorAll('.pt-row').forEach(function(row){
-    const d=row.dataset.d, plan=parseInt(row.dataset.plan,10)||0, sN=String(tally[d+'|n']||''), sH=String(tally[d+'|h']||''), s=cur==='h'?sH:sN;
+    const d=row.dataset.d, plan=parseInt(row.dataset.plan,10)||0, sN=String(tally[d+'|n']||''), sH=String(tally[d+'|h']||''), fin=row.dataset.fin==='1', s=fin?(row.dataset.style==='h'?sH:sN):(cur==='h'?sH:sN);
     const total=Math.max(plan,s.length); let dots='';
     for(let i=0;i<total;i++){const ch=s[i];dots+='<span style="width:14px;height:14px;border-radius:50%;box-sizing:border-box;display:inline-block;'+(ch==='1'?'background:var(--g);border:1.5px solid var(--g)':ch==='0'?'background:#E24B4A;border:1.5px solid #E24B4A':'border:1.5px solid var(--border)')+'"></span>';}
     row.querySelector('.pt-dots').innerHTML=dots;
-    row.querySelector('.pt-cnt').textContent='Normaali '+(sN.length?puttiTCount(sN)+'/'+sN.length:'–')+' · Haara '+(sH.length?puttiTCount(sH)+'/'+sH.length:'–')+(plan?' · tavoite '+plan:'');
+    row.querySelector('.pt-cnt').textContent=fin?(s.length?(puttiTCount(s)+'/'+s.length+' · paras putki '+puttiBestRun(s)):'–'):'Normaali '+(sN.length?puttiTCount(sN)+'/'+sN.length:'–')+' · Haara '+(sH.length?puttiTCount(sH)+'/'+sH.length:'–')+(plan?' · tavoite '+plan:'');
   });
   card.querySelectorAll('.pt-four').forEach(function(i){
     if(document.activeElement===i)return;
@@ -4161,16 +4180,16 @@ function puttiTallyUpdate(cont){
 }
 function puttiTallyTap(row,kind){
   const card=row.closest('#putti-tally'); const day=card.dataset.day; const d=row.dataset.d, plan=parseInt(row.dataset.plan,10)||0;
-  const cur=localStorage.getItem('fp_putti_nyt')==='h'?'h':'n'; const tally=puttiTallyOf(day); const s=String(tally[d+'|'+cur]||'');
+  const fin=row.dataset.fin==='1'; const cur=fin?row.dataset.style:(localStorage.getItem('fp_putti_nyt')==='h'?'h':'n'); const tally=puttiTallyOf(day); const s=String(tally[d+'|'+cur]||'');
   if(kind==='undo')puttiTSet(day,d,cur,s.slice(0,-1));
-  else if(s.length<(plan||20)+10)puttiTSet(day,d,cur,s+(kind==='hit'?'1':'0'));
+  else if(s.length<(fin?10:(plan||20)+10))puttiTSet(day,d,cur,s+(kind==='hit'?'1':'0'));
   puttiTallyUpdate(card.parentNode||document);
 }
 // Valitsin: tänään sisällä (4–10 m) vai ulkona C2 (12/14 m). Oletus päivän mukaan (la); valinta tallentuu vain tälle laitteelle.
 function puttiC2ToggleHtml(ds,pd){
   const on=!!pd.c2;
   const btn=function(v,label,act){return '<button class="pt-c2" data-v="'+v+'" style="flex:1;padding:10px 6px;border-radius:var(--rs);border:1.5px solid '+(act?'var(--g)':'var(--border)')+';background:'+(act?'var(--gl)':'var(--bg)')+';color:'+(act?'var(--gd)':'var(--t2)')+';font-size:13px;font-weight:'+(act?'700':'500')+';cursor:pointer;font-family:inherit">'+label+'</button>';};
-  return '<div class="card card-p" style="margin-bottom:8px;padding:8px 10px"><div style="font-size:11px;color:var(--t2);margin-bottom:6px">Tänään tehdään</div><div style="display:flex;gap:6px">'+btn('0','🏠 Sisällä 4–10 m',!on)+btn('1','🌲 Ulkona C2 (12/14 m)',on)+'</div></div>';
+  return '<div class="card card-p" style="margin-bottom:8px;padding:8px 10px"><div style="font-size:11px;color:var(--t2);margin-bottom:6px">Tänään tehdään</div><div style="display:flex;gap:6px">'+btn('0','🏠 Sisällä 4–10 m',!on)+btn('1','🌲 Ulkona C2 (10–16 m)',on)+'</div></div>';
 }
 function puttiTallyLuonnosHtml(today){
   const all=get('putti_tally')||{}; let h='';
@@ -4183,13 +4202,13 @@ function puttiTallyLuonnosHtml(today){
   return h;
 }
 function puttiTallySave(day){
-  const tally=puttiTallyOf(day); const order=function(d){return d===4?99:d;};
-  const keys=Object.keys(tally).filter(function(k){return String(tally[k]||'').length>0;}).sort(function(a,b){const pa=a.split('|'),pb=b.split('|');return order(+pa[0])-order(+pb[0])||(pa[1]===pb[1]?0:(pa[1]==='n'?-1:1));});
+  const tally=puttiTallyOf(day); const order=function(d){return d===4?99:d;}; const ordK=function(k){const p0=String(k.split('|')[0]);return /^F/.test(p0)?200+parseInt(p0.slice(1),10):order(+p0);};
+  const keys=Object.keys(tally).filter(function(k){return String(tally[k]||'').length>0;}).sort(function(a,b){const pa=a.split('|'),pb=b.split('|');return ordK(a)-ordK(b)||(pa[1]===pb[1]?0:(pa[1]==='n'?-1:1));});
   const sarjat=[];
   keys.forEach(function(k){
-    const p=k.split('|'), d=parseInt(p[0],10), st=p[1]==='h'?'haara':'normaali', s=String(tally[k]);
+    const p=k.split('|'), fin=/^F/.test(p[0]), d=parseInt(String(p[0]).replace(/^F/,''),10), st=p[1]==='h'?'haara':'normaali', s=String(tally[k]);
     for(let i=0;i<s.length;i+=10){
-      const chunk=s.slice(i,i+10); const e={made:puttiTCount(chunk),dist:d,tyyli:st}; if(chunk.length<10)e.n=chunk.length; sarjat.push(e);
+      const chunk=s.slice(i,i+10); const e={made:puttiTCount(chunk),dist:d,tyyli:st}; if(chunk.length<10)e.n=chunk.length; if(fin){e.putki=1;e.jono=chunk;} sarjat.push(e);
     }
   });
   (getPuttiSarjat(day)||[]).forEach(function(s){if(s&&typeof s==='object')sarjat.push(s);});
@@ -4237,6 +4256,20 @@ function puttiArkistoiKausi(kausi){
   const kaudet=get('putti_kaudet')||[]; kaudet.push(row); set('putti_kaudet',kaudet);
   set('putti_sessions',all.map(function(s){return s.kausi?s:Object.assign({},s,{kausi:String(kausi)});}));
   return row;
+}
+function puttiPutkiHtml(){
+  const rows=[]; getPuttiSessions().forEach(function(s){(s.sarjat||[]).forEach(function(sj){if(sj&&sj.putki)rows.push({date:s.date,dist:sj.dist,st:(sj.tyyli||s.tyyli)==='haara'?'h':'n',made:sj.made||0,n:sjN(sj),run:puttiBestRun(sj.jono)});});});
+  if(!rows.length)return '';
+  rows.sort(function(a,b){return String(b.date).localeCompare(String(a.date));});
+  let h='<div class="sect">🔟 Putkisarjat</div><div class="card card-p" style="margin-bottom:10px">';
+  [8,12].forEach(function(d){
+    const r=rows.filter(function(x){return x.dist===d;}); if(!r.length)return;
+    const avg=(r.reduce(function(a,x){return a+x.made;},0)/r.length).toFixed(1), best=Math.max.apply(null,r.map(function(x){return x.run;})), perfect=r.filter(function(x){return x.made>=10&&x.n>=10;}).length;
+    h+='<div style="font-size:12px;margin-bottom:4px"><b>'+d+' m</b> · '+r.length+' sarjaa · keskiarvo <b>'+avg+'/10</b> · paras putki <b>'+best+'</b> · 10/10: '+perfect+' kertaa</div>';
+  });
+  h+='<div style="margin-top:6px">';
+  rows.slice(0,8).forEach(function(x){h+='<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-top:0.5px solid var(--border)"><span>'+fiDate(x.date)+' · '+x.dist+' m · '+(x.st==='h'?'🦵':'🧍')+'</span><span><b>'+x.made+'/'+x.n+'</b> · putki '+x.run+'</span></div>';});
+  return h+'</div></div>';
 }
 function puttiKaudetHtml(){
   const k=get('putti_kaudet')||[]; if(!k.length)return '';
@@ -5846,7 +5879,7 @@ function renderPuttiDev(){
     h+='<div class=\"pd-sub\">'+(t.a>0?t.m+'/'+t.a:'Ei dataa')+' · '+d.goal+'%</div></div>';
   });
   h+='</div>';
-  h+=puttiKaudetHtml();
+  h+=puttiPutkiHtml();h+=puttiKaudetHtml();
   h+='<div class="page-spacer"></div>';document.getElementById('dev-content').innerHTML=h;
 }
 
