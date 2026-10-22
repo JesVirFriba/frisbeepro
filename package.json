@@ -1,0 +1,6 @@
+{
+  "name": "frisbeepro-tests",
+  "private": true,
+  "scripts": {"test": "node tests/run.js"},
+  "devDependencies": {"jsdom": "^30.1.3"}
+}
