@@ -58,6 +58,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#ffffff">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>FrisbeePro – Jesse</title>
 <style>
 :root{
@@ -6531,6 +6533,9 @@ function fixAria(root){
 }
 (function(){ let tm=null; const start=function(){fixAria(); if(window.MutationObserver)new MutationObserver(function(){clearTimeout(tm);tm=setTimeout(fixAria,80);}).observe(document.body,{childList:true,subtree:true});};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start); else start(); })();
+
+// PWA: service worker (offline + asennettavuus); jsdom/vanhat selaimet ohittavat
+if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}
 </script>
 </body>
 </html>
