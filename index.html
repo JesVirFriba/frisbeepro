@@ -1091,23 +1091,23 @@ function vacationDayPlan(b,ds){
   return {day:b.day,label:b.label,date:ds,sessions:T.s,icon:T.ic,intensity:T.s[0]==='lepo'?'rest':'low',note:T.n};
 }
 const PUTTI_P4_WEEKS=[
-  // sessions = sisäsessioiden määrä (4–10 m); c2 = viikon yksi C2-sessio ulkona (12/14 m), oletuksena lauantaina (c2dow 6)
+  // sessions = sisäsessioiden määrä (4–10 m); c2 = viikon yksi C2-sessio ulkona (10–16 m); lohkot per tyyli ennen loppusarjaa (10 m: 10 normaali + 10 haara), oletuksena lauantaina (c2dow 6)
   {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:20,10:10}}, // Vk1: 4×50 (ei C2:ta)
   {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:20,10:10}}, // Vk2: 4×50 (ei C2:ta)
-  {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:10,10:20}, c2:{10:10,12:15,14:5}}, // Vk3: 4×50 + C2 30
-  {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:20,10:20}, c2:{10:10,12:15,14:10,16:5}}, // Vk4: 4×60 + C2 40
-  {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:20,10:20}, c2:{10:10,12:15,14:10,16:5}}, // Vk5
-  {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:20,10:20}, c2:{10:10,12:15,14:10,16:5}}, // Vk6
-  {jakso:'Jakso 2 – etäisyyspainotus', sessions:4, mix:{4:10,8:20,10:30}, c2:{10:10,12:15,14:15,16:10}}, // Vk7: 4×60 + C2 50
-  {jakso:'Jakso 2 – etäisyyspainotus', sessions:3, mix:{4:10,8:15,10:15}, c2:{10:5,12:10,14:10}, c2dow:4, weekTotal:250, taper:true}, // Vk8: testiviikon kevennys; C2 to (la lepo), pe vain 40 puttia sisällä
+  {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:10,10:20}, c2:{10:10,12:20,14:10}}, // Vk3: 4×50 + C2 (lohkot + loppusarja 10 m)
+  {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:20,10:20}, c2:{10:10,12:15,14:15,16:10}}, // Vk4: 4×60 + C2 (lohkot + loppusarja 10 m)
+  {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:20,10:20}, c2:{10:10,12:15,14:15,16:10}}, // Vk5
+  {jakso:'Jakso 1 – volyymipainotus', sessions:4, mix:{4:10,6:10,8:20,10:20}, c2:{10:10,12:15,14:15,16:10}}, // Vk6
+  {jakso:'Jakso 2 – etäisyyspainotus', sessions:4, mix:{4:10,8:20,10:30}, c2:{10:10,12:15,14:15,16:10}}, // Vk7: 4×60 + C2 (lohkot + loppusarja 10 m)
+  {jakso:'Jakso 2 – etäisyyspainotus', sessions:3, mix:{4:10,8:15,10:15}, c2:{12:10,14:10}, c2dow:4, weekTotal:260, taper:true}, // Vk8: testiviikon kevennys; C2 to (la lepo), pe vain 40 puttia sisällä
   {jakso:'Jakso 2 – etäisyyspainotus', sessions:4, mix:{4:10,8:20,10:30}, c2:{10:10,12:15,14:15,16:10}}, // Vk9
-  {jakso:'Jakso 2 – etäisyyspainotus', sessions:4, mix:{4:10,6:10,8:20,10:30}, c2:{10:10,12:15,14:20,16:15}}, // Vk10: 4×70 + C2 60
-  {jakso:'Jakso 2 – etäisyyspainotus', sessions:4, mix:{4:10,6:10,8:20,10:30}, c2:{10:10,12:15,14:20,16:15}}, // Vk11
-  {jakso:'Jakso 2 – etäisyyspainotus', sessions:4, mix:{4:10,6:10,8:20,10:30}, c2:{10:10,12:15,14:20,16:15}}, // Vk12
-  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:4, mix:{4:10,6:10,8:20,10:30}, c2:{10:10,12:15,14:20,16:15}, pressure:true}, // Vk13
-  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:4, mix:{4:10,6:10,8:20,10:30}, c2:{10:10,12:15,14:20,16:15}, pressure:true}, // Vk14
+  {jakso:'Jakso 2 – etäisyyspainotus', sessions:4, mix:{4:10,6:10,8:20,10:30}, c2:{10:10,12:20,14:20,16:10}}, // Vk10: 4×70 + C2 (lohkot + loppusarja 10 m)
+  {jakso:'Jakso 2 – etäisyyspainotus', sessions:4, mix:{4:10,6:10,8:20,10:30}, c2:{10:10,12:20,14:20,16:10}}, // Vk11
+  {jakso:'Jakso 2 – etäisyyspainotus', sessions:4, mix:{4:10,6:10,8:20,10:30}, c2:{10:10,12:20,14:20,16:10}}, // Vk12
+  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:4, mix:{4:10,6:10,8:20,10:30}, c2:{10:10,12:20,14:20,16:10}, pressure:true}, // Vk13
+  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:4, mix:{4:10,6:10,8:20,10:30}, c2:{10:10,12:20,14:20,16:10}, pressure:true}, // Vk14
   {jakso:'Jakso 3 – vakiinnutus + paine', sessions:4, mix:{4:10,6:10,8:15,10:15}, c2:{10:10,12:10,14:10,16:10}, pressure:true, reentry:true}, // Vk15: paluu lomalta (~70 %)
-  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:4, mix:{4:10,6:10,8:15,10:20}, c2:{10:5,12:10,14:10,16:10}, pressure:true, taper:true, taperPct:25}  // Vk16: kevennys −25 % (loman jälkeen)
+  {jakso:'Jakso 3 – vakiinnutus + paine', sessions:4, mix:{4:10,6:10,8:15,10:20}, c2:{10:5,12:15,14:15,16:10}, pressure:true, taper:true, taperPct:25}  // Vk16: kevennys −25 % (loman jälkeen)
 ];
 
 // Putti helmi–toukokuu: ylläpito (nopeusjakso) ja toukokuun alku (kisakuntoon), molemmissa paine-sarja
@@ -1128,7 +1128,11 @@ function puttiC2Day(ds,row){
 function puttiDayStyle(ds){const n=Math.floor(new Date(ds+'T12:00:00').getTime()/86400000);return n%2===0?'n':'h';}
 function puttiWithFinale(pd,ds,isC2){
   if(!pd)return pd;
-  const dist=isC2?12:8; const ps=Object.assign({},pd.perStyle); let take=dist;
+  if(isC2){ // C2-sessio: lopuksi 10 m, 10 puttia normaalilla ja 10 haaralla (erillisinä sarjoina); lohkot eivät pienene
+    const mix=Object.assign({},pd.mix); mix[10]=(mix[10]||0)+20;
+    return Object.assign({},pd,{mix:mix,finale:{dist:10,n:10,styles:['n','h']}});
+  }
+  const dist=8; const ps=Object.assign({},pd.perStyle); let take=dist;
   if(!(ps[take]>=5)){const alt=[10,8,12].find(function(k){return ps[k]>=5;}); if(alt===undefined)return pd; take=alt;}
   ps[take]-=5; if(ps[take]<=0)delete ps[take];
   return Object.assign({},pd,{perStyle:ps,finale:{dist:dist,n:10,style:puttiDayStyle(ds)}});
@@ -1138,15 +1142,15 @@ function puttiDataFor(ds,wk){
   if(ph===3){
     const pr={c2:true}; const c2=puttiC2Day(ds,pr);
     const tot=function(m){return Object.values(m).reduce(function(a,b){return a+b;},0)*2;};
-    const weekTotal=2*tot({4:10,6:10,8:20,10:20})+tot({10:10,12:15,14:10,16:5});
-    if(c2)return puttiWithFinale(puttiBoth({jakso:'Vaihe 3 – ylläpito (nopeusjakso)',label:'C2-sessio ulkona (10–16 m) · vk yht. '+weekTotal+' puttia',sessions:3,mix:{10:10,12:15,14:10,16:5},c2:true,weekTotal:weekTotal}),ds,true);
+    const weekTotal=2*tot({4:10,6:10,8:20,10:20})+tot({10:10,12:15,14:15,16:10})+20;
+    if(c2)return puttiWithFinale(puttiBoth({jakso:'Vaihe 3 – ylläpito (nopeusjakso)',label:'C2-sessio ulkona (10–16 m) · vk yht. '+weekTotal+' puttia',sessions:3,mix:{10:10,12:15,14:15,16:10},c2:true,weekTotal:weekTotal}),ds,true);
     return puttiWithFinale(puttiBoth({jakso:'Vaihe 3 – ylläpito (nopeusjakso)',label:'sisällä 4–10 m · 2 sisäsessiota + 1 C2-sessio ulkona',sessions:3,mix:{4:10,6:10,8:20,10:20},pressure:true,weekTotal:weekTotal}),ds,false);
   }
   if(ph===4)return puttiBoth({jakso:'Vaihe 4 – kisakuntoon',label:'testiviikko: to testi (putti 120) + la',sessions:1,mix:{4:10,6:10,8:10,10:10,12:10},pressure:true});
   const w=Math.max(1,Math.min(16,wk));
   const row=PUTTI_P4_WEEKS[w-1];
   const tot=function(m){return Object.values(m).reduce(function(a,b){return a+b;},0)*2;};
-  const weekTotal=row.weekTotal||(row.sessions*tot(row.mix)+(row.c2?tot(row.c2):0));
+  const weekTotal=row.weekTotal||(row.sessions*tot(row.mix)+(row.c2?tot(row.c2)+20:0));
   const tag=row.taper?' · kevennys (volyymi −'+(row.taperPct||45)+' %, teho ennallaan)':(row.reentry?' · paluu lomalta (~70 %)':'');
   if(puttiC2Day(ds,row)){
     const c2=row.c2||{10:10,12:20};
@@ -2877,17 +2881,21 @@ function renderWeekView() {
     const opacity = isPast && !isToday ? '.55' : '1';
     const sessionRoute = {heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',voima_c:'str',voima_loma_a:'str',voima_loma_b:'str',putti:'putti',mob:'mob',teho:'str',hermosto:'hermosto',peruskunto:'peruskunto',testi:'testi',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros',kisa:'comp_day',lepo:'rest_day'};
     const routableSessions = sessions.filter(s=>sessionRoute[s]);
+    // Lepopäivä, jolla on tehtäviä (liikkuvuus, peruskunto, hermosto): kortti toimii kuten muut päivät (valitsin + kuittausmerkit)
+    const actionableSessions = routableSessions.filter(s=>s!=='lepo');
     // Kisa ja lepo ovat aina klikattavia
     const isCompDay = day.intensity === 'comp' && !vkDates.has(day.date);
     const isVKDay = vkDates.has(day.date);
     const isRestDay = day.intensity === 'rest';
     const clickable = (routableSessions.length > 0 || isCompDay || isVKDay || isRestDay) && !isPast;
     const isTestDay = sessions.includes('testi');
-    const clickTarget = isTestDay ? 'testi' : isVKDay ? 'viikkokisa' : isCompDay ? 'comp_day' : isRestDay ? 'rest_day' : routableSessions.length === 1 ? sessionRoute[routableSessions[0]] : routableSessions.length > 1 ? 'session_pick' : null;
-    const pickData = routableSessions.length > 1 ? JSON.stringify({sessions:routableSessions,date:day.date}).replace(/"/g,'&quot;') : '';
+    const restWithSessions = isRestDay && actionableSessions.length > 0 && !isCompDay && !isVKDay && !isTestDay;
+    const clickTarget = isTestDay ? 'testi' : isVKDay ? 'viikkokisa' : isCompDay ? 'comp_day' : restWithSessions ? 'session_pick' : isRestDay ? 'rest_day' : routableSessions.length === 1 ? sessionRoute[routableSessions[0]] : routableSessions.length > 1 ? 'session_pick' : null;
+    const pickSessions = restWithSessions ? actionableSessions.concat(['lepo']) : routableSessions;
+    const pickData = (restWithSessions || routableSessions.length > 1) ? JSON.stringify({sessions:pickSessions,date:day.date}).replace(/"/g,'&quot;') : '';
     const mainRoutable = isTestDay ? 'testi' : (routableSessions[0] || '');
     const onclickAttr = clickable
-      ? (routableSessions.length > 1 && !isCompDay && !isVKDay && !isRestDay && !isTestDay
+      ? ((restWithSessions || (routableSessions.length > 1 && !isRestDay)) && !isCompDay && !isVKDay && !isTestDay
         ? ` onclick="trainTabPick('${pickData}')"`
         : ` onclick="openSession('${clickTarget}','${day.date}','${mainRoutable}')"`)
       : '';
@@ -2895,12 +2903,12 @@ function renderWeekView() {
     const compDone = (isCompDay||isVKDay) && (get('comps')||[]).some(c=>c.date===day.date&&c.mrating);
     const isDone = compDone || !!(getDone(day.date));
     // Merkki = väri + nimi + kuittaus: napautus merkitsee kyseisen istunnon tehdyksi (○ -> ✓)
-    const pillsMode = !compDone && !(isPast && day.intensity !== 'rest' && !isCompDay) && clickable && routableSessions.length >= 1 && !isRestDay;
+    const pillsMode = !compDone && !(isPast && day.intensity !== 'rest' && !isCompDay) && clickable && routableSessions.length >= 1 && (!isRestDay || restWithSessions);
     const subDone = pillsMode ? getSubChecks(day.date) : {};
     const badges = sessions.map(s => {
       const ssc = SESSION_COLORS[s] || SESSION_COLORS.lepo;
       const lbl = sessionChipLabel(s, day.date);
-      if(pillsMode && sessionRoute[s]){
+      if(pillsMode && sessionRoute[s] && s!=='lepo'){
         const sd = !!subDone[s] || (isDone && !isCompDay && Object.keys(subDone).length===0);
         return `<span class="sess-chip" onclick="event.stopPropagation();toggleSubCheck('${day.date}','${s}')" style="font-size:11px;padding:2px 8px;border-radius:20px;cursor:pointer;flex-shrink:0;font-weight:${sd?600:500};background:${sd?'var(--gl)':ssc.bg};color:${sd?'var(--gd)':ssc.col};border:1px solid ${sd?'var(--g)':'transparent'}">${sd?'✓':'○'} ${lbl}</span>`;
       }
@@ -3136,7 +3144,7 @@ const STR_DATA=[
     {id:'sj5',name:'Reiden koukistus',detail:'Takaketju · takareisi',reps:'12–15',lo:12,hi:15,sets:[3,3,3,3,3,3,3,2],step:2.5,hint:'Hidas laskeva vaihe.'},
     {id:'sj7',name:'Pohkeet',detail:'Pohkeet',reps:'12–15',lo:12,hi:15,sets:[3,3,3,3,3,3,3,2],step:5,hint:'Täysi liikerata, tauko alhaalla.'},
     {id:'sj8',name:'Copenhagen plank',detail:'Lonkka · lähentäjät, nivelterveys',reps:'30 s / puoli',lo:30,hi:30,sets:[2,2,2,2,2,2,2,1],time:true,hint:'Päällimmäinen jalka penkin päällä. Kirjaa sekunnit per sarja. Etujalan lähentäjät osallistuvat lantion kiertoon.'},
-    {id:'sj9',name:'Dead bug (voimapyörä, kun helppo)',detail:'Ydin · anti-ekstensio',reps:'8–10 / puoli',lo:8,hi:10,sets:[2,2,2,2,2,2,2,1],step:0,bw:true,hint:'Alaselkä kiinni lattiassa, hidas. Kun helppo: ab wheel polvilta, lyhyellä liikeradalla.'}
+    {id:'sj9',name:'Voimapyörä (ab wheel)',detail:'Ydin · anti-ekstensio',reps:'6–8',lo:6,hi:8,sets:[2,2,2,2,2,2,2,1],step:0,bw:true,hint:'Polvilta. Alaselkä neutraalina, pakarat ja vatsa kireinä. Rullaa vain niin pitkälle kuin selkä pysyy neutraalina ja lisää liikelaajuutta vähitellen.'}
   ]},
   {id:'strB',name:'Yläkroppa',exercises:[
     {id:'sy1',name:'Penkkipunnerrus',detail:'Rinta · pääliike',reps:'8',lo:8,hi:8,sets:[4,4,4,4,4,4,4,3],step:2.5,e1rm:true,hint:'Spotteri tai turvatelineet.'},
@@ -3147,29 +3155,23 @@ const STR_DATA=[
     {id:'sy7',name:'Face pull',detail:'Olkapäät · takaolkapää ja lapa',reps:'15–20',lo:15,hi:20,sets:[3,3,3,3,3,3,3,2],step:2.5,hint:'Heittäjän olkapää: kyynärpäät korkealla. Tavoite: kaikki sarjat 20 toistoon, viimeinen sarja lähelle uupumusta (RIR 1–2); nosta painoa vasta kun kaikki sarjat täyttyvät.'},
     {id:'sy8',name:'Ulkokierto (kaapeli tai kuminauha)',detail:'Olkapäät · rotaattorit, nivelterveys',reps:'15–20 / käsi',lo:15,hi:20,sets:[2,2,2,2,2,2,2,2],step:1,hint:'Kyynärpää kiinni kyljessä. Tavoite: kaikki sarjat 20 toistoon, viimeinen sarja lähelle uupumusta (RIR 1–2); nosta painoa vasta kun kaikki sarjat täyttyvät.'}
   ]},
-  {id:'strN',name:'Nopeustreeni',note:'Nopeusliikkeet alle 6 toistoa/sarja · lepo 90–120 s (rinnalleveto 2–3 min) · laatu ennen väsymystä, lopeta sarja kun korkeus tai nopeus laskee. Nopeusliikkeiden jälkeen kevyt kyykky ja penkki (toinen viikkokerta, ~10 min), lopuksi pakollinen ydinlohko (~12 min). Lajinopeutta harjoitellaan heittotreeneissä.',exercises:[
-    {id:'sn0',sp:true,prog:'q',noW:false,name:'Rinnalleveto (hang power clean)',detail:'Nopeus · lonkan räjähtävä ojennus',reps:'3',lo:3,hi:3,sets:[2,3,4,4,4,4,4,2],step:2.5,load:{type:'fixed',text:'Vk 1–2 kevyt tekniikkapaino, vk 3–7 noin 70–80 % maksimista'},hint:'Nosto polven/reiden puolivälistä, räjähtävä lonkanojennus. Lepo 2–3 min. Jos ranne tai käsi kipeytyy kiinniotossa → vaihda hang high pull (ei kiinniottoa).'},
+  {id:'strN',name:'Nopeustreeni',note:'Nopeusliikkeet alle 6 toistoa/sarja · lepo 90–120 s (rinnalleveto 2–3 min) · laatu ennen väsymystä, lopeta sarja kun korkeus tai nopeus laskee. Nopeusliikkeiden jälkeen kevyt kyykky ja penkki (toinen viikkokerta, ~10 min), lopuksi ydinlohko (~8 min). Lajinopeutta harjoitellaan heittotreeneissä.',exercises:[
+    {id:'sn0',sp:true,prog:'q',noW:false,name:'Rinnalleveto (hang power clean)',detail:'Nopeus · lonkan räjähtävä ojennus',reps:'3',lo:3,hi:3,sets:[2,3,3,3,3,3,3,2],step:2.5,load:{type:'fixed',text:'Vk 1–2 kevyt tekniikkapaino, vk 3–7 noin 70–80 % maksimista'},hint:'Nosto polven/reiden puolivälistä, räjähtävä lonkanojennus. Lepo 2–3 min. Jos ranne tai käsi kipeytyy kiinniotossa → vaihda hang high pull (ei kiinniottoa).'},
     {id:'sn1',sp:true,name:'Boxi yhdellä jalalla',detail:'Nopeus · yhden jalan voima',reps:'3 / jalka',lo:3,hi:3,sets:[2,3,3,3,3,3,3,2],load:{type:'box',base:30,cap:55},wlabel:'Boxin korkeus (cm)',wunit:'cm',hint:'Pehmeä alastulo, polvi ei sisäänpäin. Tauko jokaisen toiston välillä.'},
-    {id:'sn2',sp:true,noW:true,name:'Boxi yhdellä jalalla, toistuva',detail:'Nopeus · reaktiivinen voima',reps:'5 / jalka',lo:5,hi:5,sets:[2,2,2,2,2,2,2,1],load:{type:'fixed',text:'Matala boxi 20–25 cm, lyhyt kontakti'},hint:'Reaktiivinen: ponnista heti alastulosta, ei taukoa.'},
-    {id:'sn3',sp:true,name:'Box squat jump (istumalähtö boxilta)',detail:'Nopeus · pystysuuntainen räjähtävä teho',reps:'4',lo:4,hi:4,sets:[2,3,3,3,3,3,3,2],jump:true,load:{type:'dbjump'},wlabel:'Käsipainot (kg / käsi, 0 = ei painoa)',wunit:'kg',hint:'Kirjaa paras hyppykorkeus (cm) seinämerkillä tai videolta: se on mittari, jonka mukaan käsipainoja nostetaan. Istu boxin päällä noin 90° polvikulmassa, selkä suorana ja jalat tasan lattialla. Ponnista räjähtävästi pystyyn ilman keinuntaa (ei hypätä boxin päälle). Pehmeä alastulo lattialle, istu takaisin boxille ja tauko jokaisen toiston välillä. Voit tehdä myös käsipainoilla: pidä ne niin kevyinä, että liike pysyy räjähtävänä, ja lopeta sarja kun nopeus laskee.'},
-    {id:'sn5',sp:true,name:'Pallo ala (underhand ball throw)',detail:'Nopeus · koko kehon teho',reps:'4',lo:4,hi:4,sets:[2,3,3,3,3,3,3,2],load:{type:'ball'},wlabel:'Pallon paino (kg)',hint:'Koko keho: jalat–lantio–kädet.'},
+    {id:'sn3',sp:true,name:'Box squat jump tasajalkaa (istumalähtö boxilta)',detail:'Nopeus · pystysuuntainen räjähtävä teho',reps:'4',lo:4,hi:4,sets:[2,3,3,3,3,3,3,2],jump:true,load:{type:'dbjump'},wlabel:'Käsipainot (kg / käsi, 0 = ei painoa)',wunit:'kg',hint:'Kirjaa paras hyppykorkeus (cm) seinämerkillä tai videolta: se on mittari, jonka mukaan käsipainoja nostetaan. Istu boxin päällä noin 90° polvikulmassa, selkä suorana ja jalat tasan lattialla. Ponnista räjähtävästi pystyyn ilman keinuntaa (ei hypätä boxin päälle). Pehmeä alastulo lattialle, istu takaisin boxille ja tauko jokaisen toiston välillä. Voit tehdä myös käsipainoilla: pidä ne niin kevyinä, että liike pysyy räjähtävänä, ja lopeta sarja kun nopeus laskee.'},
     {id:'sn6',sp:true,name:'Pallo seinään, rotaatio',detail:'Nopeus · kierron voima (lähin siirto heittoon)',reps:'4 / suunta',lo:4,hi:4,sets:[2,3,3,3,3,3,3,2],load:{type:'fixed',text:'Pallo 3–4 kg, maksiminopeus'},wlabel:'Pallon paino (kg)',hint:'Lantio johtaa, olkapää seuraa.'},
     {id:'sn7',sp:true,prog:'q',name:'Pallo slam',detail:'Nopeus · veto ja vartalo',reps:'5',lo:5,hi:5,sets:[2,3,3,3,3,3,3,2],step:1,load:{type:'fixed',text:'Pallo 4 kg → 6 kg, kun nopeus säilyy'},wlabel:'Pallon paino (kg)',hint:'Nosta pallo ylös kuin heittoon ja lyö lattiaan koko vartalolla, lantio mukana. Lopeta sarja kun nopeus laskee.'},
     {id:'sl1',sp:true,grp:'light',ref:'sa2',refPct:0.85,name:'Kevyt takakyykky (toinen viikkokerta)',detail:'Voima · kevyt, tekniikka ja toinen viikkokerta',reps:'8',lo:8,hi:8,sets:[2,2,2,2,2,2,2,1],step:0,wlabel:'Paino kg',hint:'Noin 85 % jalkapäivän painosta, 4+ toistoa varastoon. Ei uupumukseen: kevyt ja nopea tahti, tekniikka kunnossa.'},
     {id:'sl2',sp:true,grp:'light',ref:'sy1',refPct:0.85,name:'Kevyt penkkipunnerrus (toinen viikkokerta)',detail:'Voima · kevyt, tekniikka ja toinen viikkokerta',reps:'8',lo:8,hi:8,sets:[2,2,2,2,2,2,2,1],step:0,wlabel:'Paino kg',hint:'Noin 85 % yläkroppapäivän painosta, 4+ toistoa varastoon. Ei uupumukseen: kevyt ja nopea tahti.'},
     {id:'sc1',sp:true,grp:'core',prog:true,name:'Pallof-puristus (anti-rotaatio)',detail:'Ydin · kierron vastustus',reps:'10 / puoli',lo:10,hi:10,sets:[2,3,3,3,3,3,3,2],step:2.5,wlabel:'Kuorma (kg tai vastus)',hint:'Kaapeli tai kuminauha. Vastustaa kiertoa: heiton ydinvakaus.'},
-    {id:'sc2',sp:true,grp:'core',prog:true,name:'Rotaatio: woodchop tai landmine-kierto',detail:'Ydin · kierron voima',reps:'10 / puoli',lo:10,hi:10,sets:[2,3,3,3,3,3,3,2],step:2.5,wlabel:'Kuorma (kg)',hint:'Voima lantiosta ja vartalosta kierrossa. Kontrolloitu; lisää kuormaa kun 10 toistoa tuntuu kevyeltä.'},
-    {id:'sc3',sp:true,grp:'core',noW:true,name:'Dead bug',detail:'Ydin · anti-ekstensio',reps:'8–10 / puoli',lo:8,hi:10,sets:[2,3,3,3,3,3,3,2],hint:'Alaselkä kiinni lattiassa, hidas. Vaikeampi: ab wheel polvilta.'},
-    {id:'sc4',sp:true,grp:'core',time:true,name:'Sivulankku',detail:'Ydin · sivuttaisvakaus',reps:'30–40 s / puoli',lo:30,hi:40,sets:[2,3,3,3,3,3,3,2],hint:'Lantio ylhäällä, vartalo suorana. Vaikeampi: yläjalka nostettuna. Kirjaa sekunnit per sarja.'},
-    {id:'sn8',sp:true,grp:'opt',prog:true,bw:true,name:'Leuanveto (valinnainen, kevyt)',detail:'Selkä · toinen viikkokerta',reps:'8',lo:8,hi:8,sets:[0,2,3,3,3,3,3,2],step:2.5,hint:'Kevyt: 2–3 toistoa varastoon, ei uupumukseen. Täydentää yläkroppapäivää. Kirjaa lisäpaino (0 = kehonpaino).'},
-    {id:'sn9',sp:true,grp:'opt',prog:true,name:'Yhden jalan RDL käsipainolla (valinnainen)',detail:'Takaketju · tasapaino',reps:'10 / jalka',lo:10,hi:10,sets:[0,2,3,3,3,3,3,2],step:2,hint:'Tasapaino ja takaketju, siirtyy heiton tukijalkaan. Käsipaino 10–16 kg.'}
+    {id:'sc3',sp:true,grp:'core',noW:true,name:'Voimapyörä (ab wheel)',detail:'Ydin · anti-ekstensio',reps:'6–8',lo:6,hi:8,sets:[2,3,3,3,3,3,3,2],hint:'Polvilta. Alaselkä neutraalina, pakarat ja vatsa kireinä. Rullaa vain niin pitkälle kuin selkä pysyy neutraalina ja lisää liikelaajuutta vähitellen. Lopeta sarja, jos alaselkä alkaa notkahtaa.'},
   ]},
   {id:'strC',name:'Nivelterveys – kisakauden ylläpito',exercises:[
     {id:'nh1',name:'External rotation',detail:'Olkapää',reps:'15 / käsi',lo:15,hi:15,sets:[2,2,2,2,2,2,2,2],step:1,hint:'Kyynärpää kiinni kyljessä'},
     {id:'nh2',name:'Face pull',detail:'Olkapää',reps:'15',lo:15,hi:15,sets:[2,2,2,2,2,2,2,2],step:2.5,hint:'Kaapeli tai vastuskuminauha silmien korkeudella'},
     {id:'nh3',name:'Lateral band walk',detail:'Lonkka',reps:'15 / suunta',lo:15,hi:15,sets:[2,2,2,2,2,2,2,2],step:0,bw:true,hint:'Vastuskuminauha polvien yläpuolella'},
     {id:'nh4',name:'Copenhagen plank',detail:'Lonkka',reps:'20–30 s / puoli',lo:20,hi:30,sets:[2,2,2,2,2,2,2,2],step:0,time:true,hint:'Päällimmäinen jalka penkin päällä'},
-    {id:'nh5',name:'Dead bug',detail:'Ydin',reps:'8 / puoli',lo:8,hi:8,sets:[2,2,2,2,2,2,2,2],step:0,bw:true,hint:'Alaselkä kiinni lattiassa'}
+    {id:'nh5',name:'Voimapyörä (ab wheel)',detail:'Ydin',reps:'6–8',lo:6,hi:8,sets:[2,2,2,2,2,2,2,2],step:0,bw:true,hint:'Polvilta, alaselkä neutraalina'}
   ]}
 ];
 
@@ -3240,7 +3242,7 @@ function renderSessionPick(){
     heitto_tek:'RPE 3–4 · Tekniikkasarjat · ~1h',
     heitto_nop:'RPE 10 · Maksiminopeus · ~1h',
     voima_c:'2 sarjaa/liike · ~15 min · Olkapää + lonkka', voima_loma_a:'2–3 sarjaa · ~40 min · Sali, kevyt (RIR 3–4)', voima_loma_b:'2–3 sarjaa · ~40 min · Sali, kevyt (RIR 3–4)',
-    teho:'Rinnalleveto, box squat jump, pallo, pallo slam + kevyt kyykky/penkki + pakollinen ydinlohko · ~65 min',
+    teho:'Rinnalleveto, boxit (yhden jalan ja tasajalkaa), pallo seinään, pallo slam + kevyt kyykky/penkki + ydinlohko · ~55 min',
     voima_a:'8+ toistoa · ~65 min · Kyykky, veto, jalat',
     voima_b:'8+ toistoa · ~65 min · Penkki, veto, olkapäät',
     hermosto:'Box breathing aamu+ilta · 4-6 vk automatisoituu',
@@ -3602,7 +3604,7 @@ function renderStr(){
     let lastGrp=null;
     exs.forEach(ex=>{
       const grpKey=ex.grp||'';
-      if(sess.id==='strN'&&grpKey!==lastGrp){lastGrp=grpKey;h+=`<div class="sect" style="margin:10px 0 6px">${({'':'Nopeusliikkeet (alle 6 toistoa)',light:'Kevyt voima – toinen viikkokerta (~10 min)',core:'Ydinlohko (pakollinen, ~12 min)',opt:'Täydentävä osa (valinnainen, ~10 min)'})[grpKey]}</div>`;}
+      if(sess.id==='strN'&&grpKey!==lastGrp){lastGrp=grpKey;h+=`<div class="sect" style="margin:10px 0 6px">${({'':'Nopeusliikkeet (alle 6 toistoa)',light:'Kevyt voima – toinen viikkokerta (~10 min)',core:'Ydinlohko (~8 min)'})[grpKey]}</div>`;}
       const c=sp.cfg(ex);
       const wKey=sp.ns+'_w'+sp.wk+'_'+ex.id; const rKey='rp_'+wKey;
       const curW=getW(wKey); const repsStr=get(rKey)||''; const rr=strParseReps(repsStr);
@@ -3752,7 +3754,7 @@ function renderPuttiTrain(){
     h+=`<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,.1)">`;
     h+=`<div style="font-size:11px;font-weight:700;color:${ph.tcol}">${pd.jakso} – ${pd.label}</div>`;
     h+=`<div style="font-size:12px;color:${ph.tcol};margin-top:2px">${mixStr}, kumpikin sekä normaalilla että haaralla = <b>${perSess} puttia/sessio</b> · ${pd.weekTotal?(pd.sessions+(pd.c2?'':' sisäsessiota')+' + C2-sessio ulkona = <b>'+pd.weekTotal+' puttia/vk</b>'):(pd.sessions+' sessiota/vk = <b>'+pd.sessions*perSess+' puttia/vk</b>')}</div>`;
-    if(pd.finale)h+='<div style="font-size:12px;margin-top:4px">🔟 <b>Lopuksi putkisarja:</b> 10 puttia peräkkäin '+pd.finale.dist+' m ('+(pd.finale.style==='h'?'🦵 haara':'🧍 normaali')+'), osumat ja paras putki kirjautuvat. Sisältyy yllä oleviin puttimääriin.</div>';
+    if(pd.finale)h+='<div style="font-size:12px;margin-top:4px">🔟 <b>Lopuksi putkisarja:</b> '+(pd.finale.styles?pd.finale.dist+' m, 10 puttia peräkkäin normaalilla ja sitten 10 haaralla':'10 puttia peräkkäin '+pd.finale.dist+' m ('+(pd.finale.style==='h'?'🦵 haara':'🧍 normaali')+')')+', osumat ja paras putki kirjautuvat. Sisältyy yllä oleviin puttimääriin.</div>';
     if(pd.pressure)h+=`<div style="font-size:11px;color:${ph.tcol};margin-top:6px;line-height:1.5">🔥 <b>Paine-sarja</b> joka sessioon: portaat 4 → 8 → 10 m, ohi = alusta (max 3 yritystä). Kirjaa tulos alla olevaan Paine-sarja-korttiin.</div>`;
     h+=`</div>`;
   }
@@ -4137,7 +4139,7 @@ function puttiTRows(pd,tally){
     if(!rows[d])rows[d]={dist:d,plan:0,circle:d<=10?'C1':'C2',extra:true};
   });
   const out=Object.keys(rows).map(Number).sort(function(a,b){if(a===4)return 1;if(b===4)return -1;return a-b;}).map(function(d){return rows[d];});
-  if(pd.finale)out.push({dist:pd.finale.dist,plan:10,circle:pd.finale.dist<=10?'C1':'C2',extra:false,fin:true,style:pd.finale.style});
+  if(pd.finale)(pd.finale.styles||[pd.finale.style]).forEach(function(stl){out.push({dist:pd.finale.dist,plan:10,circle:pd.finale.dist<=10?'C1':'C2',extra:false,fin:true,finBoth:!!pd.finale.styles,style:stl});});
   return out;
 }
 function puttiBestRun(s){let b=0,c=0;s=String(s||'');for(let i=0;i<s.length;i++){if(s[i]==='1'){c++;if(c>b)b=c;}else c=0;}return b;}
@@ -4162,7 +4164,7 @@ function puttiTallyHtml(day,pd){
     h+='<div class="pt-row" data-d="'+(r.fin?'F':'')+r.dist+'"'+(r.fin?' data-fin="1" data-style="'+r.style+'"':'')+' data-c="'+r.circle+'" data-plan="'+r.plan+'" style="padding:10px 0;border-top:'+(r.fin?'2px solid var(--pd)':'0.5px solid var(--border)')+'">';
     h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:15px;font-weight:700;min-width:40px">'+(r.fin?'🔟 Putkisarja · ':'')+r.dist+' m</span>'+tag(r)+(r.fin?'<span style="font-size:11px;padding:1px 6px;border-radius:10px;background:var(--bg);color:var(--t2)">'+(r.style==='h'?'🦵 Haara':'🧍 Normaali')+'</span>':'')+'<span style="flex:1"></span><span class="pt-cnt" style="font-size:11px;color:var(--t2)"></span></div>';
     if(r.extra)h+='<div style="font-size:11px;color:var(--t3);margin-bottom:4px">Ei valitun viikon ohjelmassa (tallennettu kirjaus)</div>';
-    if(r.fin)h+='<div style="font-size:11px;color:var(--t3);margin-bottom:4px">10 puttia peräkkäin, tyyli vaihtuu päivittäin. Tavoite: mahdollisimman pitkä putki.</div>';
+    if(r.fin)h+='<div style="font-size:11px;color:var(--t3);margin-bottom:4px">'+(r.finBoth?'10 puttia peräkkäin, normaalilla ja haaralla erillisinä sarjoina. Tavoite: mahdollisimman pitkä putki.':'10 puttia peräkkäin, tyyli vaihtuu päivittäin. Tavoite: mahdollisimman pitkä putki.')+'</div>';
     h+='<div class="pt-dots" style="display:flex;flex-wrap:wrap;gap:4px"></div>';
     h+='<div style="display:flex;gap:8px;margin-top:8px"><button class="pt-hit" style="flex:1;height:44px;border-radius:var(--rs);border:1.5px solid var(--g);background:var(--gl);color:var(--gd);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">✓ Sisään</button><button class="pt-miss" style="flex:1;height:44px;border-radius:var(--rs);border:1.5px solid #E24B4A;background:transparent;color:#E24B4A;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">✗ Ohi</button><button class="pt-undo" aria-label="Kumoa viimeisin" style="width:44px;height:44px;border-radius:var(--rs);border:1px solid var(--border);background:var(--bg);color:var(--t2);font-size:18px;cursor:pointer">↶</button></div>';
     h+='</div>';
@@ -4293,7 +4295,7 @@ function puttiPutkiHtml(){
   if(!rows.length)return '';
   rows.sort(function(a,b){return String(b.date).localeCompare(String(a.date));});
   let h='<div class="sect">🔟 Putkisarjat</div><div class="card card-p" style="margin-bottom:10px">';
-  [8,12].forEach(function(d){
+  [8,10,12].forEach(function(d){
     const r=rows.filter(function(x){return x.dist===d;}); if(!r.length)return;
     const avg=(r.reduce(function(a,x){return a+x.made;},0)/r.length).toFixed(1), best=Math.max.apply(null,r.map(function(x){return x.run;})), perfect=r.filter(function(x){return x.made>=10&&x.n>=10;}).length;
     h+='<div style="font-size:12px;margin-bottom:4px"><b>'+d+' m</b> · '+r.length+' sarjaa · keskiarvo <b>'+avg+'/10</b> · paras putki <b>'+best+'</b> · 10/10: '+perfect+' kertaa</div>';
