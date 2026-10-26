@@ -3158,7 +3158,7 @@ const STR_DATA=[
   {id:'strN',name:'Nopeustreeni',note:'Nopeusliikkeet alle 6 toistoa/sarja · lepo 90–120 s (rinnalleveto 2–3 min) · laatu ennen väsymystä, lopeta sarja kun korkeus tai nopeus laskee. Nopeusliikkeiden jälkeen kevyt kyykky ja penkki (toinen viikkokerta, ~10 min), lopuksi ydinlohko (~8 min). Lajinopeutta harjoitellaan heittotreeneissä.',exercises:[
     {id:'sn0',sp:true,prog:'q',noW:false,name:'Rinnalleveto (hang power clean)',detail:'Nopeus · lonkan räjähtävä ojennus',reps:'3',lo:3,hi:3,sets:[2,3,3,3,3,3,3,2],step:2.5,load:{type:'fixed',text:'Vk 1–2 kevyt tekniikkapaino, vk 3–7 noin 70–80 % maksimista'},hint:'Nosto polven/reiden puolivälistä, räjähtävä lonkanojennus. Lepo 2–3 min. Jos ranne tai käsi kipeytyy kiinniotossa → vaihda hang high pull (ei kiinniottoa).'},
     {id:'sn1',sp:true,name:'Boxi yhdellä jalalla',detail:'Nopeus · yhden jalan voima',reps:'3 / jalka',lo:3,hi:3,sets:[2,3,3,3,3,3,3,2],load:{type:'box',base:30,cap:55},wlabel:'Boxin korkeus (cm)',wunit:'cm',hint:'Pehmeä alastulo, polvi ei sisäänpäin. Tauko jokaisen toiston välillä.'},
-    {id:'sn3',sp:true,name:'Box squat jump tasajalkaa (istumalähtö boxilta)',detail:'Nopeus · pystysuuntainen räjähtävä teho',reps:'4',lo:4,hi:4,sets:[2,3,3,3,3,3,3,2],jump:true,load:{type:'dbjump'},wlabel:'Käsipainot (kg / käsi, 0 = ei painoa)',wunit:'kg',hint:'Kirjaa paras hyppykorkeus (cm) seinämerkillä tai videolta: se on mittari, jonka mukaan käsipainoja nostetaan. Istu boxin päällä noin 90° polvikulmassa, selkä suorana ja jalat tasan lattialla. Ponnista räjähtävästi pystyyn ilman keinuntaa (ei hypätä boxin päälle). Pehmeä alastulo lattialle, istu takaisin boxille ja tauko jokaisen toiston välillä. Voit tehdä myös käsipainoilla: pidä ne niin kevyinä, että liike pysyy räjähtävänä, ja lopeta sarja kun nopeus laskee.'},
+    {id:'sn3',sp:true,name:'Box squat jump tasajalkaa (istumalähtö boxilta)',detail:'Nopeus · pystysuuntainen räjähtävä teho',reps:'4',lo:4,hi:4,sets:[2,3,3,3,3,3,3,2],load:{type:'dbjump'},wlabel:'Käsipainot (kg / käsi, 0 = ei painoa)',wunit:'kg',hint:'Istu boxin päällä käsipainot käsissä, polvikulma noin 90°, selkä suorana ja jalat tasan lattialla. Ponnista räjähtävästi pystyyn ilman keinuntaa (ei hypätä boxin päälle). Pehmeä alastulo lattialle, istu takaisin boxille ja tauko jokaisen toiston välillä. Pidä käsipainot niin kevyinä, että liike pysyy räjähtävänä, ja lopeta sarja kun nopeus laskee. Kirjaa käytetyt käsipainot.'},
     {id:'sn6',sp:true,name:'Pallo seinään, rotaatio',detail:'Nopeus · kierron voima (lähin siirto heittoon)',reps:'4 / suunta',lo:4,hi:4,sets:[2,3,3,3,3,3,3,2],load:{type:'fixed',text:'Pallo 3–4 kg, maksiminopeus'},wlabel:'Pallon paino (kg)',hint:'Lantio johtaa, olkapää seuraa.'},
     {id:'sn7',sp:true,prog:'q',name:'Pallo slam',detail:'Nopeus · veto ja vartalo',reps:'5',lo:5,hi:5,sets:[2,3,3,3,3,3,3,2],step:1,load:{type:'fixed',text:'Pallo 4 kg → 6 kg, kun nopeus säilyy'},wlabel:'Pallon paino (kg)',hint:'Nosta pallo ylös kuin heittoon ja lyö lattiaan koko vartalolla, lantio mukana. Lopeta sarja kun nopeus laskee.'},
     {id:'sl1',sp:true,grp:'light',ref:'sa2',refPct:0.85,name:'Kevyt takakyykky (toinen viikkokerta)',detail:'Voima · kevyt, tekniikka ja toinen viikkokerta',reps:'8',lo:8,hi:8,sets:[2,2,2,2,2,2,2,1],step:0,wlabel:'Paino kg',hint:'Noin 85 % jalkapäivän painosta, 4+ toistoa varastoon. Ei uupumukseen: kevyt ja nopea tahti, tekniikka kunnossa.'},
@@ -3475,7 +3475,6 @@ function strSuggest(sp,ex,cfg){
     return{text:'Kevyt: '+lw+' kg ('+pct+' % painosta '+rw.v+' kg'+(rw.w<sp.wk?', vk '+rw.w:'')+'), 4+ toistoa varastoon',weight:lw};
   }
   if(ex.time)return null;
-  if(ex.jump)return strJumpSuggest(sp,ex);
   const lt=ex.load?nopLoadText(ex,{eff:sp.eff||sp.wk}):'';
   if(ex.load&&!ex.prog)return lt?{text:'Tänään: '+lt}:null;
   const prev=strPrev(sp,ex);
@@ -3622,15 +3621,6 @@ function renderStr(){
           <input class="weight-in" type="number" min="0" step="0.5" placeholder="0" value="${curW}" onchange="strWeightSet('wt_${wKey}',this.value)" inputmode="decimal">
           <span style="font-size:12px;color:var(--t3)">${ex.wunit||'kg'}</span>
         </div>`;
-      }
-      if(ex.jump){
-        const jKey='jh_'+wKey; const jv=get(jKey)||'';
-        h+=`<div class="weight-row">
-          <span style="font-size:12px;color:var(--t2);flex:1">Hyppykorkeus (paras toisto) · ${jumpHistText(sp,ex)}</span>
-          <input class="weight-in" type="number" min="0" step="0.5" placeholder="cm" value="${jv}" onchange="strWeightSet('${jKey}',this.value)" inputmode="decimal">
-          <span style="font-size:12px;color:var(--t3)">cm</span>
-        </div>`;
-        const jr=jumpRatioHtml(sp,ex,jv,curW); if(jr)h+=`<div class="ex-hint" style="margin-bottom:6px">${jr}</div>`;
       }
       {
         const nCells=Math.max(c.sets,rr.length);
@@ -4670,61 +4660,11 @@ function nopLoadText(ex,x){
   const l=ex.load; if(!l)return '';
   if(l.type==='box'){const e=x.eff>8?x.eff:Math.min(x.eff,7);return 'Boxi '+Math.min(l.cap,l.base+5*Math.floor((e-1)/2))+' cm';}
   if(l.type==='ball')return x.eff<5?'Pallo 3 kg':'Pallo 4 kg';
-  if(l.type==='dbjump'){const m=jumpSchedMax(x.eff);return m===0?'Kehonpaino (tekniikka, ei käsipainoja)':'Käsipainot enintään '+String(m).replace('.',',')+' kg / käsi, jos hyppy pysyy räjähtävänä';}
+  if(l.type==='dbjump'){const m=jumpSchedMax(x.eff);return m===0?'Tekniikkaviikko: kevyet käsipainot, hyppy pysyy räjähtävänä':'Käsipainot enintään '+String(m).replace('.',',')+' kg / käsi, jos hyppy pysyy räjähtävänä';}
   return l.text||'';
 }
-// ===== Box squat jump: kuorman progressio ja hyppykorkeus =====
-// Ohjelman enimmäiskuorma viikoittain (käsipainot kg / käsi); nosto vain jos hyppy säilyy ≥ 90 % kehonpainoversiosta
-const JUMP_STEPS=[0,5,7.5,10];
+// ===== Box squat jump: käsipainojen enimmäiskuorma viikoittain (kg / käsi), suuntaa antava =====
 function jumpSchedMax(eff){return eff<=2?0:eff<=4?5:eff<=6?7.5:10;}
-function jumpFmt(x){return String(x).replace('.',',');}
-// Aiempien viikkojen kirjaukset (hyppykorkeus cm + käsipainot), vanhin ensin; Vaihe 2:ssa mukana myös Vaihe 1
-function jumpLogs(sp,ex){
-  const out=[]; const nss=sp.ns==='str2'?['str','str2']:[sp.ns];
-  nss.forEach(function(ns){
-    const maxW=(ns===sp.ns)?sp.wk-1:8;
-    for(let w=1;w<=maxW;w++){
-      const h=parseFloat(get('jh_'+ns+'_w'+w+'_'+ex.id)); if(!(h>0))continue;
-      out.push({ns:ns,w:w,h:h,wt:parseFloat(get('wt_'+ns+'_w'+w+'_'+ex.id))||0});
-    }
-  });
-  return out;
-}
-function jumpBase(logs){return logs.filter(function(l){return l.wt===0;}).reduce(function(m,l){return Math.max(m,l.h);},0);}
-function jumpHistText(sp,ex){
-  const logs=jumpLogs(sp,ex).slice(-3); if(!logs.length)return 'ei edellistä';
-  return logs.map(function(l){return 'Vk'+l.w+' '+jumpFmt(l.h)+' cm'+(l.wt>0?' ('+jumpFmt(l.wt)+' kg)':' (kehonp.)');}).join(' · ');
-}
-// Tämän viikon hyppy suhteessa kehonpainoversion parhaaseen
-function jumpRatioHtml(sp,ex,curH,curW){
-  const base=jumpBase(jumpLogs(sp,ex)); const h=parseFloat(curH), wt=parseFloat(curW)||0;
-  if(!(h>0))return '';
-  if(wt===0)return 'Kehonpainoversio kirjattu (vertailukohta '+jumpFmt(Math.max(base,h))+' cm).';
-  if(!base)return 'Kirjaa ensin hyppykorkeus kehonpainolla, jotta kuormaa voi verrata.';
-  const r=Math.round(100*h/base);
-  return r>=90?'Hyppy '+r+' % kehonpainoversiosta ✓ liike pysyy räjähtävänä':'Hyppy '+r+' % kehonpainoversiosta – alle 90 %, kuorma on liian raskas';
-}
-function strJumpSuggest(sp,ex){
-  const eff=sp.eff||sp.wk; const maxW=jumpSchedMax(eff); const logs=jumpLogs(sp,ex); const base=jumpBase(logs);
-  if(sp.deload)return{text:'Kevennysviikko: kehonpaino tai enintään 5 kg / käsi',weight:0};
-  if(!base)return{text:'Tee kehonpainolla ja kirjaa paras hyppykorkeus (cm) vertailukohdaksi. Käsipainot vasta kun vertailukohta on kirjattu'+(maxW>0?' (ohjelma sallii enintään '+jumpFmt(maxW)+' kg / käsi)':'')+'.',weight:0};
-  const last=logs[logs.length-1]; const r=Math.round(100*last.h/base);
-  const nextUp=function(w){for(let i=0;i<JUMP_STEPS.length;i++)if(JUMP_STEPS[i]>w)return JUMP_STEPS[i];return JUMP_STEPS[JUMP_STEPS.length-1];};
-  const nextDown=function(w){for(let i=JUMP_STEPS.length-1;i>=0;i--)if(JUMP_STEPS[i]<w)return JUMP_STEPS[i];return 0;};
-  const pre='Edellinen: '+(last.wt>0?jumpFmt(last.wt)+' kg':'kehonpaino')+' · '+jumpFmt(last.h)+' cm'+(last.wt>0?' ('+r+' % kehonpainosta)':'')+'. ';
-  let w;
-  if(last.wt===0){
-    // kevennysviikon (tai tekniikkaviikkojen) jälkeen palataan viimeisimpään hyvin toimineeseen kuormaan
-    const good=logs.filter(function(l){return l.wt>0&&Math.round(100*l.h/base)>=90;}).pop();
-    w=Math.min(maxW,good?good.wt:5);
-    if(w===0)return{text:pre+'Tekniikkaviikko: kehonpaino.',weight:0};
-    return{text:pre+'Käsipainot '+jumpFmt(w)+' kg / käsi (ohjelma sallii enintään '+jumpFmt(maxW)+' kg).',weight:w};
-  }
-  if(r<90){w=nextDown(last.wt);return{text:pre+'Hyppy putosi alle 90 %:n → '+(w>0?jumpFmt(w)+' kg / käsi':'kehonpaino')+' (liike pitää pysyä räjähtävänä).',weight:w};}
-  w=Math.min(maxW,nextUp(last.wt));
-  if(w<=last.wt)return{text:pre+'Pysy '+jumpFmt(last.wt)+' kg / käsi (ohjelma sallii enintään '+jumpFmt(maxW)+' kg).',weight:last.wt};
-  return{text:pre+'Nosta '+jumpFmt(w)+' kg / käsi (hyppy säilyi ≥ 90 %).',weight:w};
-}
 // Vanha reitti: ohjaa Voima-sivun Nopeustreeni-korttiin
 function renderTeho(){trainCtxSession='teho';trainTabCur='str';renderStr();}
 

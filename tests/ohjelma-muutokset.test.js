@@ -12,6 +12,11 @@ setTimeout(()=>{ console.log(w.eval(`(function(){
    const wk=4; const sets=S.exercises.map(e=>e.sets[wk]||0); const tot=sets.reduce((a,b)=>a+b,0); ok('nopeuspäivä vk 5: 25 sarjaa (ennen 43)', tot===25, tot+' sarjaa: '+sets.join('+'));
    ok('ei valinnaisia (leuat, RDL) ja ei ydinliikkeistä woodchop/sivulankku', !S.exercises.some(e=>e.grp==='opt'||e.id==='sc2'||e.id==='sc4'));
    ok('ydinlohko: Pallof + voimapyörä (vk 5: 6 sarjaa)', S.exercises.filter(e=>e.grp==='core').map(e=>e.name).join('|')==='Pallof-puristus (anti-rotaatio)|Voimapyörä (ab wheel)'); });
+ tryit('box squat jump ilman senttejä',()=>{ const S=STR_DATA.find(s=>s.id==='strN'), e=S.exercises.find(x=>x.id==='sn3');
+   ok('sn3: ei hyppykorkeus-kirjausta (jump-lippu pois), käsipainot kg / käsi', !e.jump&&/Käsipainot/.test(e.wlabel)&&!/cm/.test(e.hint)&&/istumalähtö/.test(e.name), e.wlabel);
+   showPg('train'); trainTab('str',null); openSession('str','2026-11-13','teho'); const root=document.getElementById('train-content'); const blocks=Array.from(root.querySelectorAll('.ex-block')); const b=blocks.find(x=>/Box squat jump/.test(x.textContent)); const bt=b?b.textContent.replace(/\\s+/g,' '):'';
+   ok('Box squat jump -kortissa ei hyppykorkeutta eikä senttejä; käsipainot kirjataan', !!b&&!/Hyppykorkeus|cm/.test(bt)&&/Käsipainot/.test(bt), bt.slice(0,160));
+   const single=blocks.find(x=>/Boxi yhdellä jalalla/.test(x.textContent)); ok('boxi yhdellä jalalla säilyy (boxin korkeus cm) – eri liike', !!single&&/Boxin korkeus \\(cm\\)|Boxi \\d+ cm/.test(single.textContent.replace(/\\s+/g,' ')), single&&single.textContent.replace(/\\s+/g,' ').slice(0,120)); });
  tryit('dead bug -> voimapyörä',()=>{ const all=STR_DATA.flatMap(s=>s.exercises); ok('Dead bug ei esiinny missään ohjelmassa', !all.some(e=>/dead ?bug/i.test(e.name+' '+(e.hint||''))), all.filter(e=>/dead ?bug/i.test(e.name+' '+(e.hint||''))).map(e=>e.id).join());
    ok('voimapyörä jalkapäivässä, nopeuspäivässä ja nivelterveydessä (sj9, sc3, nh5)', ['sj9','sc3','nh5'].every(id=>(all.find(e=>e.id===id)||{}).name==='Voimapyörä (ab wheel)')); });
  tryit('leuat pääliikkeenä',()=>{ ok('yläkroppapäivän leuanveto (sb3) säilyy', STR_DATA.flatMap(s=>s.exercises).some(e=>e.id==='sb3')); });
