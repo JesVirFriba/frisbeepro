@@ -16,7 +16,7 @@ setTimeout(()=>{ console.log(w.eval(`(function(){
    ok('sn3: ei hyppykorkeus-kirjausta (jump-lippu pois), käsipainot kg / käsi', !e.jump&&/Käsipainot/.test(e.wlabel)&&!/cm/.test(e.hint)&&/istumalähtö/.test(e.name), e.wlabel);
    showPg('train'); trainTab('str',null); openSession('str','2026-11-13','teho'); const root=document.getElementById('train-content'); const blocks=Array.from(root.querySelectorAll('.ex-block')); const b=blocks.find(x=>/Box squat jump/.test(x.textContent)); const bt=b?b.textContent.replace(/\\s+/g,' '):'';
    ok('Box squat jump -kortissa ei hyppykorkeutta eikä senttejä; käsipainot kirjataan', !!b&&!/Hyppykorkeus|cm/.test(bt)&&/Käsipainot/.test(bt), bt.slice(0,160));
-   const single=blocks.find(x=>/Boxi yhdellä jalalla/.test(x.textContent)); ok('boxi yhdellä jalalla säilyy (boxin korkeus cm) – eri liike', !!single&&/Boxin korkeus \\(cm\\)|Boxi \\d+ cm/.test(single.textContent.replace(/\\s+/g,' ')), single&&single.textContent.replace(/\\s+/g,' ').slice(0,120)); });
+   const single=blocks.find(x=>/Boxi yhdellä jalalla/.test(x.textContent)); const st=single?single.textContent.replace(/\\s+/g,' '):''; ok('boxi yhdellä jalalla kirjataan käsipainoina (kg / käsi), ei senttejä', !!single&&/Käsipainot/.test(st)&&!/cm|korkeus/i.test(st), st.slice(0,140)); });
  tryit('nopeuspäivän uudet liikkeet',()=>{ const S=STR_DATA.find(s=>s.id==='strN'); const e=id=>S.exercises.find(x=>x.id===id);
    ok('sivuhyppy yhdellä jalalla (sn4) on, ilman painoa ja senttejä', !!e('sn4')&&e('sn4').noW&&/Sivuhyppy/.test(e('sn4').name)&&!/cm/.test(e('sn4').hint), e('sn4')&&e('sn4').name);
    ok('pallo seinään on askel + rotaatio', e('sn6').name.indexOf('askel + rotaatio')>=0, e('sn6').name);
