@@ -4034,14 +4034,6 @@ function renderPuttiTrain(){
   });
   cont.querySelectorAll('.pt-c2').forEach(function(b){b.addEventListener('click',function(e){e.preventDefault();localStorage.setItem('fp_putti_c2_'+pageDate(),b.dataset.v);renderTrain();});});
   cont.querySelectorAll('.pt-seg').forEach(function(b){b.addEventListener('click',function(e){e.preventDefault();localStorage.setItem('fp_putti_nyt',b.dataset.s);puttiTallyUpdate(cont);});});
-  cont.querySelectorAll('.pt-four').forEach(function(inp){
-    inp.addEventListener('input',function(){
-      let v=parseInt(inp.value,10); if(!isNaN(v)){if(v>10){v=10;inp.value=10;}if(v<0){v=0;inp.value=0;}}
-      const day=cont.querySelector('#putti-tally').dataset.day;
-      puttiTSet(day,4,inp.dataset.s,isNaN(v)?'':('1'.repeat(v)+'0'.repeat(10-v)));
-      puttiTallyUpdate(cont);
-    });
-  });
   const ptSave=cont.querySelector('#putti-tally-save');
   if(ptSave)ptSave.addEventListener('click',function(e){e.preventDefault();puttiTallySave(today3);});
   cont.querySelectorAll('.pt-save-old').forEach(function(b){b.addEventListener('click',function(e){e.preventDefault();puttiTallySave(b.dataset.day);});});
@@ -4123,7 +4115,7 @@ function puttiTRows(pd,tally){
     const d=parseInt(k.split('|')[0],10); if(isNaN(d)||!String(tally[k]).length)return;
     if(!rows[d])rows[d]={dist:d,plan:0,circle:d<=10?'C1':'C2',extra:true};
   });
-  const out=Object.keys(rows).map(Number).sort(function(a,b){if(a===4)return 1;if(b===4)return -1;return a-b;}).map(function(d){return rows[d];});
+  const out=Object.keys(rows).map(Number).sort(function(a,b){return a-b;}).map(function(d){return rows[d];});
   if(pd.finale)(pd.finale.styles||[pd.finale.style]).forEach(function(stl){out.push({dist:pd.finale.dist,plan:10,circle:pd.finale.dist<=10?'C1':'C2',extra:false,fin:true,finBoth:!!pd.finale.styles,style:stl});});
   return out;
 }
@@ -4140,12 +4132,6 @@ function puttiTallyHtml(day,pd){
   h+='<div style="font-size:11px;color:var(--t3);margin-bottom:8px">Napauta jokaisen putin jälkeen. Tyyli valitaan tästä:</div>';
   h+='<div style="display:flex;gap:6px;margin-bottom:4px">'+segBtn('n','🧍 Normaali')+segBtn('h','🦵 Haara')+'</div>';
   rows.forEach(function(r,idx){
-    if(r.dist===4&&!r.extra){
-      const vN=tally['4|n']&&String(tally['4|n']).length===10?puttiTCount(tally['4|n']):'', vH=tally['4|h']&&String(tally['4|h']).length===10?puttiTCount(tally['4|h']):'';
-      const box=function(s,label,v){return '<div style="text-align:center"><div style="font-size:11px;color:var(--t2);margin-bottom:2px">'+label+'</div><input class="weight-in pt-four" data-s="'+s+'" type="number" min="0" max="10" inputmode="numeric" placeholder="/10" value="'+v+'" style="width:72px;box-sizing:border-box"></div>';};
-      h+='<div class="pt-row4" data-d="4" style="padding:10px 0;border-top:0.5px solid var(--border);border-bottom:0.5px solid var(--border)"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:15px;font-weight:700;min-width:40px">4 m</span>'+tag(r)+'<span style="font-size:11px;color:var(--t3)">10 putin putki, viimeisenä</span></div><div style="display:flex;gap:14px">'+box('n','🧍 Normaali',vN)+box('h','🦵 Haara',vH)+'</div></div>';
-      return;
-    }
     h+='<div class="pt-row" data-d="'+(r.fin?'F':'')+r.dist+'"'+(r.fin?' data-fin="1" data-style="'+r.style+'"':'')+' data-c="'+r.circle+'" data-plan="'+r.plan+'" style="padding:10px 0;border-top:'+(r.fin?'2px solid var(--pd)':'0.5px solid var(--border)')+'">';
     h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:15px;font-weight:700;min-width:40px">'+(r.fin?'🔟 Putkisarja · ':'')+r.dist+' m</span>'+tag(r)+(r.fin?'<span style="font-size:11px;padding:1px 6px;border-radius:10px;background:var(--bg);color:var(--t2)">'+(r.style==='h'?'🦵 Haara':'🧍 Normaali')+'</span>':'')+'<span style="flex:1"></span><span class="pt-cnt" style="font-size:11px;color:var(--t2)"></span></div>';
     if(r.extra)h+='<div style="font-size:11px;color:var(--t3);margin-bottom:4px">Ei valitun viikon ohjelmassa (tallennettu kirjaus)</div>';
@@ -4182,10 +4168,6 @@ function puttiTallyUpdate(cont){
     row.querySelector('.pt-dots').innerHTML=dots;
     row.querySelector('.pt-cnt').textContent=fin?(s.length?(puttiTCount(s)+'/'+s.length+' · paras putki '+puttiBestRun(s)):'–'):'Normaali '+(sN.length?puttiTCount(sN)+'/'+sN.length:'–')+' · Haara '+(sH.length?puttiTCount(sH)+'/'+sH.length:'–')+(plan?' · tavoite '+plan:'');
   });
-  card.querySelectorAll('.pt-four').forEach(function(i){
-    if(document.activeElement===i)return;
-    const s=String(tally['4|'+i.dataset.s]||''); i.value=s.length===10?puttiTCount(s):'';
-  });
   const planTotal=parseInt(card.dataset.plan,10)||0;
   const set=function(id,t){const e=card.querySelector('#'+id);if(e)e.textContent=t;};
   set('pt-p',(na+ha)+' / '+planTotal); set('pt-n',pct(nm,na)); set('pt-h',pct(hm,ha));
@@ -4220,7 +4202,7 @@ function puttiTallyLuonnosHtml(today){
   return h;
 }
 function puttiTallySave(day){
-  const tally=puttiTallyOf(day); const order=function(d){return d===4?99:d;}; const ordK=function(k){const p0=String(k.split('|')[0]);return /^F/.test(p0)?200+parseInt(p0.slice(1),10):order(+p0);};
+  const tally=puttiTallyOf(day); const order=function(d){return d;}; const ordK=function(k){const p0=String(k.split('|')[0]);return /^F/.test(p0)?200+parseInt(p0.slice(1),10):order(+p0);};
   const keys=Object.keys(tally).filter(function(k){return String(tally[k]||'').length>0;}).sort(function(a,b){const pa=a.split('|'),pb=b.split('|');return ordK(a)-ordK(b)||(pa[1]===pb[1]?0:(pa[1]==='n'?-1:1));});
   const sarjat=[];
   keys.forEach(function(k){
