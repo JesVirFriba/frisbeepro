@@ -43,8 +43,8 @@ setTimeout(()=>{ console.log(w.eval(`(function(){
    const r8=chk('2026-12-01','t2'); ok('vk 8 (testiviikko) edelleen −45 %', r8.prog.n===8&&/−45 %/.test(r8.ad.det)&&!/noin/.test(r8.ad.det), r8.ad.det);
    const r14=chk('2027-01-12','t2'); ok('vk 14 (normaali) ei kevennystä', r14.ad.n===r14.base.n&&!/paluu|kevennys/.test(r14.ad.det)); });
  tryit('putti',()=>{ const sum=m=>Object.values(m).reduce((x,y)=>x+y,0)*2; const d15i=puttiDataFor('2027-01-20',15), d15c=puttiDataFor('2027-01-23',15), d16i=puttiDataFor('2027-01-27',16), d16c=puttiDataFor('2027-01-30',16);
-   ok('vk 15: sisällä 100, C2 80, viikko 480, "paluu lomalta"', sum(d15i.perStyle)+10===100&&sum(d15c.perStyle)+20===100&&d15i.weekTotal===500&&/paluu lomalta/.test(d15i.label)&&d15c.c2===true, d15i.label+' | '+d15i.weekTotal);
-   ok('vk 16: sisällä 110, C2 70, viikko 510, kevennys −25 %', sum(d16i.perStyle)+10===110&&sum(d16c.perStyle)+20===110&&d16i.weekTotal===550&&/−25 %/.test(d16i.label), d16i.label+' | '+d16i.weekTotal);
+   ok('vk 15: sisällä 100, C2 80, viikko 480, "paluu lomalta"', sum(d15i.perStyle)+20===100&&sum(d15c.perStyle)+20===100&&d15i.weekTotal===500&&/paluu lomalta/.test(d15i.label)&&d15c.c2===true, d15i.label+' | '+d15i.weekTotal);
+   ok('vk 16: sisällä 110, C2 70, viikko 510, kevennys −25 %', sum(d16i.perStyle)+20===100&&sum(d16c.perStyle)+20===100&&d16i.weekTotal===500&&/−25 %/.test(d16i.label), d16i.label+' | '+d16i.weekTotal);
    ok('vk 8 putti-kevennys säilyy −45 %', /−45 %/.test(puttiDataFor('2026-12-01',8).label)); });
  tryit('tapahtumapohjainen loma',()=>{ const ev=(get('events')||[]).slice(); ev.push({type:'loma',date:'2026-12-14',dateTo:'2026-12-16',name:'Testiloma',mode:'yllapito',id:'t1'}); set('events',ev);
    const p=plan('2026-12-14'); ok('event type=loma + mode=yllapito → ylläpitopäivät (ma voima 1, ti aerobinen, ke vapaa)', day(p,'2026-12-14').sessions.includes('voima_loma_a')&&day(p,'2026-12-15').sessions.includes('peruskunto')&&day(p,'2026-12-16').sessions[0]==='lepo'&&day(p,'2026-12-17').sessions.some(s=>s==='putti'||s==='heitto_tek'), day(p,'2026-12-14').sessions.join('+'));

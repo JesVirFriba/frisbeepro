@@ -6,9 +6,8 @@ setTimeout(()=>{ console.log(w.eval(`(function(){
  const add=(ds,n)=>{const d=new Date(ds+'T12:00:00');d.setDate(d.getDate()+n);return dateStr(d);};
  const starts=[]; for(let n=1;n<=16;n++) starts.push(n<=8?add('2026-10-12',7*(n-1)):add('2026-12-07',7*(n-9)));
  const sum=m=>Object.values(m).reduce((a,b)=>a+b,0)*2; const keys=m=>Object.keys(m).map(Number);
- tryit('tyyli',()=>{ const a=puttiDataFor('2026-11-10',5).finale.style, b=puttiDataFor('2026-11-11',5).finale.style, c=puttiDataFor('2026-11-12',5).finale.style; ok('putkisarjan tyyli vaihtuu päivittäin (n/h)', a!==b&&a===c&&['n','h'].includes(a), a+b+c); });
  tryit('sisällä-tila',()=>{ localStorage.setItem('fp_putti_c2_2026-11-14','0'); showPg('train'); trainTab('putti',null); const root=document.getElementById('train-content'); const rows=Array.from(root.querySelectorAll('.pt-row')).map(r=>r.dataset.d+':'+r.dataset.plan).join(' ');
-   ok('sisällä (la 14.11. käsin): rivit 6, 8 (15), 10 + putkisarja F8; 4 m numeroruutu mukana', /6:10 8:15 10:20 F8:10/.test(rows)&&root.querySelectorAll('.pt-four').length===2, rows);
+   ok('sisällä (la 14.11. käsin): rivit 6, 8 (10), 10 + putkisarjat F8 (normaali ja haara); 4 m numeroruutu mukana', /6:10 8:10 10:20 F8:10 F8:10/.test(rows)&&root.querySelectorAll('.pt-four').length===2, rows);
    const fin=root.querySelector('.pt-row[data-fin="1"]'); ok('sisällä-putkisarja 8 m', /Putkisarja · 8 m/.test(fin.textContent)); localStorage.removeItem('fp_putti_c2_2026-11-14'); });
  tryit('uudet etäisyydet tilastoissa',()=>{ const ss=(get('putti_sessions')||[]).slice(); ss.push({id:99991,date:'2026-11-15',tyyli:'normaali',sarjat:[{made:5,dist:11,tyyli:'normaali'},{made:4,dist:13,tyyli:'normaali'},{made:3,dist:15,tyyli:'haara'},{made:2,dist:16,tyyli:'haara'}]}); set('putti_sessions',ss);
    const t=puttiTotalsOf(getPuttiSessions()); ok('d11, d13, d15, d16 laskeutuvat tilastoihin (a=10 kukin)', t.d11.a>=10&&t.d13.a>=10&&t.d15.a>=10&&t.d16.a>=10&&t.d16.m>=2, [11,13,15,16].map(k=>k+':'+t['d'+k].m+'/'+t['d'+k].a).join(' '));
