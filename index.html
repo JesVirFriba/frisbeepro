@@ -2405,14 +2405,14 @@ function archiveGoal(id,flag){set('goals',(get('goals')||[]).map(g=>g.id===id?{.
 // ===== Viikkonäkymästä avattavan session konteksti (päivä + sessio) =====
 function weekStartOf(ds){const dt=new Date(ds+'T12:00:00');const dow=(dt.getDay()+6)%7;return dateStr(new Date(dt.getTime()-dow*86400000));}
 // Off-season-viikon numero (1 = viikko 12.10.2026 alkaen). Ennen alkua 0 tai negatiivinen.
-// Paluuviikko: kiinteät ikkunat (PROGRAM.returns) + automaattisesti jokaisen "Sairaana"-loma-tapahtuman jälkeen (1 toipumispäivä, sitten 7 päivää)
+// Paluuviikko: kiinteät ikkunat (PROGRAM.returns) + automaattisesti jokaisen "Sairaana"-loma-tapahtuman jälkeen: alkaa tapahtuman päättymistä seuraavasta päivästä ja kestää 8 päivää (tai tapahtuman returnTo-päivään)
 function returnWindowOf(ds){
   const st=(PROGRAM.returns||[]).find(function(r){return ds>=r.from&&ds<=r.to;}); if(st)return st;
   const evs=get('events')||[];
   for(let i=0;i<evs.length;i++){ const e=evs[i];
     if(e&&e.type==='loma'&&/sairaa/i.test(e.name||'')&&e.dateTo&&e.date>=PROGRAM.start){
       const sh=function(n){const d=new Date(e.dateTo+'T12:00:00');d.setDate(d.getDate()+n);return dateStr(d);};
-      const from=sh(2), to=sh(8); if(ds>=from&&ds<=to)return {from:from,to:to,label:'sairaudesta',skipPutti:false};
+      const from=sh(1), to=e.returnTo||sh(8); if(ds>=from&&ds<=to)return {from:from,to:to,label:'sairaudesta',skipPutti:false};
     } }
   return null;
 }
@@ -2443,7 +2443,9 @@ function throwProgramFor(ds,mode){
   if(effMode==='tek'&&ph===2)extra+=' Vaihe 2: nopeusheitot molempina päivinä (ti ja la), harjoitevolyymi pienempi.';
   if(effMode==='tek'&&ph<=2&&(n===8||n===16))extra+=' KEVENNYSVIIKKO: sarjat '+(n===16?'noin −25':'−45')+' %, teho ennallaan'+(n===8?' (testi su 6.12.)':'')+'.'+(n===8?' Tiistaina lyhyt terävöitys: 2 × 4 nopeaa heittoa.':'');
   if(effMode==='tek'&&ph<=2&&n===15)extra+=' PALUU LOMALTA: sarjat noin −30 %, nopeusheitot −50 %. Palaa rauhallisesti, älä hae kovinta vauhtia heti.';
-  const ret=returnWindowOf(ds);
+  let ret=returnWindowOf(ds);
+  if(ret&&(get('events')||[]).some(function(e){return e&&e.type==='palautus'&&e.date===ds&&e.noSpeed;}))ret=Object.assign({},ret,{noSpeed:true});
+  if(ret&&ret.noSpeed)extra+=' Ei nopeusheittoja tänään (kevyt paluupäivä, RPE 2–4).';
   if(ret&&!(effMode==='tek'&&ph<=2&&n===15))extra+=' PALUU '+ret.label.toUpperCase()+': sarjat noin −30 %, nopeusheitot −50 %. Palaa rauhallisesti, älä hae kovinta vauhtia heti.';
   return {cw,ns,title,pick,note:note+extra,n,ph,effMode,ret:ret};
 }
@@ -2451,7 +2453,8 @@ function throwProgramFor(ds,mode){
 function thAdapt(sess,prog){
   if(prog&&prog.ret&&(prog.effMode!=='tek'||prog.ph>2)){   // paluuviikko muissa kuin Vaiheen 1–2 tekniikkaviikoissa
     const isSp=function(e){return /Nopeusheitot|Nopeusblokki|nopeus/i.test(e.name||'');};
-    const ex2=sess.exercises.map(function(e){if(!e.totalSets)return e;const s2=isSp(e);return Object.assign({},e,{totalSets:Math.max(2,Math.round(e.totalSets*(s2?0.5:0.7))),detail:(e.detail||'')+' · paluu '+prog.ret.label+' '+(s2?'−50 %':'noin −30 %')});});
+    let ex2=sess.exercises.map(function(e){if(!e.totalSets)return e;const s2=isSp(e);return Object.assign({},e,{totalSets:Math.max(2,Math.round(e.totalSets*(s2?0.5:0.7))),detail:(e.detail||'')+' · paluu '+prog.ret.label+' '+(s2?'−50 %':'noin −30 %')});});
+    if(prog.ret.noSpeed)ex2=ex2.filter(function(e){return !isSp(e);});
     return Object.assign({},sess,{exercises:ex2});
   }
   if(!prog||prog.effMode!=='tek'||prog.ph>2)return sess;
@@ -2474,6 +2477,7 @@ function thAdapt(sess,prog){
   if(prog.ret||prog.n===15){
     const rl=prog.ret?prog.ret.label:'lomalta';
     exs=exs.map(function(e){if(!e.totalSets)return e;const sp2=isSpeed(e);return Object.assign({},e,{totalSets:Math.max(2,Math.round(e.totalSets*(sp2?0.5:0.7))),detail:(e.detail||'')+' · paluu '+rl+' '+(sp2?'−50 %':'noin −30 %')});});
+    if(prog.ret&&prog.ret.noSpeed)exs=exs.filter(function(e){return !isSpeed(e);});
   }
   // Testiviikon terävöitys (vk 8, tiistai): lyhyt nopeusannos pitää intensiteetin yllä ennen su 6.12. testiä
   if(prog.n===8&&baseId(sess.id)==='t2'){
