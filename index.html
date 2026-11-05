@@ -845,7 +845,9 @@ async function gistSave(){
           const parsed=JSON.parse(raw);
           if(parsed&&parsed.data){
             const base=getSyncBase();
-            // Kolmitieyhdistäminen: tämän laitteen todelliset muutokset voittavat, muu tulee Gististä
+            // Kolmitieyhdistäminen: tämän laitteen todelliset muutokset voittavat, muu tulee Gististä.
+            // TÄRKEÄÄ: luetaan paikallinen data UUDESTAAN vasta nyt (haun jälkeen), jotta haun aikana tehdyt kirjaukset (esim. putin napautus) eivät häviä.
+            localData=ld();
             localData=base?mergeFpData3(parsed.data, localData, base):mergeFpData(parsed.data, localData, true);
             sv(localData);
           }
@@ -855,6 +857,7 @@ async function gistSave(){
     }catch(e){remoteOk=false;}
     // Ei sokkokirjoitusta: jos Gistin nykytilaa ei saatu luettua, ei kirjoiteta vanhalla paikallisella datalla yli
     if(!remoteOk){gistUpdateStatus('error','Gistin luku epäonnistui – tallennus yritetään uudelleen');return;}
+    localData=ld();   // aina tuorein paikallinen tila (sisältää yhdistetyn datan ja haun aikana tehdyt muutokset)
     const payload={version:1,updated:new Date().toISOString(),data:fpStripLocal(localData)};
     const r=await fetch(`https://api.github.com/gists/${id}`,{
       method:'PATCH',
