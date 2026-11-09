@@ -1132,7 +1132,7 @@ function puttiWithFinale(pd,ds,isC2){
   if(!pd)return pd;
   const dist=isC2?10:8; let mix=Object.assign({},pd.mix); let ps=pd.perStyle, wt=pd.weekTotal, label=pd.label;
   const rw=returnWindowOf(ds);
-  if(rw&&!rw.skipPutti){   // paluuviikko: lohkot ~70 % (parillisina, vähintään 2), loppusarja ennallaan
+  if(rw&&!rw.skipPutti&&!lightWindowOf(ds)){   // paluuviikko: lohkot ~70 % (parillisina, vähintään 2), loppusarja ennallaan
     ps={}; Object.keys(pd.perStyle).forEach(function(k){ps[k]=Math.max(2,2*Math.round(pd.perStyle[k]*0.7/2));});
     mix={}; Object.keys(ps).forEach(function(k){mix[k]=ps[k]*2;});
     if(wt)wt=Math.round(wt*0.75/10)*10; label=(label||'')+' · paluu '+rw.label+' (lohkot ~70 %)';
@@ -2409,9 +2409,20 @@ function archiveGoal(id,flag){set('goals',(get('goals')||[]).map(g=>g.id===id?{.
 function weekStartOf(ds){const dt=new Date(ds+'T12:00:00');const dow=(dt.getDay()+6)%7;return dateStr(new Date(dt.getTime()-dow*86400000));}
 // Off-season-viikon numero (1 = viikko 12.10.2026 alkaen). Ennen alkua 0 tai negatiivinen.
 // Paluuviikko: kiinteät ikkunat (PROGRAM.returns) + automaattisesti jokaisen "Sairaana"-loma-tapahtuman jälkeen: alkaa tapahtuman päättymistä seuraavasta päivästä ja kestää 8 päivää (tai tapahtuman returnTo-päivään)
+// Kevennysjakso (tapahtumatyyppi 'kevennys', kentät date, dateTo, throwFactor, returnDays): ei voimaa eikä nopeustreeniä, heitto kevennetty ilman nopeusheittoja, putti normaali
+function lightWindowOf(ds){
+  const evs=get('events')||[];
+  for(let i=0;i<evs.length;i++){const e=evs[i]; if(e&&e.type==='kevennys'&&e.date&&e.dateTo&&ds>=e.date&&ds<=e.dateTo)return e;}
+  return null;
+}
 function returnWindowOf(ds){
   const st=(PROGRAM.returns||[]).find(function(r){return ds>=r.from&&ds<=r.to;}); if(st)return st;
   const evs=get('events')||[];
+  for(let i=0;i<evs.length;i++){ const e=evs[i];   // paluuviikko kevennysjakson jälkeen
+    if(e&&e.type==='kevennys'&&e.dateTo&&e.returnDays!==0){
+      const sh=function(n){const d=new Date(e.dateTo+'T12:00:00');d.setDate(d.getDate()+n);return dateStr(d);};
+      const from=sh(1), to=sh(e.returnDays||7); if(ds>=from&&ds<=to)return {from:from,to:to,label:'kevennysjaksolta',skipPutti:true};
+    } }
   for(let i=0;i<evs.length;i++){ const e=evs[i];
     if(e&&e.type==='loma'&&/sairaa/i.test(e.name||'')&&e.dateTo&&e.date>=PROGRAM.start){
       const sh=function(n){const d=new Date(e.dateTo+'T12:00:00');d.setDate(d.getDate()+n);return dateStr(d);};
@@ -2446,17 +2457,20 @@ function throwProgramFor(ds,mode){
   if(effMode==='tek'&&ph===2)extra+=' Vaihe 2: nopeusheitot molempina päivinä (ti ja la), harjoitevolyymi pienempi.';
   if(effMode==='tek'&&ph<=2&&(n===8||n===16))extra+=' KEVENNYSVIIKKO: sarjat '+(n===16?'noin −25':'−45')+' %, teho ennallaan'+(n===8?' (testi su 6.12.)':'')+'.'+(n===8?' Tiistaina lyhyt terävöitys: 2 × 4 nopeaa heittoa.':'');
   if(effMode==='tek'&&ph<=2&&n===15)extra+=' PALUU LOMALTA: sarjat noin −30 %, nopeusheitot −50 %. Palaa rauhallisesti, älä hae kovinta vauhtia heti.';
-  let ret=returnWindowOf(ds);
+  const lwT=lightWindowOf(ds);
+  let ret=lwT?{from:lwT.date,to:lwT.dateTo,label:'kevennysjakso',factor:lwT.throwFactor||0.6,noSpeed:true,skipPutti:true,light:true}:returnWindowOf(ds);
   if(ret&&(get('events')||[]).some(function(e){return e&&e.type==='palautus'&&e.date===ds&&e.noSpeed;}))ret=Object.assign({},ret,{noSpeed:true});
-  if(ret&&ret.noSpeed)extra+=' Ei nopeusheittoja tänään (kevyt paluupäivä, RPE 2–4).';
-  if(ret&&!(effMode==='tek'&&ph<=2&&n===15))extra+=' PALUU '+ret.label.toUpperCase()+': sarjat noin −30 %, nopeusheitot −50 %. Palaa rauhallisesti, älä hae kovinta vauhtia heti.';
+  if(ret&&ret.noSpeed&&!ret.light)extra+=' Ei nopeusheittoja tänään (kevyt paluupäivä, RPE 2–4).';
+  if(ret&&ret.light)extra+=' KEVENNYSJAKSO: sarjat −'+Math.round((1-ret.factor)*100)+' %, ei nopeusheittoja, teho RPE 2–5 (alle ~80 % omasta nopeudesta).';
+  else if(ret&&!(effMode==='tek'&&ph<=2&&n===15))extra+=' PALUU '+ret.label.toUpperCase()+': sarjat noin −30 %, nopeusheitot −50 %. Palaa rauhallisesti, älä hae kovinta vauhtia heti.';
   return {cw,ns,title,pick,note:note+extra,n,ph,effMode,ret:ret};
 }
 // Mukauta session sisältö vaiheen ja viikon mukaan (80 % teho vk 1–2, Vaihe 2: nopeusheitot molempina päivinä)
 function thAdapt(sess,prog){
+  const fct=(prog&&prog.ret&&prog.ret.factor)||0.7; const rtag=function(sp){return (prog&&prog.ret&&prog.ret.light)?' · kevennysjakso −'+Math.round((1-fct)*100)+' %':' · paluu '+(prog&&prog.ret?prog.ret.label:'lomalta')+' '+(sp?'−50 %':'noin −30 %');};
   if(prog&&prog.ret&&(prog.effMode!=='tek'||prog.ph>2)){   // paluuviikko muissa kuin Vaiheen 1–2 tekniikkaviikoissa
     const isSp=function(e){return /Nopeusheitot|Nopeusblokki|nopeus/i.test(e.name||'');};
-    let ex2=sess.exercises.map(function(e){if(!e.totalSets)return e;const s2=isSp(e);return Object.assign({},e,{totalSets:Math.max(2,Math.round(e.totalSets*(s2?0.5:0.7))),detail:(e.detail||'')+' · paluu '+prog.ret.label+' '+(s2?'−50 %':'noin −30 %')});});
+    let ex2=sess.exercises.map(function(e){if(!e.totalSets)return e;const s2=isSp(e);return Object.assign({},e,{totalSets:Math.max(2,Math.round(e.totalSets*(s2?0.5:fct))),detail:(e.detail||'')+rtag(s2)});});
     if(prog.ret.noSpeed)ex2=ex2.filter(function(e){return !isSp(e);});
     return Object.assign({},sess,{exercises:ex2});
   }
@@ -2479,7 +2493,7 @@ function thAdapt(sess,prog){
   // Paluuviikko lomalta (vk 15, 19.–24.1.): sarjat −30 %, nopeusheitot −50 %
   if(prog.ret||prog.n===15){
     const rl=prog.ret?prog.ret.label:'lomalta';
-    exs=exs.map(function(e){if(!e.totalSets)return e;const sp2=isSpeed(e);return Object.assign({},e,{totalSets:Math.max(2,Math.round(e.totalSets*(sp2?0.5:0.7))),detail:(e.detail||'')+' · paluu '+rl+' '+(sp2?'−50 %':'noin −30 %')});});
+    exs=exs.map(function(e){if(!e.totalSets)return e;const sp2=isSpeed(e);return Object.assign({},e,{totalSets:Math.max(2,Math.round(e.totalSets*(sp2?0.5:fct))),detail:(e.detail||'')+rtag(sp2)});});
     if(prog.ret&&prog.ret.noSpeed)exs=exs.filter(function(e){return !isSpeed(e);});
   }
   // Testiviikon terävöitys (vk 8, tiistai): lyhyt nopeusannos pitää intensiteetin yllä ennen su 6.12. testiä
@@ -2692,6 +2706,15 @@ function buildWeekPlan(weekDates) {
         }
       }
     }
+    { const lw=lightWindowOf(ds);
+      if(lw&&dayPlan.intensity!=='comp'&&!dayPlan.sessions.some(function(s){return s==='testi'||s==='comp_day'||s==='viikkokisa'||s==='kierros';})){
+        const drop={voima_a:1,voima_b:1,voima_c:1,voima_loma_a:1,voima_loma_b:1,teho:1,heitto_nop:1};
+        const lbl={mob:'iltaliikkuvuus',hermosto:'hermosto',putti:'putti',peruskunto:'peruskunto',heitto_tek:'kevyt tekniikkaheitto',lepo:'lepo'};
+        if(dayPlan.sessions.some(function(s){return drop[s];})){
+          const ns=dayPlan.sessions.filter(function(s){return !drop[s];});
+          dayPlan={...dayPlan,sessions:ns,intensity:(dayPlan.intensity==='high'||dayPlan.intensity==='medium')?'low':dayPlan.intensity,note:'Kevennysjakso (ei voimaa eikä nopeutta): '+ns.filter(function(s){return s!=='lepo';}).map(function(s){return lbl[s]||s;}).join(' + ')};
+        }else if(dayPlan.sessions.indexOf('heitto_tek')>=0){ dayPlan={...dayPlan,note:dayPlan.note+' · kevennetty (−'+Math.round((1-(lw.throwFactor||0.6))*100)+' %, ei nopeusheittoja)'}; }
+      } }
     plan.push(dayPlan);
   }
   return plan;
@@ -2810,8 +2833,11 @@ function renderWeekView() {
     <button onclick="weekNext()" style="background:none;border:1px solid var(--border);border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center">›</button>
   </div>`;
 
+  // Kevennysjakso: ei voimaa eikä nopeustreeniä
+  const lwk=weekDates.map(function(d){return lightWindowOf(dateStr(d));}).filter(Boolean)[0];
+  if(lwk) h += `<div class="card card-p" id="light-banner" style="margin-bottom:12px;border-left:3px solid #378ADD"><div style="font-size:13px;font-weight:600">🪶 Kevennysjakso ${lwk.date.slice(8)}.${lwk.date.slice(5,7)}.–${lwk.dateTo.slice(8)}.${lwk.dateTo.slice(5,7)}.</div><div style="font-size:12px;color:var(--t2);margin-top:2px;line-height:1.5">Voima ja nopeustreeni on poistettu. Heitto on kevennetty (−${Math.round((1-(lwk.throwFactor||0.6))*100)} %, ei nopeusheittoja, teho RPE 2–5). Putti, liikkuvuus ja peruskunto normaalisti.</div></div>`;
   // Paluuviikko (sairaus/loma): kuormat kevennetty
-  { const rwk=weekDates.map(function(d){return returnWindowOf(dateStr(d));}).filter(Boolean)[0];
+  { const rwk=lwk?null:weekDates.map(function(d){return returnWindowOf(dateStr(d));}).filter(Boolean)[0];
     if(rwk) h += `<div class="card card-p" id="return-banner" style="margin-bottom:12px;border-left:3px solid #EF9F27"><div style="font-size:13px;font-weight:600">🤒 Paluuviikko (${rwk.label})</div><div style="font-size:12px;color:var(--t2);margin-top:2px;line-height:1.5">Kuormat on kevennetty: voima −10 % ja −1 sarja, heitto noin −30 % ja nopeusheitot −50 %, putti-lohkot noin 70 %. Palaa rauhallisesti äläkä hae kovinta vauhtia heti. Jos oireet palaavat, lepää.</div></div>`; }
   // Kisakausi 2027: ylläpitopohja, kunnes kausiohjelma (tavoitteet, kisakalenteri, kuormitus) on suunniteltu
   if(dateStr(weekDates[6]) >= PROGRAM.season.from){
