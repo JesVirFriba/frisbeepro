@@ -8,9 +8,12 @@ setTimeout(()=>{ console.log(w.eval(`(function(){
    ok('treenipäivä 2605 ja lepopäivä 2380 kcal', FOOD_PLAN.treeni.kcal===2605&&FOOD_PLAN.lepo.kcal===2380); });
  tryit('nappi ja sivu',()=>{ ok('alapalkissa 7 nappia ja Ruoka-nappi', document.querySelectorAll('.nav .ni').length===7&&!!document.getElementById('nav-food'));
    showPg('food'); ok('Ruoka-sivu piirtyy ilman NaN/undefined', document.getElementById('pg-food').classList.contains('on')&&txt().indexOf('NaN')<0&&txt().indexOf('undefined')<0&&/2605|2380/.test(txt()), txt().slice(0,80)); });
- tryit('päivätyyppi',()=>{ set('events',[]); set('ruoka_tyyppi',{});
-   const types={}; ['2026-11-16','2026-11-17','2026-11-18','2026-11-19','2026-11-20','2026-11-21','2026-11-22'].forEach(d=>{types[d]=foodDayType(d).type;});
-   ok('päivätyyppi tulee kalenterista (voima/heitto → treeni, muuten lepo)', Object.values(types).indexOf('treeni')>=0&&Object.values(types).indexOf('lepo')>=0, JSON.stringify(types));
+ tryit('päivätyyppi',()=>{ set('events',[{id:6001,type:'kevennys',name:'Kevennys',icon:'🪶',date:'2026-11-09',dateTo:'2026-11-22',throwFactor:0.6,noStrength:true,noSpeed:true}]); set('ruoka_tyyppi',{});
+   const days=['2026-11-16','2026-11-17','2026-11-18','2026-11-19','2026-11-20','2026-11-21','2026-11-22'];
+   const plan=buildWeekPlan(getWeekDates(weekOffsetOf(new Date('2026-11-17T12:00:00')))); const bad=[];
+   days.forEach(d=>{ const p=plan.find(x=>x.date===d); const exp=p.intensity==='rest'?'lepo':'treeni'; if(foodDayType(d).type!==exp)bad.push(d+' '+p.intensity+' → '+foodDayType(d).type); });
+   ok('ruoka seuraa viikkonäkymää: vain lepopäivä (intensity rest) on lepo, kevyetkin päivät treeniä', bad.length===0, bad.join(' | '));
+   ok('kevennysjakson su 22.11. on lepo ja ti 17.11. treeni', foodDayType('2026-11-22').type==='lepo'&&foodDayType('2026-11-17').type==='treeni');
    foodDate='2026-11-17'; foodSetType('lepo'); ok('käsin valittu lepopäivä ohittaa kalenterin', foodDayType('2026-11-17').type==='lepo'&&!foodDayType('2026-11-17').auto&&/2380/.test(txt()));
    foodSetType('treeni'); ok('käsin valittu treenipäivä', /2605/.test(txt())); });
  tryit('kuittaus',()=>{ foodDate='2026-11-17'; foodSetType('treeni'); foodToggle('aamu'); foodToggle('lounas');
