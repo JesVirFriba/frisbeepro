@@ -1,0 +1,26 @@
+process.env.TZ='Europe/Helsinki'; process.env.FAKE_NOW='2026-11-13T10:00:00+02:00';
+const {boot,APP}=require('./harness.js'); const {w,errors}=boot(APP);
+setTimeout(()=>{ console.log(w.eval(`(function(){
+ const R=[]; const ok=(n,c,x='')=>R.push((c?'OK   ':'VIRHE')+' '+n+(x?' → '+String(x).slice(0,230):''));
+ const tryit=(n,f)=>{try{f();}catch(e){R.push('VIRHE '+n+': '+e.message+' @'+(e.stack||'').split('\\\\n')[1]);}};
+ set('events',[{id:6001,type:'kevennys',name:'Kevennys',icon:'🪶',date:'2026-11-09',dateTo:'2026-11-22',throwFactor:0.6,noStrength:true,noSpeed:true},{id:7001,type:'testi',name:'Testi 2',date:'2026-12-06'}]);
+ set('profile',{rating:919,metrix:939,target:940,metrix_target:960,bh_target:125,fh_target:110});
+ const txt=()=>document.getElementById('pv').textContent;
+ tryit('rakenne',()=>{ showPg('profile'); const t=txt(), html=document.getElementById('pv').innerHTML;
+   ok('etusivu piirtyy ilman NaN/undefined', t.length>100&&t.indexOf('NaN')<0&&t.indexOf('undefined')<0, t.slice(0,90));
+   ok('Tänään-kortti: Avaa-nappi ja ruokarivi', /home-cta/.test(html)&&/Ruoka · /.test(t)&&/kcal/.test(t));
+   ok('viikkorivissä 7 päivää', document.querySelectorAll('#pv .hday').length===7);
+   ok('seuraava testi ja kevennys näkyvät viikkokortissa', /Seuraava testi 6\\.12\\. \\(23 pv\\)/.test(t)&&/Kevennys päättyy 22\\.11\\./.test(t), t.match(/Seuraava testi[^T]*/));
+   ok('Tilanne-kortti: PDGA, Metrix, BH, FH', /PDGA/.test(t)&&/Metrix/.test(t)&&/BH km\\/h/.test(t)&&/FH km\\/h/.test(t));
+   ok('Kopioi tilanne ei ole etusivulla, vaan asetuksissa', !/Kopioi tilanne/.test(t)&&/Kopioi tilanne Claude-chattiin/.test(document.getElementById('m-settings').textContent)&&!!document.getElementById('copy-ok'));
+   ok('synkronointitila (#gist-status) säilyy etusivulla', !!document.getElementById('gist-status')); });
+ tryit('valmentajaviesti',()=>{ const m=offseasonCoachMsg('2026-11-13'); ok('viesti on kevennystietoinen (ei vanhaa "Ma jalat, ke yläkroppa")', /Kevennysjakso/.test(m)&&!/Ma jalat/.test(m)&&/ei voimaa eikä nopeutta/.test(m), m);
+   const m2=offseasonCoachMsg('2026-11-24'); ok('jakson jälkeen paluuviikon viesti', /Paluuviikko/.test(m2), m2); });
+ tryit('Avaa',()=>{ showPg('profile'); openToday(); ok('Avaa vie treenisivulle', document.getElementById('pg-train').classList.contains('on'), trainTabCur); });
+ tryit('tavoitteet ja putti',()=>{ set('goals',[{id:1,type:'muu',desc:'Vaihe 1: voimalohko läpi – vähintään 21/23',deadline:'2026-12-06',from:0,to:21,cur:0,active:true},{id:2,type:'muu',desc:'Box breathing päivittäin',deadline:'2026-12-07',from:0,to:28,cur:7,active:true}]);
+   set('putti_sessions',[{date:'2026-11-10',d4:{m:9,a:10},d6:{m:8,a:10},d8:{m:7,a:10},d10:{m:5,a:10}}]);
+   showPg('profile'); const t=txt(); ok('voimatavoite merkitään tauolle kevennysjaksolla', /tauolla \\(kevennys\\)/.test(t), t.match(/tauolla[^)]*\\)?/));
+   ok('putti-kortti näyttää prosentit', /Putti/.test(t)&&/90/.test(t)); });
+ tryit('tumma tila',()=>{ document.body.classList.add('dark'); showPg('profile'); ok('tumma tila piirtyy', txt().length>100); document.body.classList.remove('dark'); });
+ tryit('alapalkin ikonit',()=>{ const svgs=document.querySelectorAll('.nav .ni .ni-icon svg'); ok('alapalkissa 7 SVG-ikonia (ei emojeja)', svgs.length===7&&!/[\\u{1F300}-\\u{1FAFF}]/u.test(document.querySelector('.nav').textContent)); });
+ return R.join('\\n'); })()`)); console.log('JS-virheitä:',errors.length,errors.slice(0,2)); process.exit(0); },1800);
