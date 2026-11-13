@@ -1289,14 +1289,13 @@ const FOOD_PLAN={
     {id:'iltapala',name:'Iltapala',kcal:345,items:['200 g skyriä','100 g marjoja','30 g cashewpähkinöitä']}]}
 };
 let foodDate=null;
-const FOOD_TRAIN_SESSIONS=['voima_a','voima_b','voima_c','voima_loma_a','voima_loma_b','teho','heitto_tek','heitto_nop','kierros','comp_day','kisa','viikkokisa','testi'];
-// Päivän tyyppi: käsin valittu > kalenterin treeni (voima, heitto, nopeus, kierros, kisa, testi) > lepopäivä
+// Päivän tyyppi: käsin valittu > viikkoohjelma (sama määritelmä kuin viikkonäkymässä: vain lepopäivä on lepo, kaikki muu treeniä) > treenipäivä
 function foodDayType(ds){
   const man=(get('ruoka_tyyppi')||{})[ds]; if(man==='treeni'||man==='lepo')return {type:man,auto:false};
-  let type='lepo';
+  let type='treeni';
   try{
     const d=buildWeekPlan(getWeekDates(weekOffsetOf(new Date(ds+'T12:00:00')))).find(function(x){return x.date===ds;});
-    if(d){const s=Array.isArray(d.sessions)?d.sessions:[d.sessions]; if(d.intensity==='comp'||s.some(function(x){return FOOD_TRAIN_SESSIONS.indexOf(x)>=0;}))type='treeni';}
+    if(d&&d.intensity==='rest')type='lepo';
   }catch(e){}
   return {type:type,auto:true};
 }
