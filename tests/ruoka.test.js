@@ -1,0 +1,26 @@
+process.env.TZ='Europe/Helsinki'; process.env.FAKE_NOW='2026-11-17T10:00:00+02:00';
+const {boot,APP}=require('./harness.js'); const {w,errors}=boot(APP);
+setTimeout(()=>{ console.log(w.eval(`(function(){
+ const R=[]; const ok=(n,c,x='')=>R.push((c?'OK   ':'VIRHE')+' '+n+(x?' → '+String(x).slice(0,230):''));
+ const tryit=(n,f)=>{try{f();}catch(e){R.push('VIRHE '+n+': '+e.message+' @'+(e.stack||'').split('\\\\n')[1]);}};
+ const txt=()=>document.getElementById('food-content').textContent;
+ tryit('summat',()=>{ ['treeni','lepo'].forEach(t=>{ const p=FOOD_PLAN[t]; ok(t+': aterioiden kcal = päivän kcal', p.meals.reduce((a,m)=>a+m.kcal,0)===p.kcal, p.meals.map(m=>m.kcal).join('+')+'='+p.kcal); });
+   ok('treenipäivä 2605 ja lepopäivä 2380 kcal', FOOD_PLAN.treeni.kcal===2605&&FOOD_PLAN.lepo.kcal===2380); });
+ tryit('nappi ja sivu',()=>{ ok('alapalkissa 7 nappia ja Ruoka-nappi', document.querySelectorAll('.nav .ni').length===7&&!!document.getElementById('nav-food'));
+   showPg('food'); ok('Ruoka-sivu piirtyy ilman NaN/undefined', document.getElementById('pg-food').classList.contains('on')&&txt().indexOf('NaN')<0&&txt().indexOf('undefined')<0&&/2605|2380/.test(txt()), txt().slice(0,80)); });
+ tryit('päivätyyppi',()=>{ set('events',[]); set('ruoka_tyyppi',{});
+   const types={}; ['2026-11-16','2026-11-17','2026-11-18','2026-11-19','2026-11-20','2026-11-21','2026-11-22'].forEach(d=>{types[d]=foodDayType(d).type;});
+   ok('päivätyyppi tulee kalenterista (voima/heitto → treeni, muuten lepo)', Object.values(types).indexOf('treeni')>=0&&Object.values(types).indexOf('lepo')>=0, JSON.stringify(types));
+   foodDate='2026-11-17'; foodSetType('lepo'); ok('käsin valittu lepopäivä ohittaa kalenterin', foodDayType('2026-11-17').type==='lepo'&&!foodDayType('2026-11-17').auto&&/2380/.test(txt()));
+   foodSetType('treeni'); ok('käsin valittu treenipäivä', /2605/.test(txt())); });
+ tryit('kuittaus',()=>{ foodDate='2026-11-17'; foodSetType('treeni'); foodToggle('aamu'); foodToggle('lounas');
+   ok('kuittaus tallentuu päiväkohtaisesti', (get('ruoka_checks')['2026-11-17']||{}).aamu===true&&/syöty 1125 kcal/.test(txt()), txt().match(/syöty[^·]*/)); 
+   foodToggle('aamu'); ok('kuittauksen poisto tallentaa epätoden (ei poista avainta)', get('ruoka_checks')['2026-11-17'].aamu===false&&/syöty 685 kcal/.test(txt()));
+   foodNav(1); ok('päivänavigointi vaihtaa päivän ja kuittaukset eivät vuoda', foodDate==='2026-11-18'&&/0\\/5 ateriaa/.test(txt()));
+   foodToday(); ok('Siirry tähän päivään', foodDate===dateStr(new Date())); });
+ tryit('synkronointi',()=>{ const base={ruoka_checks:{'2026-11-17':{aamu:false}}}; const remote={ruoka_checks:{'2026-11-17':{aamu:false,lounas:true}}}; const local={ruoka_checks:{'2026-11-17':{aamu:true}}};
+   const m=mergeFpData3(remote,local,base); const d=m.ruoka_checks['2026-11-17']; ok('eri laitteiden kuittaukset yhdistyvät (aamu paikallinen, lounas etä)', d.aamu===true&&d.lounas===true, JSON.stringify(d));
+   const base2={ruoka_checks:{'2026-11-17':{aamu:true}}}; const m2=mergeFpData3({ruoka_checks:{'2026-11-17':{aamu:true}}},{ruoka_checks:{'2026-11-17':{aamu:false}}},base2); ok('kuittauksen poisto säilyy synkronoinnissa', m2.ruoka_checks['2026-11-17'].aamu===false); });
+ tryit('saavutettavuus',()=>{ showPg('food'); const cards=document.querySelectorAll('#food-content [role=checkbox]'); ok('ateriakortit ovat checkbox-roolilla ja aria-labelilla', cards.length===5&&Array.from(cards).every(c=>c.getAttribute('aria-label')&&c.hasAttribute('aria-checked'))); 
+   const small=Array.from(document.querySelectorAll('#food-content [style]')).filter(e=>{const m=/font-size:(\\d+)px/.exec(e.getAttribute('style'));return m&&+m[1]<11;}); ok('ei alle 11 px fontteja', small.length===0, small.length); });
+ return R.join('\\n'); })()`)); console.log('JS-virheitä:',errors.length,errors.slice(0,2)); process.exit(0); },1800);
