@@ -1391,9 +1391,7 @@ function renderProfile(){
   // Metrix-rating = 16 viimeisen kierroksen keskiarvo
   const last16=compsWithRating.slice(-16);
   const lastMxFromComps=last16.length>=1?Math.round(last16.reduce((a,c)=>a+c.mrating,0)/last16.length):null;
-  let lastMx=p.metrix||939;
-  if(lastMxFromComps)lastMx=lastMxFromComps;
-  else if(lastMxFromRatings)lastMx=lastMxFromRatings;
+  const lastMx=currentMetrix();
   const bhSp=speeds.filter(s=>(s.bh5||s.bhAvg||s.bhMax||0)>0);
   const fhSp=speeds.filter(s=>(s.fh5||s.fhAvg||s.fhMax||0)>0);
   const bestBH=bhSp.length?Math.max(...bhSp.map(s=>s.bhMax||s.bh5||s.bhAvg||0)):null;
@@ -1534,7 +1532,7 @@ function buildCtx(){
   const chatHist=(get('chat_history')||[]).sort((a,b)=>b.id-a.id).slice(0,5);
   const disc=get('disc_analytics');
   const lastPDGA=ratings.length?ratings[ratings.length-1].val:p.rating;
-  const lastMx=ratings.length&&ratings[ratings.length-1].mval?ratings[ratings.length-1].mval:p.metrix;
+  const lastMx=currentMetrix();
   const bhSp=speeds.filter(s=>(s.bh5||s.bhAvg||0)>0);
   const fhSp=speeds.filter(s=>(s.fh5||s.fhAvg||0)>0);
   const bestBH=bhSp.length?Math.max(...bhSp.map(s=>s.bhMax||s.bh5||s.bhAvg||0)):null;
@@ -6187,9 +6185,19 @@ function saveGistToken(){
   });
 }
 
+// Metrix-rating = 16 viimeisen kisakierroksen keskiarvo (sama etusivulla, asetuksissa ja Claude-chat-tekstissä)
+function currentMetrix(){
+  const p=get('profile')||DEF;
+  const rs=(get('ratings')||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const cs=(get('comps')||[]).filter(c=>c.mrating).sort((a,b)=>a.date.localeCompare(b.date)).slice(-16);
+  if(cs.length)return Math.round(cs.reduce((a,c)=>a+c.mrating,0)/cs.length);
+  const lr=rs.length&&rs[rs.length-1].mval?rs[rs.length-1].mval:null;
+  return lr||p.metrix||939;
+}
+
 function renderSettings(){
   const p=get('profile')||DEF;
-  setV('s-rating',p.rating||919);setV('s-metrix',p.metrix||939);
+  setV('s-rating',p.rating||919);setV('s-metrix',currentMetrix());
   setV('s-target',p.target||940);setV('s-mtarget',p.metrix_target||960);
   setV('s-bh',p.bh_target||125);setV('s-fh',p.fh_target||110);setV('s-home',p.home||'');
   // Show token status
