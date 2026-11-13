@@ -292,7 +292,13 @@ textarea{resize:none;min-height:65px}
     <button class="tb" onclick="trainTab('kierros',this)">🏃 Kierros</button>
     <button class="tb" onclick="trainTab('comp_day',this)">🏆 Kisa</button>
   </div>
+  <button id="train-back-top" class="btn btn-out" style="display:none;width:100%;margin:2px 0 10px;height:38px;font-size:13px" onclick="trainTab('week',null)" aria-label="Palaa viikkonäkymään">← Viikkonäkymään</button>
   <div id="train-content"></div>
+  <button id="train-back-bot" class="btn btn-out" style="display:none;width:100%;margin-top:10px" onclick="trainTab('week',null)" aria-label="Palaa viikkonäkymään">← Takaisin viikko-ohjelmaan</button>
+</div>
+<div class="page" id="pg-food">
+  <div class="ph">Ruokavalio</div>
+  <div id="food-content"></div>
 </div>
 <div class="page" id="pg-cal">
   <div class="ph">Kalenteri</div>
@@ -398,6 +404,7 @@ textarea{resize:none;min-height:65px}
   <button class="ni on" onclick="showPg('profile')" id="nav-profile"><span class="ni-icon">👤</span><span>Jesse</span></button>
   <button class="ni" onclick="showPg('speed')" id="nav-speed"><span class="ni-icon">⚡</span><span>Nopeus</span></button>
   <button class="ni" onclick="showPg('train')" id="nav-train"><span class="ni-icon">💪</span><span>Treeni</span></button>
+  <button class="ni" onclick="showPg('food')" id="nav-food" aria-label="Ruokavalio"><span class="ni-icon">🍽️</span><span>Ruoka</span></button>
   <button class="ni" onclick="showPg('cal')" id="nav-cal"><span class="ni-icon">📅</span><span>Kalenteri</span></button>
   <button class="ni" onclick="showPg('comp')" id="nav-comp"><span class="ni-icon">🏆</span><span>Kisat</span></button>
   <button class="ni" onclick="showPg('dev')" id="nav-dev"><span class="ni-icon">📈</span><span>Kehitys</span></button>
@@ -433,6 +440,11 @@ textarea{resize:none;min-height:65px}
   <div class="sv-msg" id="sp-msg">✓ Tallennettu!</div>
 </div></div>
 
+<div class="modal-bg" id="m-swap"><div class="modal">
+  <button class="modal-close" onclick="closeM('m-swap')" aria-label="Sulje">✕</button>
+  <div class="modal-title">⇄ Siirrä päivän treeni</div>
+  <div id="swap-body"></div>
+</div></div>
 <div class="modal-bg" id="m-event"><div class="modal">
   <button class="modal-close" onclick="closeM('m-event')">✕</button>
   <div class="modal-title">Lisää tapahtuma</div>
@@ -713,7 +725,7 @@ async function gistInit(){
   return null;
 }
 
-const ARRAY_MERGE_KEYS=['comps','events','goals'];
+const ARRAY_MERGE_KEYS=['comps','events','goals','day_swaps'];
 // Poistetut kohteet (hautakivet): id → aika. Ilman tätä yhdistäminen palauttaisi toisella laitteella/Gistissä vielä olevan poistetun tapahtuman, kisan tai tavoitteen.
 function markDeleted(key,id){const t=Object.assign({},get('deleted_ids')||{});const k=Object.assign({},t[key]||{});k[id]=Date.now();t[key]=k;set('deleted_ids',t);}
 function mergeFpData(remote, local, preferLocal){
@@ -1255,10 +1267,87 @@ function showPg(id){
   if(id==='profile')renderProfile();
   if(id==='speed')renderSpeed();
   if(id==='train')renderTrain();
+  if(id==='food')renderFood();
   if(id==='cal')renderCal();
   if(id==='comp')renderComp();
   if(id==='dev')renderDev();
 }
+// ===== Ruokavalio: treenipäivä / lepopäivä, ateriakuittaus =====
+// Lähtötiedot: 190 cm, 98 kg, 36 v · tavoite 90–92 kg · energiavaje noin 500 kcal · proteiini ~2 g/kg
+const FOOD_PLAN={
+  treeni:{label:'Treenipäivä',kcal:2605,p:208,hh:271,r:74,kuitu:46,meals:[
+    {id:'aamu',name:'Aamu · smoothie (mukaan töihin)',kcal:440,items:['30 g heraproteiinia','200 g skyriä','100 g marjoja','40 g kaurahiutaleita']},
+    {id:'lounas',name:'Lounas',kcal:685,items:['160 g kananrintaa','90 g riisiä (kuivapaino)','200 g parsakaalia','1 rkl rapsiöljyä']},
+    {id:'valipala',name:'Välipala',kcal:320,items:['2 kananmunaa','2 ruisleipää']},
+    {id:'paivallinen',name:'Päivällinen',kcal:815,items:['2 tortillaa (medium)','180 g jauhelihaa (rasva 10 %)','150 g mustia- tai kidneypapuja (keitettyjä)','150 g parsakaalia','100 g tomaattia, sipulia ja paprikaa'],note:'Kuivatut kidneypavut on keitettävä kypsiksi ennen käyttöä (tai käytä purkkipapuja).'},
+    {id:'iltapala',name:'Iltapala',kcal:345,items:['200 g skyriä','100 g marjoja','30 g cashewpähkinöitä']}]},
+  lepo:{label:'Lepopäivä',kcal:2380,p:203,hh:227,r:72,kuitu:45,meals:[
+    {id:'aamu',name:'Aamu · smoothie (mukaan töihin)',kcal:440,items:['30 g heraproteiinia','200 g skyriä','100 g marjoja','40 g kaurahiutaleita']},
+    {id:'lounas',name:'Lounas',kcal:580,items:['160 g kananrintaa','60 g riisiä (kuivapaino)','200 g parsakaalia','1 rkl rapsiöljyä']},
+    {id:'valipala',name:'Välipala',kcal:320,items:['2 kananmunaa','2 ruisleipää']},
+    {id:'paivallinen',name:'Päivällinen',kcal:695,items:['1 tortilla (medium)','180 g jauhelihaa (rasva 10 %)','150 g mustia- tai kidneypapuja (keitettyjä)','150 g parsakaalia','100 g tomaattia, sipulia ja paprikaa'],note:'Kuivatut kidneypavut on keitettävä kypsiksi ennen käyttöä (tai käytä purkkipapuja).'},
+    {id:'iltapala',name:'Iltapala',kcal:345,items:['200 g skyriä','100 g marjoja','30 g cashewpähkinöitä']}]}
+};
+let foodDate=null;
+const FOOD_TRAIN_SESSIONS=['voima_a','voima_b','voima_c','voima_loma_a','voima_loma_b','teho','heitto_tek','heitto_nop','kierros','comp_day','kisa','viikkokisa','testi'];
+// Päivän tyyppi: käsin valittu > kalenterin treeni (voima, heitto, nopeus, kierros, kisa, testi) > lepopäivä
+function foodDayType(ds){
+  const man=(get('ruoka_tyyppi')||{})[ds]; if(man==='treeni'||man==='lepo')return {type:man,auto:false};
+  let type='lepo';
+  try{
+    const d=buildWeekPlan(getWeekDates(weekOffsetOf(new Date(ds+'T12:00:00')))).find(function(x){return x.date===ds;});
+    if(d){const s=Array.isArray(d.sessions)?d.sessions:[d.sessions]; if(d.intensity==='comp'||s.some(function(x){return FOOD_TRAIN_SESSIONS.indexOf(x)>=0;}))type='treeni';}
+  }catch(e){}
+  return {type:type,auto:true};
+}
+function foodNav(delta){const d=new Date((foodDate||dateStr(new Date()))+'T12:00:00'); d.setDate(d.getDate()+delta); foodDate=dateStr(d); renderFood();}
+function foodToday(){foodDate=dateStr(new Date()); renderFood();}
+function foodSetType(t){
+  const ds=foodDate||dateStr(new Date()); const all=Object.assign({},get('ruoka_tyyppi')||{});
+  all[ds]=t; set('ruoka_tyyppi',all); renderFood();
+}
+function foodToggle(mealId){
+  const ds=foodDate||dateStr(new Date()); const all=get('ruoka_checks')||{}; const d=Object.assign({},all[ds]||{});
+  d[mealId]=!d[mealId]; all[ds]=d; set('ruoka_checks',all); renderFood();   // epätosi tallennetaan (ei poisteta), jotta synkronointi ei palauta vanhaa kuittausta
+}
+function renderFood(){
+  const cont=document.getElementById('food-content'); if(!cont)return;
+  const today=dateStr(new Date()); const ds=foodDate||today;
+  const ft=foodDayType(ds), plan=FOOD_PLAN[ft.type];
+  const checks=(get('ruoka_checks')||{})[ds]||{};
+  const eaten=plan.meals.reduce(function(a,m){return a+(checks[m.id]?m.kcal:0);},0);
+  const nDone=plan.meals.filter(function(m){return checks[m.id];}).length;
+  const dn=['su','ma','ti','ke','to','pe','la'][new Date(ds+'T12:00:00').getDay()];
+  const title=(ds===today?'Tänään':dn.charAt(0).toUpperCase()+dn.slice(1))+' '+ds.slice(8)+'.'+ds.slice(5,7)+'.';
+  const navBtn='background:none;border:1px solid var(--border);border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center';
+  let h='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+    +'<button onclick="foodNav(-1)" aria-label="Edellinen päivä" style="'+navBtn+'">‹</button>'
+    +'<div style="text-align:center"><div style="font-size:14px;font-weight:600">'+title+'</div>'
+    +(ds!==today?'<div onclick="foodToday()" role="button" style="font-size:11px;color:var(--g);cursor:pointer">Siirry tähän päivään</div>':'<div style="font-size:11px;color:var(--t3)">'+plan.label+(ft.auto?' (kalenterista)':' (valittu)')+'</div>')
+    +'</div><button onclick="foodNav(1)" aria-label="Seuraava päivä" style="'+navBtn+'">›</button></div>';
+  h+='<div style="display:flex;gap:6px;margin-bottom:12px">'
+    +['treeni','lepo'].map(function(t){const on=ft.type===t; return '<button onclick="foodSetType(\''+t+'\')" class="tb'+(on?' on':'')+'" style="flex:1;font-size:13px;padding:8px 6px">'+(t==='treeni'?'💪 Treenipäivä':'😴 Lepopäivä')+'</button>';}).join('')+'</div>';
+  const pct=Math.min(100,Math.round(eaten/plan.kcal*100));
+  h+='<div class="card card-p" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px"><div style="font-size:15px;font-weight:700">'+plan.kcal+' kcal</div><div style="font-size:12px;color:var(--t2)">syöty '+eaten+' kcal · '+nDone+'/'+plan.meals.length+' ateriaa</div></div>'
+    +'<div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:10px"><div style="width:'+pct+'%;height:100%;background:var(--g)"></div></div>'
+    +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center">'
+    +[['Proteiini',plan.p+' g'],['Hiilihydr.',plan.hh+' g'],['Rasva',plan.r+' g'],['Kuitu',plan.kuitu+' g']].map(function(x){return '<div style="background:var(--bg);border-radius:var(--rs);padding:6px 2px"><div style="font-size:14px;font-weight:700">'+x[1]+'</div><div style="font-size:11px;color:var(--t3)">'+x[0]+'</div></div>';}).join('')
+    +'</div></div>';
+  plan.meals.forEach(function(m){
+    const on=!!checks[m.id];
+    h+='<div class="card card-p" onclick="foodToggle(\''+m.id+'\')" role="checkbox" aria-checked="'+on+'" aria-label="'+m.name+' '+m.kcal+' kcal" tabindex="0" style="margin-bottom:8px;cursor:pointer;'+(on?'border:1.5px solid var(--g);background:var(--gl)':'border:1.5px solid transparent')+'">'
+      +'<div style="display:flex;align-items:center;gap:10px"><div style="width:26px;height:26px;border-radius:50%;border:2px solid '+(on?'var(--g)':'var(--border)')+';background:'+(on?'var(--g)':'none')+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">'+(on?'✓':'')+'</div>'
+      +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">'+m.name+'</div></div><div style="font-size:12px;font-weight:600;color:var(--t2);flex-shrink:0">'+m.kcal+' kcal</div></div>'
+      +'<ul style="margin:8px 0 0 36px;padding:0;font-size:13px;color:var(--text);line-height:1.5">'+m.items.map(function(i){return '<li>'+i+'</li>';}).join('')+'</ul>'
+      +(m.note?'<div style="font-size:11px;color:var(--t3);margin:6px 0 0 36px">'+m.note+'</div>':'')+'</div>';
+  });
+  h+='<div class="card card-p" style="margin:12px 0 8px"><div style="font-size:13px;font-weight:700;margin-bottom:6px">📋 Ohjeet</div><ul style="margin:0;padding-left:18px;font-size:13px;line-height:1.55">'
+    +['<b>Nesteet:</b> 2,5–3 l päivässä.','<b>Osmo-hiilihydraattijuoma:</b> vain yli 75–90 min treeneissä, ei lyhyissä.','<b>Ennen treeniä:</b> jätä pavut ja parsakaali pois 2–3 h ennen treeniä (vatsa).','<b>Kala 1–2 kertaa viikossa</b> ja <b>D-vitamiini</b> talvella.','<b>Punnitus:</b> 3–4 aamua viikossa, seuraa viikkokeskiarvoa. Alle 0,3 kg/vk kahden viikon ajan → −150 kcal. Yli 0,8 kg/vk → +150 kcal.','<b>Testi 6.12.:</b> pidä vaje maltillisena sinne asti.'].map(function(x){return '<li>'+x+'</li>';}).join('')
+    +'</ul></div>';
+  h+='<div style="font-size:11px;color:var(--t3);margin:8px 2px">Lähtötiedot: 190 cm, 98 kg, 36 v. Tavoite 90–92 kg, energiavaje noin 500 kcal/vrk, proteiini noin 2 g/kg. Määrät ovat arvioita, ja ravintoarvot vaihtelevat tuotteittain.</div>';
+  cont.innerHTML=h;
+}
+
 function openM(id){
   document.getElementById(id).classList.add('show');
   if(id==='m-putti-sess')renderPuttiInputs();
@@ -2717,7 +2806,64 @@ function buildWeekPlan(weekDates) {
       } }
     plan.push(dayPlan);
   }
+  // Päivien vaihto (day_swaps): kaksi päivää vaihtaa sisältönsä; sovelletaan vain jos vaihto on edelleen sallittu
+  (getRO('day_swaps')||[]).forEach(function(sw){
+    if(!sw)return;
+    const ia=plan.findIndex(function(d){return d.date===sw.a;}), ib=plan.findIndex(function(d){return d.date===sw.b;});
+    if(ia<0||ib<0||swapBlockReason(plan,ia,ib))return;
+    const A=plan[ia], B=plan[ib];
+    plan[ia]={...B,day:A.day,label:A.label,date:A.date,swapFrom:B.date};
+    plan[ib]={...A,day:B.day,label:B.label,date:B.date,swapFrom:A.date};
+  });
   return plan;
+}
+
+// Päivän vaihto: mitkä päivät eivät voi osallistua (kisa, testi, kierros, loma, kisaa/testiä edeltävä päivä)
+function swapDayBlock(plan,i){
+  const d=plan[i]; if(!d)return 'ei päivää';
+  const s=Array.isArray(d.sessions)?d.sessions:[d.sessions];
+  if(d.intensity==='comp'||s.some(function(x){return x==='testi'||x==='comp_day'||x==='viikkokisa'||x==='kierros'||x==='kisa';}))return 'kisa-, testi- tai kierrospäivää ei voi siirtää';
+  if(vacationOf(d.date)||(getRO('events')||[]).some(function(e){return e&&e.type==='loma'&&d.date>=e.date&&d.date<=(e.dateTo||e.date);}))return 'loma-päivää ei voi siirtää';
+  const n=plan[i+1];
+  if(n&&(n.intensity==='comp'||(Array.isArray(n.sessions)?n.sessions:[n.sessions]).indexOf('testi')>=0))return 'kisaa tai testiä edeltävä päivä pysyy kevyenä';
+  return '';
+}
+function swapBlockReason(plan,i,j){
+  if(i===j)return 'sama päivä';
+  const a=swapDayBlock(plan,i); if(a)return a;
+  const b=swapDayBlock(plan,j); if(b)return b;
+  // kevennysjakson raja: sisältö on jo suodatettu päiväkohtaisesti, joten vaihdon pitää pysyä saman jakson sisällä
+  if(!!lightWindowOf(plan[i].date)!==!!lightWindowOf(plan[j].date))return 'kevennysjakson raja ylittyisi';
+  return '';
+}
+function openSwap(date){
+  const weekDates=getWeekDates(weekOffsetOf(new Date(date+'T12:00:00')));
+  const plan=buildWeekPlan(weekDates), today=dateStr(new Date());
+  const i=plan.findIndex(function(d){return d.date===date;}); if(i<0)return;
+  const swaps=(get('day_swaps')||[]).filter(function(s){return s.a===date||s.b===date;});
+  let h='<div style="font-size:13px;color:var(--t2);margin-bottom:10px">Vaihda <b>'+plan[i].day+' '+date.slice(8)+'.</b> ('+shortDayTitle(plan[i].note)+') toisen päivän kanssa. Päivät vaihtavat sisältönsä.</div>';
+  plan.forEach(function(d,j){
+    if(j===i||d.date<today)return;
+    const why=swapBlockReason(plan,i,j);
+    h+='<button class="btn btn-out" '+(why?'disabled style="opacity:.5;':'style="')+'width:100%;margin-bottom:6px;text-align:left;height:auto;padding:9px 12px;font-size:13px"'+(why?'':' onclick="doSwap(\''+date+'\',\''+d.date+'\')"')+'><b>'+d.day+' '+d.date.slice(8)+'.</b> · '+shortDayTitle(d.note)+(why?'<div style="font-size:11px;color:var(--t3)">Ei mahdollista: '+why+'</div>':'')+'</button>';
+  });
+  if(swaps.length)h+='<button class="btn btn-out" style="width:100%;margin-top:6px" onclick="undoSwap(\''+date+'\')">↩ Peru tämän päivän siirto</button>';
+  document.getElementById('swap-body').innerHTML=h; openM('m-swap');
+}
+function undoSwap(date){
+  const all=get('day_swaps')||[];
+  all.filter(function(s){return s.a===date||s.b===date;}).forEach(function(s){markDeleted('day_swaps',s.id);});
+  set('day_swaps',all.filter(function(s){return !(s.a===date||s.b===date);}));
+  closeM('m-swap'); renderTrain();
+}
+function doSwap(a,b){
+  const all=get('day_swaps')||[];
+  const touch=function(s){return s.a===a||s.b===a||s.a===b||s.b===b;};
+  all.filter(touch).forEach(function(s){markDeleted('day_swaps',s.id);});
+  const keep=all.filter(function(s){return !touch(s);});
+  keep.push({id:Date.now(),a:a<b?a:b,b:a<b?b:a});
+  set('day_swaps',keep);
+  closeM('m-swap'); renderTrain();
 }
 
 // Nopea kisatulos
@@ -2980,7 +3126,12 @@ function renderWeekView() {
     h += '<div style="flex:1;min-width:0">';
     h += '<div style="font-size:12px;font-weight:600;color:'+(isDone?'var(--gd)':textCol)+';margin-bottom:4px;line-height:1.3">'+shortDayTitle(day.note)+(isDone?' – tehty':'')+'</div>';
     h += '<div style="display:flex;gap:3px;flex-wrap:wrap">'+badges+'</div>';
+    if(day.swapFrom)h += '<div style="font-size:11px;color:var(--t3);margin-top:3px">⇄ siirretty (alk. '+day.swapFrom.slice(8)+'.)</div>';
     h += '</div>';
+    { const pi=plan.indexOf(day);
+      if(!isPast && !isDone && !compDone && pi>=0 && !swapDayBlock(plan,pi))
+        h += '<div onclick="event.stopPropagation();openSwap(\''+day.date+'\')" role="button" aria-label="Siirrä päivän treeni" style="font-size:15px;color:var(--t2);cursor:pointer;flex-shrink:0;padding:4px 8px;border:1px solid var(--border);border-radius:20px">⇄</div>';
+    }
     if(isDone && !isCompDay){
       h += '<div class="done-chip" onclick="event.stopPropagation();setDone(\''+day.date+'\',null);renderTrain()" style="font-size:11px;color:var(--gd);cursor:pointer;flex-shrink:0;padding:3px 7px;border:1px solid var(--g);border-radius:20px">✓ Tehty</div>';
     } else if(compDone){
@@ -3352,6 +3503,16 @@ function renderTrain(){
   else if(trainTabCur==='session_pick')renderSessionPick();
   else if(trainTabCur==='viikkokisa')renderViikkokisa();
   else if(trainTabCur==='rest_day')renderRestDay();
+  syncTrainBack();
+}
+
+// "← Viikkonäkymään" kaikille muille treenivälilehdille kuin viikkonäkymälle; alanappi vain jos sisältö ei jo sisällä omaansa
+function syncTrainBack(){
+  const top=document.getElementById('train-back-top'), bot=document.getElementById('train-back-bot'), cont=document.getElementById('train-content');
+  if(!top||!bot||!cont)return;
+  const off=trainTabCur!=='week';
+  top.style.display=off?'block':'none';
+  bot.style.display=(off&&cont.textContent.indexOf('Takaisin viikko-ohjelmaan')<0)?'block':'none';
 }
 
 function renderThrow(){
