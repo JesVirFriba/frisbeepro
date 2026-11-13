@@ -60,22 +60,26 @@
 <meta name="theme-color" content="#ffffff">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap">
 <title>FrisbeePro – Jesse</title>
 <style>
 :root{
-  --g:#1D9E75;--gl:#E1F5EE;--gm:#5DCAA5;--gd:#085041;
-  --bl:#E6F1FB;--bd:#0C447C;--al:#FAEEDA;--ad:#633806;
-  --rl:#FCEBEB;--rd:#791F1F;--pl:#EEEDFE;--pd:#3C3489;
+  /* Metsä-värimaailma: metsänvihreä pääväri, lämmin vaalea pohja, oranssi toimintoväri */
+  --g:#2F7D5B;--gl:#E3EFE8;--gm:#7FB59A;--gd:#14382B;
+  --bl:#E4EDF7;--bd:#1F4C80;--al:#FAEEDA;--ad:#633806;
+  --rl:#FBE9E5;--rd:#8F2A1C;--pl:#EEEDFE;--pd:#3C3489;
   --cl:#FAECE7;--cd:#712B13;
-  --bg:#f5f5f3;--card:#fff;--text:#1a1a1a;--t2:#555;--t3:#999;
-  --border:#e5e5e5;--r:12px;--rs:8px;
+  --ac:#D4501A;--hero:#14382B;--herot:#B9D0C4;
+  --bg:#EEF1EC;--card:#fff;--text:#14231C;--t2:#4F5F56;--t3:#7A897F;
+  --border:#DDE3DC;--r:14px;--rs:10px;
   --nav:70px;--safe:env(safe-area-inset-bottom,0px);
   --yd:#8a6800;--yb:#fffbea;
 }
 body.dark{
-  --bg:#111113;--card:#1c1c1e;--text:#f2f2f7;--t2:#aeaeb2;--t3:#636366;
-  --border:#2c2c2e;
-  --gl:#0d3326;--gd:#4cd9a0;
+  --bg:#0E1713;--card:#16231D;--text:#E8F0EC;--t2:#9DB3A8;--t3:#6C8579;
+  --border:#243A30;--g:#2E8F69;--hero:#1B3A32;--herot:#9FC4B4;--ac:#E0642B;
+  --gl:#12362A;--gd:#5FD3A4;
   --bl:#0d1f33;--bd:#6ea8d8;
   --rl:#330d0d;--rd:#e87474;
   --pl:#1a1730;--pd:#9b91f5;
@@ -83,21 +87,21 @@ body.dark{
   --yd:#e8b84b;--yb:#2e1f00;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:var(--bg);color:var(--text);font-size:16px;overscroll-behavior:none}
+body{font-family:'Barlow',-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:16px;overscroll-behavior:none}
 .page-spacer{height:120px;flex-shrink:0}
-.page{display:none;padding:12px 14px calc(var(--nav)+80px+var(--safe));min-height:100vh;max-width:480px;margin:0 auto}
+.page{display:none;padding:12px 14px calc(var(--nav) + 80px + var(--safe));min-height:100vh;max-width:480px;margin:0 auto}
 .page.on{display:block}
 /* NAV */
 .nav{position:fixed;bottom:0;left:50%;width:100%;background:var(--card);border-top:1px solid var(--border);display:flex;padding-bottom:var(--safe);z-index:100;max-width:480px;transform:translateX(-50%)}
 .ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 1px;cursor:pointer;border:none;background:none;color:var(--t3);font-size:11px;gap:2px;font-weight:500}
-.ni.on{color:var(--g)}
-.ni-icon{font-size:24px;line-height:1}
+.ni.on{color:var(--gd)}
+.ni-icon{width:24px;height:24px;display:block}.ni-icon svg{width:24px;height:24px;display:block;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 /* TYPOGRAPHY */
 .ph{font-size:20px;font-weight:700;margin-bottom:4px}
 .sect{font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin:16px 0 8px}
 .sect:first-child{margin-top:0}
 /* CARDS */
-.card{background:var(--card);border-radius:var(--r);margin-bottom:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.card{background:var(--card);border-radius:var(--r);margin-bottom:8px;overflow:hidden;box-shadow:0 0 0 1px var(--border)}
 .card-p{padding:13px 15px}
 /* INPUTS */
 input,select,textarea{font-family:inherit;font-size:15px;color:var(--text);background:var(--bg);border:1.5px solid var(--border);border-radius:var(--rs);padding:9px 11px;width:100%;outline:none;-webkit-appearance:none}
@@ -141,12 +145,26 @@ textarea{resize:none;min-height:65px}
 .modal-close{float:right;background:none;border:none;font-size:22px;color:var(--t3);cursor:pointer;margin-top:-4px}
 /* PROFILE */
 .avatar{width:56px;height:56px;border-radius:50%;background:var(--gl);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--gd);flex-shrink:0}
+.home-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.home-gear{background:none;border:none;color:var(--t2);cursor:pointer;padding:8px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center}
+.home-hero{background:var(--hero);color:#fff;border-radius:18px;padding:18px;margin-bottom:10px}
+.lbl-h{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--herot)}
+.lbl-c{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--t3)}
+.home-cta{background:var(--ac);color:#fff;border:none;border-radius:24px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:inherit;min-height:44px}
+.home-food{display:flex;justify-content:space-between;align-items:center;width:100%;margin-top:14px;padding:12px 0 0;background:none;border:none;border-top:1px solid rgba(255,255,255,.18);color:var(--herot);font-size:13px;text-align:left;cursor:pointer;font-family:inherit}
+.home-card{padding:16px;cursor:pointer}
+.hnum{font-family:'Barlow Condensed','Barlow',sans-serif;font-size:36px;font-weight:700;line-height:1}
+.hday{flex:1;text-align:center;font-size:11px;color:var(--t3)}.hday.on{color:var(--text);font-weight:700}
+.hd{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;margin:5px auto 0}
+.hd svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.hd-done{background:var(--g)}.hd-today{border:2.5px solid var(--ac)}.hd-rest{background:var(--border)}.hd-miss{border:2px dashed var(--border)}.hd-future{border:2px solid var(--border)}
+.home-goal{border-top:1px solid var(--border)}.home-goal summary{display:flex;align-items:center;gap:8px;padding:12px 16px;cursor:pointer;list-style:none}.home-goal summary::-webkit-details-marker{display:none}
 .rating-hero{border-radius:var(--r);padding:14px;margin-bottom:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .rh{text-align:center;padding:12px 6px;border-radius:var(--rs)}
 .rh-num{font-size:36px;font-weight:700;line-height:1}
 .rh-lbl{font-size:11px;margin-top:3px;font-weight:500}
 /* SPEED */
-.speed-hero{background:linear-gradient(135deg,#085041,#1D9E75);border-radius:var(--r);padding:16px;margin-bottom:10px;color:#fff;text-align:center}
+.speed-hero{background:linear-gradient(135deg,#14382B,#2F7D5B);border-radius:var(--r);padding:16px;margin-bottom:10px;color:#fff;text-align:center}
 .speed-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
 .stc{background:var(--bg);border-radius:var(--rs);padding:8px 5px;text-align:center}
 .stc-l{font-size:11px;color:var(--t3);font-weight:600;text-transform:uppercase;margin-bottom:2px;letter-spacing:-.02em}
@@ -157,16 +175,16 @@ textarea{resize:none;min-height:65px}
 .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .cal-nav-btn{background:none;border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;color:var(--text)}
 /* COMP CARDS */
-.comp-card{background:var(--card);border-radius:var(--r);margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden}
+.comp-card{background:var(--card);border-radius:var(--r);margin-bottom:8px;box-shadow:0 0 0 1px var(--border);overflow:hidden}
 .comp-head{padding:14px 14px;cursor:pointer}
 .comp-name{font-size:14px;font-weight:600;margin-bottom:1px}
 .comp-meta{font-size:11px;color:var(--t2)}
 .comp-body{border-top:1px solid var(--border);padding:12px 14px;display:none}
 .comp-body.show{display:block}
 /* GOAL CARDS */
-.goal-card{background:var(--card);border-radius:var(--r);margin-bottom:8px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.goal-card{background:var(--card);border-radius:var(--r);margin-bottom:8px;padding:12px 14px;box-shadow:0 0 0 1px var(--border)}
 /* CHART */
-.chart-wrap{background:var(--card);border-radius:var(--r);padding:13px 14px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.chart-wrap{background:var(--card);border-radius:var(--r);padding:13px 14px;margin-bottom:8px;box-shadow:0 0 0 1px var(--border)}
 .bar-chart{display:flex;align-items:flex-end;gap:3px;height:110px;margin-bottom:6px}
 .bc{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px}
 .bv{font-size:11px;color:var(--t2);font-weight:600}
@@ -184,7 +202,7 @@ textarea{resize:none;min-height:65px}
 .mx-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:.5px solid var(--border)}
 .mx-row:last-child{border:none}
 /* STR CARDS */
-.str-card{background:var(--card);border-radius:var(--r);margin-bottom:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.str-card{background:var(--card);border-radius:var(--r);margin-bottom:8px;overflow:hidden;box-shadow:0 0 0 1px var(--border)}
 .str-head{display:flex;align-items:center;gap:8px;padding:12px 14px;cursor:pointer}
 .str-body{border-top:1px solid var(--border);padding:12px 14px;display:none}
 .str-body.open{display:block}
@@ -224,18 +242,18 @@ textarea{resize:none;min-height:65px}
 .a-co{background:var(--bl);color:var(--bd)}
 .a-ni{background:var(--al);color:var(--ad)}
 /* CLAUDE COPY */
-.claude-btn{width:100%;background:linear-gradient(135deg,#085041,#1D9E75);border:none;color:#fff;padding:14px;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px}
+.claude-btn{width:100%;background:linear-gradient(135deg,#14382B,#2F7D5B);border:none;color:#fff;padding:14px;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px}
 .claude-btn:active{opacity:.88}
 .copy-ok{background:var(--gl);border-radius:var(--rs);padding:10px;font-size:12px;color:var(--gd);text-align:center;display:none;margin-bottom:8px;font-weight:500}
 /* CHAT HISTORY */
-.chat-item{background:var(--card);border-radius:var(--r);margin-bottom:8px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.chat-item{background:var(--card);border-radius:var(--r);margin-bottom:8px;padding:12px 14px;box-shadow:0 0 0 1px var(--border)}
 .ci-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
 .ci-date{font-size:11px;color:var(--t3)}
 .ci-topic{font-size:13px;font-weight:600;flex:1}
 .ci-body{font-size:13px;color:var(--text);line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto}
 .ci-tag{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
 /* NOTES */
-.note-card{background:var(--card);border-radius:var(--r);margin-bottom:8px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.note-card{background:var(--card);border-radius:var(--r);margin-bottom:8px;padding:12px 14px;box-shadow:0 0 0 1px var(--border)}
 .nc-tag{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;margin-bottom:6px;display:inline-block}
 .nc-body{font-size:13px;color:var(--text);line-height:1.6;white-space:pre-wrap;word-break:break-word}
 /* INFO BOX */
@@ -337,7 +355,7 @@ textarea{resize:none;min-height:65px}
 
 <!-- NAV -->
 <!-- FAB: Nopea kisatulos -->
-<button onclick="openQuickResult()" style="position:fixed;bottom:calc(60px + var(--safe) + 12px);right:16px;z-index:150;width:52px;height:52px;border-radius:50%;background:var(--g);border:none;color:#fff;font-size:24px;box-shadow:0 4px 12px rgba(0,0,0,.25);cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>
+<button onclick="openQuickResult()" style="position:fixed;bottom:calc(60px + var(--safe) + 12px);right:16px;z-index:150;width:52px;height:52px;border-radius:50%;background:var(--ac);border:none;color:#fff;font-size:24px;box-shadow:0 4px 12px rgba(0,0,0,.25);cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>
 
 <!-- Modal: Nopea kisatulos -->
 <div class="modal-bg" id="m-quick-result"><div class="modal">
@@ -401,13 +419,13 @@ textarea{resize:none;min-height:65px}
 </div></div>
 
 <nav class="nav">
-  <button class="ni on" onclick="showPg('profile')" id="nav-profile"><span class="ni-icon">👤</span><span>Jesse</span></button>
-  <button class="ni" onclick="showPg('speed')" id="nav-speed"><span class="ni-icon">⚡</span><span>Nopeus</span></button>
-  <button class="ni" onclick="showPg('train')" id="nav-train"><span class="ni-icon">💪</span><span>Treeni</span></button>
-  <button class="ni" onclick="showPg('food')" id="nav-food" aria-label="Ruokavalio"><span class="ni-icon">🍽️</span><span>Ruoka</span></button>
-  <button class="ni" onclick="showPg('cal')" id="nav-cal"><span class="ni-icon">📅</span><span>Kalenteri</span></button>
-  <button class="ni" onclick="showPg('comp')" id="nav-comp"><span class="ni-icon">🏆</span><span>Kisat</span></button>
-  <button class="ni" onclick="showPg('dev')" id="nav-dev"><span class="ni-icon">📈</span><span>Kehitys</span></button>
+  <button class="ni on" onclick="showPg('profile')" id="nav-profile"><span class="ni-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></span><span>Jesse</span></button>
+  <button class="ni" onclick="showPg('speed')" id="nav-speed"><span class="ni-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></span><span>Nopeus</span></button>
+  <button class="ni" onclick="showPg('train')" id="nav-train"><span class="ni-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7v10M3 9v6M18 7v10M21 9v6M6 12h12"/></svg></span><span>Treeni</span></button>
+  <button class="ni" onclick="showPg('food')" id="nav-food" aria-label="Ruokavalio"><span class="ni-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v8M4 3v5a3 3 0 0 0 6 0V3M7 11v10M17 3c-2 2-3 5-3 8h3v10"/></svg></span><span>Ruoka</span></button>
+  <button class="ni" onclick="showPg('cal')" id="nav-cal"><span class="ni-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span><span>Kalenteri</span></button>
+  <button class="ni" onclick="showPg('comp')" id="nav-comp"><span class="ni-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v6a4 4 0 0 1-8 0zM8 6H4v1a3 3 0 0 0 4 3M16 6h4v1a3 3 0 0 1-4 3M12 14v4M8 21h8M10 18h4"/></svg></span><span>Kisat</span></button>
+  <button class="ni" onclick="showPg('dev')" id="nav-dev"><span class="ni-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></svg></span><span>Kehitys</span></button>
 </nav>
 
 <!-- MODALS -->
@@ -583,6 +601,10 @@ textarea{resize:none;min-height:65px}
     <button class="btn btn-out" onclick="exportData()">⬇ Lataa JSON</button>
     <button class="btn btn-out" onclick="importData()">⬆ Tuo JSON</button>
   </div>
+  <div class="sect">Claude-chat</div>
+  <button class="claude-btn" onclick="copyToClaudeChat()">Kopioi tilanne Claude-chattiin</button>
+  <div class="copy-ok" id="copy-ok">✓ Kopioitu! Avaa Claude.ai ja liitä.</div>
+  <button class="btn btn-out btn-sm" onclick="closeM('m-settings');openM('m-chat')" style="width:100%;margin-bottom:8px">+ Tallenna chat-keskustelu historiaan</button>
   <div class="sect">Tiedot</div>
   <div id="data-summary" style="font-size:12px;color:var(--t2);line-height:1.8"></div>
 </div></div>
@@ -1379,38 +1401,6 @@ function renderProfile(){
   const bestComp=comps.length?comps.slice().sort((a,b)=>(b.mrating||0)-(a.mrating||0))[0]:null;
   const rPct=p.target&&p.rating&&p.target>p.rating?Math.min(100,Math.round(((lastPDGA-p.rating)/(p.target-p.rating))*100)):0;
 
-  let h=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <div style="display:flex;align-items:center;gap:12px">
-      <div class="avatar">JV<\/div>
-      <div>
-        <div style="font-size:18px;font-weight:700">Jesse Virtanen<\/div>
-        <div style="font-size:12px;color:var(--t2)">PDGA #252010 · MPO<\/div>
-        <div style="font-size:11px;color:var(--t3)">Valmentaja: Claude<\/div>
-      <\/div>
-    <\/div>
-    <button onclick="openM('m-settings')" style="background:none;border:1px solid var(--border);border-radius:20px;padding:5px 11px;font-size:11px;color:var(--t2);cursor:pointer">⚙ Asetukset<\/button>
-  <\/div>
-
-  <div class="rating-hero">
-    <div class="rh" style="background:var(--gl)">
-      <div class="rh-num" style="color:var(--gd)">${lastPDGA}<\/div>
-      <div class="rh-lbl" style="color:var(--gd)">PDGA rating<\/div>
-      ${p.target?`<div style="font-size:11px;color:var(--gd);opacity:.7;margin-top:2px">Tavoite: ${p.target}<\/div><div style="height:3px;background:rgba(0,0,0,.1);border-radius:2px;margin-top:5px;overflow:hidden"><div style="height:100%;width:${rPct}%;background:var(--g);border-radius:2px"><\/div><\/div>`:''}
-    <\/div>
-    <div class="rh" style="background:var(--bl)">
-      <div class="rh-num" style="color:var(--bd)">${lastMx}<\/div>
-      <div class="rh-lbl" style="color:var(--bd)">Metrix rating<\/div>
-      ${p.metrix_target?`<div style="font-size:11px;color:var(--bd);opacity:.7;margin-top:2px">Tavoite: ${p.metrix_target}<\/div>`:''}
-    <\/div>
-  <\/div>
-
-  <div class="stat-2">
-    <div class="sc"><div class="sn" style="color:var(--bd)">${bestBH?bestBH.toFixed(1):'–'}<\/div><div class="sl">BH paras (km/h)<\/div>${p.bh_target?`<div style="font-size:11px;color:var(--t3)">Tavoite: ${p.bh_target}<\/div>`:''}${bestBH&&p.bh_target?`<div class="prog-bar" style="margin-top:4px"><div class="prog-fill" style="width:${Math.min(100,Math.round(bestBH/p.bh_target*100))}%;background:var(--bd)"><\/div><\/div>`:''}<\/div>
-    <div class="sc"><div class="sn" style="color:var(--pd)">${bestFH?bestFH.toFixed(1):'–'}<\/div><div class="sl">FH paras (km/h)<\/div>${p.fh_target?`<div style="font-size:11px;color:var(--t3)">Tavoite: ${p.fh_target}<\/div>`:''}${bestFH&&p.fh_target?`<div class="prog-bar" style="margin-top:4px"><div class="prog-fill" style="width:${Math.min(100,Math.round(bestFH/p.fh_target*100))}%;background:var(--pd)"><\/div><\/div>`:''}<\/div>
-    <div class="sc"><div class="sn">${comps.length}<\/div><div class="sl">Kisaa kirjattu<\/div><\/div>
-    <div class="sc"><div class="sn">${bestComp?bestComp.mrating||'–':'–'}<\/div><div class="sl">Paras Metrix-rating<\/div><\/div>
-  <\/div>`;
-
   // Dynamic today card
   const todayStr=dateStr(new Date());
   const tomorrowStr=dateStr(new Date(Date.now()+86400000));
@@ -1448,125 +1438,87 @@ function renderProfile(){
   const countdownColor=daysToComp&&daysToComp<=7?'var(--rd)':daysToComp&&daysToComp<=14?'var(--ad)':'var(--gd)';
   const countdownBg=daysToComp&&daysToComp<=7?'var(--rl)':daysToComp&&daysToComp<=14?'var(--al)':'var(--gl)';
 
-  h+=`<div style="background:var(--card);border-radius:var(--r);padding:14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.07)">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:22px">${todayPlan.icon}</span>
-        <div>
-          <div style="font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.04em">Tänään</div>
-          <div style="font-size:14px;font-weight:700;color:var(--text)">${shortDayTitle(todayPlan.note)}</div>${(todayPlan.sessions&&todayPlan.sessions.length)?'<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:4px">'+todayPlan.sessions.map(function(s){const q=SESSION_COLORS[s]||SESSION_COLORS.lepo;return '<span style="font-size:11px;padding:2px 7px;border-radius:20px;background:'+q.bg+';color:'+q.col+';font-weight:500">'+sessionChipLabel(s,todayPlan.date)+'</span>';}).join('')+'</div>':''}
-        </div>
-      </div>
-      ${nextComp?`<div style="text-align:center;background:${countdownBg};border-radius:var(--rs);padding:6px 10px;flex-shrink:0">
-        <div style="font-size:18px;font-weight:800;color:${countdownColor};line-height:1">${isCompToday?'🏆':daysToComp}</div>
-        <div style="font-size:11px;color:${countdownColor};font-weight:600">${isCompToday?'KISA':'päivää'}</div>
-      </div>`:''}
-    </div>
-    <div style="font-size:12px;color:var(--t2);line-height:1.5;background:var(--bg);border-radius:var(--rs);padding:9px 11px">
-      💬 <strong style="color:var(--text)">Valmentaja Claude:</strong> ${coachMsg}
-    </div>
-    ${nextComp&&!isCompToday?`<div style="margin-top:8px;font-size:11px;color:var(--t3);text-align:right">Seuraava: <strong>${nextComp.name||'Kisa'}</strong> ${nextComp.date}</div>`:''}
-    ${smKarsinnat&&daysToSM&&daysToSM>1?`<div style="margin-top:4px;font-size:11px;color:var(--rd);text-align:right;font-weight:600">🎯 SM-karsinnat: <strong>${daysToSM} päivää</strong></div>`:''}
-  </div>`;
+  const clean=function(s){return String(s||'').replace(/^[^\p{L}\p{N}]+/u,'');};
+  const wkPlan=(function(){try{return buildWeekPlan(getWeekDates(0));}catch(e){return [];}})();
+  const compsAll=get('comps')||[];
+  const dayState=function(d){
+    const isRest=d.intensity==='rest';
+    const done=!!getDone(d.date)||(d.intensity==='comp'&&compsAll.some(function(x){return x.date===d.date&&x.mrating;}));
+    if(done)return 'done'; if(d.date===todayStr)return isRest?'resttoday':'today'; if(isRest)return 'rest'; return d.date<todayStr?'miss':'future';
+  };
+  const trainDays=wkPlan.filter(function(d){return d.intensity!=='rest'&&d.intensity!=='comp';});
+  const doneN=trainDays.filter(function(d){return !!getDone(d.date);}).length;
+  const nextTest=allEvents.filter(function(e){return e.type==='testi'&&e.date>=todayStr;}).sort(function(x,y){return x.date.localeCompare(y.date);})[0]||null;
+  const lwNow=lightWindowOf(todayStr);
+  const weekNotes=[];
+  if(nextTest)weekNotes.push('Seuraava testi '+fiDate(nextTest.date)+' ('+daysBetweenDs(todayStr,nextTest.date)+' pv)');
+  if(lwNow)weekNotes.push('Kevennys päättyy '+fiDate(lwNow.dateTo));
+  const ft=foodDayType(todayStr), fp=FOOD_PLAN[ft.type], fchecks=((get('ruoka_checks')||{})[todayStr])||{};
+  const fdone=fp.meals.filter(function(m){return fchecks[m.id];}).length;
+  const kcalFmt=function(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,' ');};
+  const mReached=!!(p.metrix_target&&lastMx>=p.metrix_target);
+  const pLeft=p.target?(lastPDGA<p.target?'tavoite '+p.target+' · +'+(p.target-lastPDGA):'tavoite '+p.target+' saavutettu'):'';
+  const num=function(v,col,lbl,sub){return '<div><div class="hnum"'+(col?' style="color:'+col+'"':'')+'>'+v+'</div><div style="font-size:12px;color:var(--t2);margin-top:3px;line-height:1.35">'+lbl+(sub?' · '+sub:'')+'</div></div>';};
+  // Putti: viimeisten 10 session osuma-% matkoittain
+  const pSess=getPuttiSessions().sort(function(x,y){return x.date.localeCompare(y.date);});
+  const pStats=[4,6,8,10,12].map(function(dist){
+    let made=0,total=0;
+    pSess.slice(-10).forEach(function(s){const k=s['d'+dist];if(k){made+=k.m||0;total+=k.a||0;}if(s.sarjat)s.sarjat.forEach(function(sj){if((sj.dist||0)===dist){made+=sj.made||0;total+=sjN(sj);}});});
+    return {dist:dist,total:total,pct:total>0?Math.round(made/total*100):null};
+  }).filter(function(x){return x.total>0;});
+  const goalsList=goals.slice(0,5);
+  const dlFmt=function(ds){return /^\d{4}-\d{2}-\d{2}$/.test(ds||'')?fiDate(ds):(ds||'');};
+  const nextDl=goalsList.map(function(g){return g.deadline||'';}).filter(Boolean).sort()[0];
 
-  // Puttitilastokortti
-  const puttiSessions=getPuttiSessions().sort((a,b)=>a.date.localeCompare(b.date));
-  if(puttiSessions.length>=1){
-    // Laske prosentit etäisyyksittäin viimeisistä sessioista
-    const DIST_GROUPS=[
-      {key:'c1-4',label:'C1 · 4m',keys:['d4'],dists:[4],circle:'C1'},
-      {key:'c1-6',label:'C1 · 6m',keys:['d6'],dists:[6],circle:'C1'},
-      {key:'c1-8',label:'C1 · 8m',keys:['d8'],dists:[8],circle:'C1'},
-      {key:'c1-10',label:'C1 · 10m',keys:['d10'],dists:[10],circle:'C1'},
-      {key:'c2-12',label:'C2 · 12m',keys:['d12'],dists:[12],circle:'C2'},
-      {key:'c2-14',label:'C2 · 14m',keys:['d14'],dists:[14],circle:'C2'},
-    ];
-    const stats=DIST_GROUPS.map(g=>{
-      let made=0,total=0;
-      puttiSessions.slice(-10).forEach(s=>{
-        g.keys.forEach(k=>{if(s[k]){made+=s[k].m||0;total+=s[k].a||0;}});
-        if(s.sarjat){
-          s.sarjat.forEach(sj=>{
-            if(g.dists.includes(sj.dist||0)){made+=sj.made||0;total+=sjN(sj);}
-          });
-        }
-      });
-      return {label:g.label,circle:g.circle,made,total,pct:total>0?Math.round(made/total*100):null};
-    }).filter(g=>g.total>0);
+  let h='<div class="home-head"><div class="avatar">JV</div><div style="flex:1;min-width:0"><div style="font-size:17px;font-weight:700">Jesse Virtanen</div><div style="font-size:12px;color:var(--t2)">PDGA #252010 · MPO</div></div>'
+    +'<button onclick="openM(\'m-settings\')" aria-label="Asetukset" class="home-gear"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg></button></div>';
 
-    if(stats.length){
-      // Trendi: viimeiset 3 vs edelliset 3
-      const recent=puttiSessions.slice(-3);
-      const older=puttiSessions.slice(-6,-3);
-      const avgRecent=recent.length?Math.round(recent.map(s=>{
-        let m=0,a=0;
-        Object.keys(s).forEach(k=>{if(k.startsWith('d')&&s[k]){m+=s[k].m||0;a+=s[k].a||0;}});
-        if(s.sarjat)s.sarjat.forEach(sj=>{m+=sj.made||0;a+=sjN(sj);});
-        return a>0?m/a*100:null;
-      }).filter(Boolean).reduce((a,b)=>a+b,0)/recent.length):null;
-      const avgOlder=older.length?Math.round(older.map(s=>{
-        let m=0,a=0;
-        Object.keys(s).forEach(k=>{if(k.startsWith('d')&&s[k]){m+=s[k].m||0;a+=s[k].a||0;}});
-        if(s.sarjat)s.sarjat.forEach(sj=>{m+=sj.made||0;a+=sjN(sj);});
-        return a>0?m/a*100:null;
-      }).filter(Boolean).reduce((a,b)=>a+b,0)/older.length):null;
-      const trendText=avgRecent&&avgOlder?(avgRecent>avgOlder?`↑ +${Math.round(avgRecent-avgOlder)}%`:avgRecent<avgOlder?`↓ ${Math.round(avgRecent-avgOlder)}%`:'→ Tasainen'):null;
-      const trendCol=trendText?.startsWith('↑')?'var(--gd)':trendText?.startsWith('↓')?'#E24B4A':'var(--t2)';
+  // Tänään
+  h+='<div class="home-hero"><div class="lbl-h">Tänään · '+['su','ma','ti','ke','to','pe','la'][new Date().getDay()]+' '+fiDate(todayStr)+'</div>'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px"><div style="font-size:21px;font-weight:700;line-height:1.2;min-width:0">'+heroTitle(todayPlan.note)+'</div>'
+    +'<button class="home-cta" onclick="openToday()">'+(isCompToday?'Kisapäivä':'Avaa')+'</button></div>'
+    +'<div style="font-size:13px;color:var(--herot);margin-top:12px;line-height:1.5">'+clean(coachMsg).replace(/\s*Seuraava testi: \d+\.\d+\. \(\d+ pv\)\./,'')+'</div>'
+    +(nextComp&&!isCompToday?'<div style="font-size:12px;color:var(--herot);margin-top:8px">Seuraava kisa: <b style="color:#fff">'+(nextComp.name||'Kisa')+'</b> · '+daysToComp+' pv</div>':'')
+    +'<button class="home-food" onclick="showPg(\'food\')">Ruoka · '+fp.label.toLowerCase()+' '+kcalFmt(fp.kcal)+' kcal · '+fdone+'/'+fp.meals.length+' <span>›</span></button></div>';
 
-      h+=`<div style="background:var(--card);border-radius:var(--r);padding:12px 14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.07)">`;
-      h+=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">`;
-      h+=`<div style="font-size:13px;font-weight:700;color:var(--text)">🎯 Puttitilasto</div>`;
-      if(trendText)h+=`<div style="font-size:11px;font-weight:600;color:${trendCol}">${trendText}</div>`;
-      h+=`</div>`;
-      const c1=stats.filter(s=>s.circle==='C1');
-      const c2=stats.filter(s=>s.circle==='C2');
-      if(c1.length){
-        h+=`<div style="font-size:11px;font-weight:600;color:var(--gd);margin-bottom:4px">C1 – Circle 1</div>`;
-        h+=`<div style="display:grid;grid-template-columns:repeat(${Math.min(c1.length,4)},1fr);gap:6px;margin-bottom:8px">`;
-        c1.forEach(s=>{const col=s.pct>=80?'var(--gd)':s.pct>=60?'var(--ad)':'#E24B4A';h+=`<div><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="font-size:11px;color:var(--t2)">${s.label.split('·')[1]?.trim()||s.label}</span><span style="font-size:11px;font-weight:700;color:${col}">${s.pct}%</span></div><div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div style="height:100%;width:${s.pct}%;background:${col};border-radius:2px"></div></div><div style="font-size:11px;color:var(--t3);margin-top:1px">${s.made}/${s.total}</div></div>`;});
-        h+=`</div>`;
-      }
-      if(c2.length){
-        h+=`<div style="font-size:11px;font-weight:600;color:var(--pd);margin-bottom:4px">C2 – Circle 2</div>`;
-        h+=`<div style="display:grid;grid-template-columns:repeat(${Math.min(c2.length,3)},1fr);gap:6px">`;
-        c2.forEach(s=>{const col=s.pct>=60?'var(--gd)':s.pct>=40?'var(--ad)':'#E24B4A';h+=`<div><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="font-size:11px;color:var(--t2)">${s.label.split('·')[1]?.trim()||s.label}</span><span style="font-size:11px;font-weight:700;color:${col}">${s.pct}%</span></div><div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div style="height:100%;width:${s.pct}%;background:${col};border-radius:2px"></div></div><div style="font-size:11px;color:var(--t3);margin-top:1px">${s.made}/${s.total}</div></div>`;});
-        h+=`</div>`;
-      }
-      h+=`</div></div>`;
-    }
+  // Viikko
+  h+='<div class="card card-p home-card" onclick="showPg(\'train\')" role="button" aria-label="Avaa viikko-ohjelma"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div class="lbl-c">Tämä viikko</div><div style="font-size:12px;color:var(--t2)"><b>'+doneN+'/'+trainDays.length+'</b> treeniä</div></div>'
+    +'<div style="display:flex;justify-content:space-between">'+wkPlan.map(function(d){
+      const st=dayState(d); const nm=d.day.charAt(0).toUpperCase()+d.day.slice(1,2).toLowerCase();
+      const dot=st==='done'?'<i class="hd hd-done"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>':st==='today'?'<i class="hd hd-today"></i>':st==='resttoday'||st==='rest'?'<i class="hd hd-rest"></i>':st==='miss'?'<i class="hd hd-miss"></i>':'<i class="hd hd-future"></i>';
+      return '<div class="hday'+(d.date===todayStr?' on':'')+'"><span>'+nm+'</span>'+dot+'</div>';}).join('')+'</div>'
+    +(weekNotes.length?'<div style="font-size:12px;color:var(--t2);margin-top:12px">'+weekNotes.join(' · ')+'</div>':'')+'</div>';
+
+  // Tilanne
+  h+='<div class="card card-p home-card" onclick="openDevTab(\'rating\')" role="button" aria-label="Avaa kehitys"><div class="lbl-c" style="margin-bottom:12px">Tilanne</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:18px 12px">'
+    +num(lastPDGA,'var(--gd)','PDGA',pLeft)
+    +num(lastMx,'var(--bd)','Metrix',mReached?'tavoite '+p.metrix_target+' saavutettu':(p.metrix_target?'tavoite '+p.metrix_target:''))
+    +num(bestBH?bestBH.toFixed(1):'–','','BH km/h',p.bh_target?'tavoite '+p.bh_target:'')
+    +num(bestFH?bestFH.toFixed(1):'–','','FH km/h',p.fh_target?'tavoite '+p.fh_target:'')+'</div>'
+    +'<div style="font-size:12px;color:var(--t3);margin-top:14px">'+comps.length+' kisaa kirjattu'+(bestComp&&bestComp.mrating?' · paras Metrix '+bestComp.mrating:'')+'</div></div>';
+
+  // Putti
+  if(pStats.length){
+    h+='<div class="card card-p home-card" onclick="openDevTab(\'putti\')" role="button" aria-label="Avaa puttitilastot"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div class="lbl-c">Putti</div><span style="color:var(--t3)">›</span></div><div style="display:flex;justify-content:space-between;gap:6px">'
+      +pStats.map(function(s){const col=s.pct>=80?'var(--gd)':s.pct>=60?'var(--ad)':'var(--rd)'; const thin=s.total<50;
+        return '<div style="text-align:center;'+(thin?'opacity:.6':'')+'"><div class="hnum" style="font-size:22px;color:'+col+'">'+s.pct+'<span style="font-size:13px"> %</span></div><div style="font-size:11px;color:var(--t3);margin-top:2px">'+s.dist+' m'+(thin?' · n='+s.total:'')+'</div></div>';}).join('')+'</div></div>';
   }
 
-  // Active goals
-  const activeGoals=(goals).slice(0,3);
-  if(activeGoals.length){
-    h+=`<div class="sect">Tavoitteet<\/div>`;
-    activeGoals.forEach(g=>{
-      const from=parseFloat(g.from)||0,to=parseFloat(g.to)||1,cur=Math.max(parseFloat(g.cur)||from,autoGoalCur(g));
-      const pct=to!==from?Math.min(100,Math.max(0,Math.round((cur-from)/(to-from)*100))):0;
-      const col=pct>=100?'#1D9E75':pct>=50?'#EF9F27':'#E24B4A';
-      const icons={rating:'📊',metrix:'📊',speed:'⚡',speedfh:'⚡',putti:'🎯',kisa:'🏆',muu:'⭐'};
-      h+=`<div class="goal-card">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
-          <span style="font-size:18px">${icons[g.type]||'⭐'}<\/span>
-          <div style="flex:1"><div style="font-size:13px;font-weight:600">${g.desc}<\/div><div style="font-size:11px;color:var(--t3)">${g.deadline} · ${cur} → ${to}<\/div><\/div>
-        <\/div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:3px;font-size:12px"><span style="color:var(--t2)">${cur} / ${to}<\/span><span style="color:${col};font-weight:600">${pct}%<\/span><\/div>
-        <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${col}"><\/div><\/div>
-        ${g.coach?`<div style="font-size:11px;color:var(--bd);background:var(--bl);padding:6px 9px;border-radius:var(--rs);margin-top:6px">💬 ${g.coach}<\/div>`:''}
-      <\/div>`;
-    });
+  // Tavoitteet
+  if(goalsList.length){
+    h+='<div class="card card-p" style="padding:0"><div style="padding:14px 16px"><div class="lbl-c" style="margin-bottom:4px">Tavoitteet</div><div style="font-size:13px;color:var(--t2)">'+goalsList.length+' aktiivista'+(nextDl?' · seuraava '+dlFmt(nextDl):'')+'</div></div>'
+      +goalsList.map(function(g){
+        const from=parseFloat(g.from)||0,to=parseFloat(g.to)||1,cur=Math.max(parseFloat(g.cur)||from,autoGoalCur(g));
+        const pct=to!==from?Math.min(100,Math.max(0,Math.round((cur-from)/(to-from)*100))):0;
+        const paused=!!(lwNow&&/voima/i.test(g.desc||''));
+        const col=paused?'var(--t3)':pct>=100?'var(--g)':pct>=50?'#E0A030':'var(--rd)';
+        const title=String(g.desc||'').split(/[:–]/)[0].slice(0,60);
+        return '<details class="home-goal"><summary><div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;gap:8px"><span style="font-size:13px;font-weight:600'+(paused?';color:var(--t3)':'')+'">'+title+'</span><span style="font-size:11px;color:var(--t3);flex-shrink:0">'+(paused?'tauolla (kevennys)':dlFmt(g.deadline))+'</span></div>'
+          +'<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><div class="prog-bar" style="flex:1"><div class="prog-fill" style="width:'+pct+'%;background:'+col+'"></div></div><span style="font-size:12px;color:var(--t2)">'+cur+' / '+to+'</span></div></div></summary>'
+          +'<div style="font-size:12px;color:var(--t2);line-height:1.5;padding:0 16px 12px">'+(g.desc||'')+(g.coach?'<div style="margin-top:6px;color:var(--bd)">'+g.coach+'</div>':'')+'</div></details>';}).join('')+'</div>';
   }
 
-  // Copy to Claude button
-  h+=`<div class="sect">Valmentajakeskustelu<\/div>
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-    <div style="font-size:11px;color:var(--t3)" id="gist-status">☁ Ladataan...</div>
-    <button onclick="gistSave()" style="background:none;border:none;font-size:11px;color:var(--bd);cursor:pointer;padding:0">Synkronoi nyt</button>
-  </div>
-  <button class="claude-btn" onclick="copyToClaudeChat()">📋 Kopioi tilanne Claude-chattiin<\/button>
-  <div class="copy-ok" id="copy-ok">✓ Kopioitu! Avaa Claude.ai ja liitä.<\/div>
-  <div style="font-size:11px;color:var(--t3);text-align:center;margin-bottom:12px;line-height:1.5">Kopioi kaikki datasi yhdellä napin painalluksella → liitä uuteen Claude-chattiin<\/div>
-  <button class="btn btn-out btn-sm" onclick="openM('m-chat')" style="width:100%;margin-bottom:4px">+ Tallenna chat-keskustelu historiaan<\/button>`;
+  h+='<div style="display:flex;align-items:center;justify-content:space-between;margin:4px 2px 12px"><div style="font-size:11px;color:var(--t3)" id="gist-status">☁ Ladataan...</div><button onclick="gistSave()" style="background:none;border:none;font-size:11px;color:var(--bd);cursor:pointer;padding:4px 0">Synkronoi nyt</button></div>';
 
   h+='<div class="page-spacer"></div>';document.getElementById('pv').innerHTML=h;
 }
@@ -1935,7 +1887,7 @@ function buildCompProtocol(){
 
 function buildCompHeader(doneSteps, totalSteps){
   var pct=Math.round(doneSteps/totalSteps*100);
-  var h='<div style="background:linear-gradient(135deg,#085041,#1D9E75);border-radius:var(--r);padding:16px;margin-bottom:12px;color:#fff">';
+  var h='<div style="background:linear-gradient(135deg,#14382B,#2F7D5B);border-radius:var(--r);padding:16px;margin-bottom:12px;color:#fff">';
   h+='<div style="font-size:16px;font-weight:700;margin-bottom:2px">🏆 Kisapäivän protokolla</div>';
   h+='<div style="font-size:12px;opacity:.8;margin-bottom:10px">Jesse Virtanen · MPO · Optimoitu kamppailutaustaiselle</div>';
   h+='<div style="display:flex;gap:12px">';
@@ -2055,7 +2007,7 @@ function renderCompDay(){
     {id:'q5', label:'Hengitysharjoitus tehty', icon:'🧘'},
   ];
   var quickDone=quickItems.filter(i=>kisaChecks[i.id]).length;
-  h+='<div style="background:var(--card);border-radius:var(--r);padding:12px 14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
+  h+='<div style="background:var(--card);border-radius:var(--r);padding:12px 14px;margin-bottom:10px;box-shadow:0 0 0 1px var(--border)">';
   h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
   h+='<div style="font-size:13px;font-weight:700;color:var(--text)">✅ Kisapäivän tarkistuslista</div>';
   h+='<div style="font-size:12px;font-weight:700;color:'+(quickDone===5?'var(--gd)':'var(--t2)')+'">'+quickDone+'/5</div>';
@@ -2160,7 +2112,7 @@ function renderCompDay(){
   h+='</div>';
 
   // Quick result logging with rating calculator
-  h+='<div style="background:var(--card);border-radius:var(--r);padding:12px 14px;margin-top:10px;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
+  h+='<div style="background:var(--card);border-radius:var(--r);padding:12px 14px;margin-top:10px;box-shadow:0 0 0 1px var(--border)">';
   h+='<div style="font-size:13px;font-weight:700;color:var(--bd);margin-bottom:10px">📊 Kirjaa kisatulos</div>';
   h+='<div style="display:flex;gap:8px;margin-bottom:8px;align-items:flex-end">';
   h+='<div style="flex:1"><div style="font-size:11px;color:var(--t3);margin-bottom:3px">Metrix kilpailu-ID</div>';
@@ -2604,6 +2556,27 @@ function openSession(target,date,sess){
   trainTab(target,null);
 }
 
+// Viikkonäkymän istuntoreitit; etusivun "Avaa"-nappi avaa päivän treenin suoraan
+const SESSION_ROUTE={heitto_tek:'throw_tek',heitto_nop:'throw_nop',voima_a:'str',voima_b:'str',voima_c:'str',voima_loma_a:'str',voima_loma_b:'str',putti:'putti',mob:'mob',teho:'str',hermosto:'hermosto',peruskunto:'peruskunto',testi:'testi',aktivointi:'aktivointi',comp_day:'comp_day',kierros:'kierros',kisa:'comp_day',lepo:'rest_day'};
+function heroTitle(note){
+  let t=shortDayTitle(note).replace(/^Kevennysjakso \([^)]*\):\s*/,'').split(' · ')[0].trim();
+  return t.charAt(0).toUpperCase()+t.slice(1);
+}
+function openToday(){
+  const ds=dateStr(new Date());
+  let plan=null; try{plan=buildWeekPlan(getWeekDates(0)).find(function(d){return d.date===ds;});}catch(e){}
+  showPg('train');
+  const ss=plan?(Array.isArray(plan.sessions)?plan.sessions:[plan.sessions]).filter(function(s){return SESSION_ROUTE[s]&&s!=='lepo';}):[];
+  if(ss.length===1)openSession(SESSION_ROUTE[ss[0]],ds,ss[0]);
+  else if(ss.length>1)trainTabPick(JSON.stringify({sessions:ss,date:ds}));
+  else trainTab('week',null);
+}
+function openDevTab(tab){
+  showPg('dev');
+  const b=Array.from(document.querySelectorAll('#pg-dev .tb')).find(function(x){return (x.getAttribute('onclick')||'').indexOf("'"+tab+"'")>=0;});
+  devTab(tab,b||null);
+}
+
 // ===== Päiväkortin ja etusivun apufunktiot =====
 // Karsitaan otsikosta apuharjoitteet (merkit näyttävät ne jo): "Voima A + iltaliikkuvuus (…) + hermosto" -> "Voima A"
 function shortDayTitle(note){
@@ -2637,6 +2610,10 @@ function offseasonCoachMsg(ds){
     return '🛌 Huomenna testi. Tänään täysi lepo, hyvä uni ja normaali ruokailu.';
   const loma=events.find(e=>e.type==='loma'&&ds>=e.date&&ds<=(e.dateTo||e.date));
   if(loma&&/sairaa/i.test(loma.name||'')) return '🤒 Lepo. Anna kehon palautua – aloita vasta kun olet ollut oireeton.'+(nextTest?' Seuraava askel: '+(nextTest.name||'testi').replace(/^Testi \d\/\d:\s*/,'')+' '+fiDate(nextTest.date):'');
+  const lwC=lightWindowOf(ds);
+  if(lwC) return '🪶 Kevennysjakso '+fiDate(lwC.date)+'–'+fiDate(lwC.dateTo)+': ei voimaa eikä nopeutta, heitto −'+Math.round((1-(lwC.throwFactor||0.6))*100)+' %. Putti ja liikkuvuus normaalisti.'+testSuffix;
+  const rwC=returnWindowOf(ds);
+  if(rwC) return '🔁 Paluuviikko ('+rwC.label+'): kuormat kevennetty, palaa rauhallisesti ja pysy kevyenä.'+testSuffix;
   const dt=new Date(ds+'T12:00:00'); const dow=(dt.getDay()+6)%7;
   const wsDs=dateStr(new Date(dt.getTime()-dow*86400000));
   const ph=offseasonPhaseOf(wsDs);
@@ -3042,7 +3019,7 @@ function renderWeekView() {
     const varoitus = preKisaLoad >= 3;
     const loadColors = {'0':'#E8E8E8','1':'#A8D8B9','2':'#EFC97E','3':'#E57373'};
 
-    h += '<div style="margin-bottom:12px;padding:10px 12px;background:var(--card);border-radius:var(--r);box-shadow:0 1px 3px rgba(0,0,0,.06)">';
+    h += '<div style="margin-bottom:12px;padding:10px 12px;background:var(--card);border-radius:var(--r);box-shadow:0 0 0 1px var(--border)">';
     h += '<div style="font-size:11px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Kisaviikon kuormitus</div>';
     h += '<div style="display:flex;gap:4px;margin-bottom:6px">';
     dayLoads.forEach(function(d){
@@ -3114,7 +3091,7 @@ function renderWeekView() {
       }
       return `<span style="font-size:11px;padding:2px 7px;border-radius:20px;background:${ssc.bg};color:${ssc.col};font-weight:500;flex-shrink:0">${lbl}</span>`;
     }).join('');
-    const tagStyle = 'display:flex;align-items:center;gap:8px;padding:10px 12px;background:'+(isDone?'var(--gl)':cardBg)+';border-radius:var(--r);margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:'+(isDone?'1.5px solid var(--g)':cardBorder)+';opacity:'+opacity+';width:100%;text-align:left;font-family:inherit;cursor:'+(clickable?'pointer':'default');
+    const tagStyle = 'display:flex;align-items:center;gap:8px;padding:10px 12px;background:'+(isDone?'var(--gl)':cardBg)+';border-radius:var(--r);margin-bottom:6px;box-shadow:0 0 0 1px var(--border);border:'+(isDone?'1.5px solid var(--g)':cardBorder)+';opacity:'+opacity+';width:100%;text-align:left;font-family:inherit;cursor:'+(clickable?'pointer':'default');
 
     h += '<div'+onclickAttr+' style="'+tagStyle+'">';
     h += '<div style="width:36px;flex-shrink:0;text-align:center">';
@@ -3154,7 +3131,7 @@ function renderWeekView() {
     const totalTrains=plan.filter(d=>d.intensity!=='rest'&&d.intensity!=='comp').length;
     const avgMetrix=weekCompsAll.length?Math.round(weekCompsAll.reduce((a,c)=>a+c.mrating,0)/weekCompsAll.length):null;
     const bestMetrix=weekCompsAll.length?Math.max(...weekCompsAll.map(c=>c.mrating)):null;
-    h+=`<div style="background:var(--card);border-radius:var(--r);padding:12px 14px;margin-top:8px;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+    h+=`<div style="background:var(--card);border-radius:var(--r);padding:12px 14px;margin-top:8px;box-shadow:0 0 0 1px var(--border)">
       <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">📋 Viikkoyhteenveto</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <div style="flex:1;min-width:70px;text-align:center;background:var(--gl);border-radius:var(--rs);padding:7px">
@@ -3203,7 +3180,7 @@ function buildMonthView(year, month) {
   const comps = get('comps') || [];
   const events = get('events') || [];
 
-  let h = `<div style="background:var(--card);border-radius:var(--r);padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)">`;
+  let h = `<div style="background:var(--card);border-radius:var(--r);padding:12px;box-shadow:0 0 0 1px var(--border)">`;
   h += `<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">${MNAMES[month]} ${year}</div>`;
 
   // Day headers
@@ -3460,7 +3437,7 @@ function renderSessionPick(){
     aktivointi:'Kevyt herättely ennen kisaa',
     kierros:'Kenttäkierros'
   };
-  let h = '<div style="background:var(--card);border-radius:var(--r);padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.07)">';
+  let h = '<div style="background:var(--card);border-radius:var(--r);padding:16px;margin-bottom:12px;box-shadow:0 0 0 1px var(--border)">';
   h += '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">Valitse sessio</div>';
   h += '<div style="font-size:12px;color:var(--t2);margin-bottom:14px">'+(sessionPickDate?('Päivälle '+fiDate(sessionPickDate)):'Tänään')+' on useampi sessio – kumman haluat avata?</div>';
   sessionPickList.forEach(function(s){
@@ -4893,7 +4870,7 @@ function renderAktivointi(){
     ]},
   ];
 
-  let h='<div style="background:linear-gradient(135deg,#085041,#1D9E75);border-radius:var(--r);padding:16px;margin-bottom:12px;color:#fff">';
+  let h='<div style="background:linear-gradient(135deg,#14382B,#2F7D5B);border-radius:var(--r);padding:16px;margin-bottom:12px;color:#fff">';
   h+='<div style="font-size:11px;font-weight:600;opacity:.8;text-transform:uppercase;letter-spacing:.05em">Kisapäivän aktivointi</div>';
   h+='<div style="font-size:20px;font-weight:700;margin-top:2px">~28 min ennen lähtöä</div>';
   h+='<div style="font-size:12px;opacity:.85;margin-top:4px">Herätä keho ja hermosto – älä kuluta energiaa</div>';
@@ -4902,7 +4879,7 @@ function renderAktivointi(){
   STEPS.forEach(function(step){
     const done=step.exercises.filter((_,i)=>getSets('ak_'+akDay+'_'+step.id+'_'+i)>0).length;
     const total=step.exercises.length;
-    h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
+    h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:8px;overflow:hidden;box-shadow:0 0 0 1px var(--border)">';
     h+='<div style="background:'+step.color+';padding:10px 14px;display:flex;align-items:center;justify-content:space-between">';
     h+='<div style="display:flex;align-items:center;gap:8px">';
     h+='<span style="font-size:20px">'+step.icon+'</span>';
@@ -5179,7 +5156,7 @@ function renderKierros(){
     {id:'k5',text:'Puttausrutiini mielessä: asetu → katso → hengitä → rytmi → seuraa läpi'},
   ];
   const checks=saved.checks||{};
-  let h='<div style="background:linear-gradient(135deg,#085041,#1D9E75);border-radius:var(--r);padding:16px;margin-bottom:12px;color:#fff">';
+  let h='<div style="background:linear-gradient(135deg,#14382B,#2F7D5B);border-radius:var(--r);padding:16px;margin-bottom:12px;color:#fff">';
   h+='<div style="font-size:11px;font-weight:600;opacity:.8;text-transform:uppercase">Kenttäkierros</div>';
   h+='<div style="font-size:20px;font-weight:700;margin-top:2px">'+today+'</div>';
   h+='<div style="font-size:12px;opacity:.85;margin-top:4px">'+(selectedCourse?selectedCourse.name+' – '+selectedCourse.layout:'Valitse rata alta')+'</div>';
@@ -5187,7 +5164,7 @@ function renderKierros(){
   // Usean kierroksen yhteenveto
   const kSum=computeKierrosSummary(5);
   if(kSum.count>0){
-    h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:8px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
+    h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:8px;padding:12px 14px;box-shadow:0 0 0 1px var(--border)">';
     h+='<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">📈 Viimeiset '+kSum.count+' harjoituskierrosta</div>';
     h+='<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--t2)">';
     if(kSum.avgDiff!=null)h+='<span>Ero ka: <b style="color:'+(kSum.avgDiff<=0?'var(--gd)':'var(--rd)')+'">'+(kSum.avgDiff>0?'+':'')+kSum.avgDiff.toFixed(1)+'</b></span>';
@@ -5196,7 +5173,7 @@ function renderKierros(){
     h+='</div></div>';
   }
   // Rata-valinta
-  h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:8px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
+  h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:8px;padding:12px 14px;box-shadow:0 0 0 1px var(--border)">';
   h+='<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">🏟️ Valitse rata</div>';
   h+='<div style="display:flex;flex-wrap:wrap;gap:6px">';
   COURSES.forEach(function(c){
@@ -5215,7 +5192,7 @@ function renderKierros(){
     h+='<button onclick="startVaylaKierros(\''+selectedCourseId+'\',\''+today+'\')" style="width:100%;padding:12px;border-radius:var(--r);border:1.5px solid var(--bd);background:var(--bl);color:var(--bd);font-size:13px;font-weight:600;cursor:pointer">🥏 Aloita väyläkohtainen kirjaus</button>';
     h+='</div>';
   }
-  h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:8px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
+  h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:8px;padding:12px 14px;box-shadow:0 0 0 1px var(--border)">';
   h+='<div style="font-size:13px;font-weight:700;color:var(--pd);margin-bottom:8px">📊 Kierroksen jälkeen</div>';
   h+='<div style="display:flex;gap:8px;margin-bottom:8px"><div style="flex:1"><div style="font-size:11px;color:var(--t3);margin-bottom:4px">Tulos (heitot)</div><input id="kierros-result" type="number" placeholder="'+(selectedCourse?selectedCourse.par:60)+'" oninput="calcKierrosRatingTable()" value="'+(result||'')+'" style="width:100%;padding:8px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--bg);color:var(--text)"></div><div style="flex:1"><div style="font-size:11px;color:var(--t3);margin-bottom:4px">Kenttä (vapaa)</div><input id="kierros-kentta" type="text" placeholder="'+(selectedCourse?selectedCourse.name:'esim. Tali')+'" value="'+(saved.kentta||'')+'" style="width:100%;padding:8px 10px;border-radius:var(--rs);border:1.5px solid var(--border);font-size:14px;background:var(--bg);color:var(--text)"></div></div>';
   var c1m=saved.c1_made!==undefined&&saved.c1_made!==null?saved.c1_made:'';
@@ -5277,7 +5254,7 @@ function renderKierros(){
       const fhstr=kd.fh_hit!==undefined?'FH: '+kd.fh_hit:'';
       const obstr=kd.ob_count?'OB: '+kd.ob_count:'';
       const statsStr=[c1str,fhstr,obstr].filter(Boolean).join(' · ');
-      h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden">';
+      h+='<div style="background:var(--card);border-radius:var(--r);margin-bottom:6px;box-shadow:0 0 0 1px var(--border);overflow:hidden">';
       h+='<div class="kierros-hist-toggle" data-date="'+d+'" style="display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer">';
       h+='<div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text)">'+d+(prevCourse?' · '+prevCourse.name:kd.kentta?' · '+kd.kentta:'')+'</div>';
       h+='<div style="font-size:11px;color:var(--t2)">'+[kd.focus||'',kd.result?kd.result+' ht':'',kd.calcRating?kd.calcRating+' rating':'',c1str||''].filter(Boolean).join(' · ')+'</div></div>';
